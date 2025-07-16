@@ -1,19 +1,22 @@
 # Flow: Clean, Composable Business Logic for .NET
 
-Is your business logic a tangled mess?
-
-Full of `try-catch` blocks, `if-else` statements, and scattered side-effects?
-
+* ❌ Is your business logic a tangled, and potentially ugly, mess?
+* ❌ Are there `try-catch` blocks and `if-else` statements?
+* ❌ Do you see side-effects, error handling, logging, retries, and more all over the place?
 
 _Ugh_ 😣
 
-WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead? 
+---
 
-A pipeline that clearly separates the "happy path" from error handling, logging, retries, ...
+* ✅ WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead? 
+* ✅ A pipeline that clearly separates the "happy path" from error handling, logging, retries, ...
+* ✅ A pipeline that is a pleasure to express, read, and maintain?
 
 _Oh!?_ 🤔
 
-THAT, my dear reader, is the problem **Flow** solves ✅
+--- 
+
+THAT, my dear reader, is the problem **Flow** solves 🙌
 
 * Lightweight
 * Fluent API
@@ -22,6 +25,8 @@ THAT, my dear reader, is the problem **Flow** solves ✅
   * Resilient
   * Composable
   * Easy to test
+
+---
 
 Allow me to demonstrate. Imagine turning this imperative code:
 
@@ -55,10 +60,14 @@ public Flow<User> GetUserAndNotifyFlow(int userId)
 
 _Nice and neat, eh!?_ 👍
 
+---
+
 But...the REAL win is in Flow's **plug-and-play design** 🔌
 * A `Flow` is a just a **recipe** for your business logic.
 * Since it is nothing more than a definition, it can be enriched and reused: cheap and simple.
 * You can enhance any `Flow` with new behaviours without ever touching the original code -- no, seriously 😎
+
+---
 
 Allow me to demonstrate:
 
@@ -88,13 +97,17 @@ var loggedGetUserFlow =
 
 4. I could go on, but you get the idea.
 
+---
+
 In short, with `Flow` you create components that are:
 - Readable
 - Predictable
 - Reusable
 - Easy to test
 
-Here’s a more formal look at the principles behind the design:
+---
+
+Now...here’s a more formal look at the principles behind the design:
 
 # Core Principles
 
