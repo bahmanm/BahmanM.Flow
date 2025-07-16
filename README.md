@@ -1,11 +1,14 @@
 # Flow: Clean, Composable Business Logic for .NET
 
 Is your business logic a tangled mess?
+
 Full of `try-catch` blocks, `if-else` statements, and scattered side-effects?
+
 
 _Ugh_ 😣
 
 WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead? 
+
 A pipeline that clearly separates the "happy path" from error handling, logging, retries, ...
 
 _Oh!?_ 🤔
