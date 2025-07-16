@@ -1,6 +1,97 @@
-# Flow: A Declarative Framework for Composable Operations
+# Flow: Clean, Composable Business Logic for .NET
 
-Flow is a lightweight, powerful framework for building robust, predictable, and testable business logic in .NET. It provides a simple, fluent API for composing complex operations, handling failures, and managing cross-cutting concerns in a declarative and immutable way.
+Is your business logic a tangled mess?
+Full of `try-catch` blocks, `if-else` statements, and scattered side-effects?
+
+_Ugh_ 😣
+
+WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead? 
+A pipeline that clearly separates the "happy path" from error handling, logging, retries, ...
+
+_Oh!?_ 🤔
+
+THAT, my dear reader, is the problem **Flow** solves ✅
+
+* Lightweight
+* Fluent API
+* To build pipelines that are:
+  * Declarative
+  * Resilient
+  * Composable
+  * Easy to test
+
+Allow me to demonstrate. Imagine turning this imperative code:
+
+```csharp
+public User GetUserAndNotify(int userId)
+{
+    try
+    {
+        var user = _database.GetUser(userId);
+        _auditor.LogSuccess(user.Id);
+        return user;
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Failed to get user");
+        return GetDefaultUser();
+    }
+}
+```
+
+Into this simple `Flow`:
+
+```csharp
+public Flow<User> GetUserAndNotifyFlow(int userId)
+{
+    return Flow.Create(() => _database.GetUser(userId))
+               .DoOnSuccess(user => _auditor.LogSuccess(user.Id))
+               .Recover(ex => GetDefaultUser());
+}
+```
+
+_Nice and neat, eh!?_ 👍
+
+But...the REAL win is in Flow's **plug-and-play design** 🔌
+* A `Flow` is a just a **recipe** for your business logic.
+* Since it is nothing more than a definition, it can be enriched and reused: cheap and simple.
+* You can enhance any `Flow` with new behaviours without ever touching the original code -- no, seriously 😎
+
+Allow me to demonstrate:
+
+1. Say, next sprint, you realise you need retry logic? Easy -- you simply enrich your existing flow!
+
+```csharp
+var resilientGetUserFlow = 
+    GetUserAndNotifyFlow(httpRequestParams.userId)
+      .WithRetry(3);
+```
+
+2. Or maybe you want to add a timeout? No problem!
+
+```csharp
+var timeoutGetUserFlow = 
+    resilientGetUserFlow 
+      .WithTimeout(TimeSpan.FromSeconds(5));
+```
+
+3. Need to log the failure? Just do it!
+
+```csharp
+var loggedGetUserFlow = 
+    timeoutGetUserFlow
+      .DoOnFailure(ex => _logger.LogError(ex, "Failed to get user"));
+```
+
+4. I could go on, but you get the idea.
+
+In short, with `Flow` you create components that are:
+- Readable
+- Predictable
+- Reusable
+- Easy to test
+
+Here’s a more formal look at the principles behind the design:
 
 # Core Principles
 
