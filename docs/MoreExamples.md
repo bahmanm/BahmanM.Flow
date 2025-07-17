@@ -1,69 +1,76 @@
-# Key Scenarios & Usage
+# Practical Recipes
 
-This section provides client-side code snippets for each major operator, which can serve as a basis for user acceptance tests.
+Ready to cook up something more advanced? This document provides practical recipes for specific scenarios you might encounter.
 
-## Core Operations
+# Handling Concurrency
 
-### 1. Declaring and Executing Flows
+### Running Multiple Flows at Once
 
-```csharp
-// A simple synchronous flow
-var simpleFlow = Flow.Succeed(42).Select(x => x * 2);
-var result = await FlowEngine.ExecuteAsync(simpleFlow);
+**Problem:** You have several long-running `Flows` and you want to run them all in parallel and collect the results.
 
-// A flow with asynchronous operations
-var asyncFlow = Flow.Succeed("user-123", new FlowId("user-enrichment"))
-    .Chain(userId => GetUserFromDatabaseAsync(userId));
-var userResult = await FlowEngine.ExecuteAsync(asyncFlow);
-```
-
-### 2. Transformation (`Select`)
+**Solution:** Use `Flow.All`. It's like `Task.WhenAll` for Flows. 
+* It runs all Flows concurrently and, if they all succeed, returns a Flow containing an array of their results. 
+* If any Flow fails, the entire operation fails immediately.
 
 ```csharp
-// Synchronous transformation
-var syncSelect = Flow.Succeed("  hello  ").Select(text => text.Trim());
-
-// Asynchronous transformation
-var asyncSelect = Flow.Succeed(42)
-                      .Select(async userId => await GetUserNameFromDbAsync(userId));
+var allUsersFlow = Flow.All(
+    GetUserAsync(1),
+    GetUserAsync(2),
+    GetUserAsync(3)
+);
 ```
 
-### 3. Sequencing (`Chain`)
+### Racing Flows for the Fastest Success
+
+**Problem:** You have multiple sources for the same data (e.g., a cache and a database), and you want the result from whichever one finishes first.
+
+**Solution:** Use `Flow.Any`. 
+* It's like `Task.WhenAny`, but it specifically waits for the first Flow to succeed. 
+* This is perfect for building fast, resilient data retrieval.
 
 ```csharp
-// Chaining a synchronous operation that returns an Outcome
-var syncChain = Flow.Succeed(5).Chain(value => Outcome.Success(value + 10));
-
-// Chaining an asynchronous operation that returns a Task<Outcome>
-var asyncChain = Flow.Succeed(42)
-                     .Chain(async userId => await GetUserDataAsync(userId));
+var fastestUserFlow = Flow.Any(
+    GetUserFromCacheAsync(1), // This one is probably faster
+    GetUserFromDbAsync(1)
+);
 ```
 
-### 4. Failure Recovery (`Recover`)
+# Building Resiliency
+
+> **Note:** The resiliency operators are actually built-in _Behaviours_. 
+> You can also [create your own custom behaviours](./CustomBehaviours.md) for more complex scenarios like circuit breakers.
+
+### Retrying Failed Operations
+
+**Problem:** An operation in your Flow might fail intermittently due to a flaky network or a temporary service outage.
+
+**Solution:** Use the `.WithRetry()` operator to automatically retry a failed operation.
 
 ```csharp
-// Recovering with a simple fallback value
-var simpleRecovery = Flow.Fail<string>(new Exception("...")).Recover("Default Value");
-
-// Recovering with an asynchronous function
-var asyncRecovery = Flow.Fail<User>(new Exception("..."))
-                        .Recover(async ex => await GetDefaultUserFromCacheAsync(ex));
+var resilientFlow = CreateSometimesFailingFlow()
+    .WithRetry(3); // Tries up to 3 times before giving up
 ```
 
-### 5. Performing Side Effects (`DoOnSuccess` / `DoOnFailure`)
+### Preventing Hung Operations
+
+**Problem:** An operation in your Flow might hang indefinitely, tying up resources.
+
+**Solution:** Use the `.WithTimeout()` operator to enforce a deadline.
 
 ```csharp
-// Synchronous side effect
-var syncTap = Flow.Succeed(42).DoOnSuccess(v => Console.WriteLine(v));
-
-// Asynchronous side effect
-var asyncTap = Flow.Succeed("user-123")
-                     .DoOnSuccess(async id => await _auditService.LogAccessAsync(id));
+var timelyFlow = CreateLongRunningFlow()
+    .WithTimeout(TimeSpan.FromSeconds(5)); // Gives up if it takes too long
 ```
 
-## Advanced Operations
+# Managing Resources
 
-### 1. Operation-Scoped Resources (`Flow.WithResource`)
+### Handling Disposable Resources
+
+**Problem:** You need to use a resource that must be disposed of (like an `HttpClient` or a database connection) within a Flow.
+
+**Solution:** Use `Flow.WithResource`. 
+* It ensures your resource is created, used, and then safely disposed of.
+* It mirros a standard `using` block but in a **composable** way!
 
 ```csharp
 var resourceFlow = Flow.Succeed("user-123")
@@ -75,80 +82,12 @@ var resourceFlow = Flow.Succeed("user-123")
     );
 ```
 
-### 2. Concurrency (`Flow.All` & `Flow.Any`)
 
-```csharp
-// Flow.All runs all flows and returns an array of results.
-var allFlow = Flow.All(
-    GetUserAsync(1),
-    GetUserAsync(2)
-);
+# What's Next?
 
-// Flow.Any returns the result of the first flow to complete successfully.
-var anyFlow = Flow.Any(
-    GetUserFromCacheAsync(1),
-    GetUserFromDbAsync(1)
-);
-```
+Now that you've seen some advanced use cases, you have a solid overview of what Flow can do.
 
-### 3. Enriching Flows with Behaviours
-
-Behaviours enrich a flow with cross-cutting concerns.
-
-#### 3.1 Timing out an Operation
-
-```csharp
-// Simple usage
-var simpleTimeoutFlow = CreateLongRunningFlow()
-    .WithTimeout(TimeSpan.FromSeconds(1));
-
-// Advanced usage with a policy
-// (Note: The specific builder methods and policy properties are illustrative and TBD.)
-var policy = new FlowTimeoutPolicy(TimeSpan.FromSeconds(1));
-var advancedTimeoutFlow = CreateLongRunningFlow()
-    .WithTimeout(policy);
-```
-
-#### 3.2 Retrying a Failed Operation
-
-```csharp
-// Simple usage
-var simpleRetryFlow = CreateSometimesFailingFlow()
-    .WithRetry(3);
-
-// Advanced usage with a policy
-// (Note: The specific builder methods and policy properties are illustrative and TBD.)
-var policy = new FlowRetryPolicy(maxAttempts: 3);
-var advancedRetryFlow = CreateSometimesFailingFlow()
-    .WithRetry(policy);
-```
-
-#### 3.3 Applying Custom Behaviours
-
-The `WithBehaviour` operator allows for the application of custom, stateful behaviours that can alter the control flow.
-
-```csharp
-// The user defines a reusable behaviour by implementing the IBehaviour<T> interface.
-public class CircuitBreakerBehaviour<T> : IBehaviour<T>
-{
-    // The behaviour provides its own type for richer diagnostics.
-    public string OperationType => "Flow.CircuitBreaker";
-
-    // The Apply method returns a new flow that wraps the original.
-    public IFlow<T> Apply(IFlow<T> originalFlow)
-    {
-        // The implementation would check the circuit breaker's state.
-        // If the circuit is open, it would return Flow.Fail(...).
-        // Otherwise, it would execute the originalFlow and update the state.
-        return Flow.Create(() => {
-            // ... state-checking and wrapping logic would go here ...
-            return FlowEngine.ExecuteAsync(originalFlow);
-        });
-    }
-}
-
-// The user can then apply this behaviour to any flow.
-var circuitState = new CircuitBreakerState();
-var resilientFlow = CreateFlakyApiServiceCall()
-    .WithBehaviour(new CircuitBreakerBehaviour(circuitState));
-```
+Depending on your interest, you can now:
+*   Look at **[Behaviours](./CustomBehaviours.md)** to learn about the concept and how to roll your own.
+*   Read the **[Design Rationale](./DesignRationale.md)** to understand the "why" behind the library.
+*   Browse the **[API Blueprint](./ApiBlueprint.cs)** to see all available methods.
