@@ -54,6 +54,7 @@ public Flow<User> GetUserAndNotifyFlow(int userId)
 {
     return Flow.Create(() => _database.GetUser(userId))
                .DoOnSuccess(user => _auditor.LogSuccess(user.Id))
+               .DoOnFailure(ex => _logger.LogError(ex, "Failed to get user"))
                .Recover(ex => GetDefaultUser());
 }
 ```
