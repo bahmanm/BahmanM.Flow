@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{06876250-FB98-41DD-AD2E-49274F170F23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BahmanM.Flow", "src\BahmanM.Flow\BahmanM.Flow.csproj", "{DB15BC37-0491-4EB3-A4E2-421538CB9BDF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{32D23A3A-A013-4D7C-83AA-3185C18B119E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BahmanM.Flow.Tests", "tests\BahmanM.Flow.Tests\BahmanM.Flow.Tests.csproj", "{0737C3D8-D97F-4E6E-B777-20BE4EFF0D6B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DB15BC37-0491-4EB3-A4E2-421538CB9BDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB15BC37-0491-4EB3-A4E2-421538CB9BDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB15BC37-0491-4EB3-A4E2-421538CB9BDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB15BC37-0491-4EB3-A4E2-421538CB9BDF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0737C3D8-D97F-4E6E-B777-20BE4EFF0D6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0737C3D8-D97F-4E6E-B777-20BE4EFF0D6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0737C3D8-D97F-4E6E-B777-20BE4EFF0D6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0737C3D8-D97F-4E6E-B777-20BE4EFF0D6B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DB15BC37-0491-4EB3-A4E2-421538CB9BDF} = {06876250-FB98-41DD-AD2E-49274F170F23}
+		{0737C3D8-D97F-4E6E-B777-20BE4EFF0D6B} = {32D23A3A-A013-4D7C-83AA-3185C18B119E}
+	EndGlobalSection
+EndGlobal
