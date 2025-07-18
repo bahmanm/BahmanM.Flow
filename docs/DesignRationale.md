@@ -2,45 +2,88 @@
 
 This section documents the key architectural decisions that shape the Flow API, focusing on the "why" behind the design.
 
-### 1. The Core Philosophy: Recipe & Chef
+# 1. The Core Philosophy: Recipe & Chef
 
 The central architectural pattern is a strict separation of concerns:
 
 *   **`IFlow<T>` is the Recipe:** It is a purely declarative, **immutable** data structure representing the sequence of operations. It is an Abstract Syntax Tree (AST) that defines *what* to do, not *how* to do it.
+
 *   **`FlowEngine` is the Chef:** It is the interpreter that knows how to execute an `IFlow<T>` AST. It is the single source of execution logic.
+
 *   **Operators are Pure Functions on the Flow:** With the exception of the `Do` family of operators, all extension methods in `FlowExtensions` (e.g., `.Chain()`, `.Select()`, `.Recover()`) are themselves pure functions with respect to the `IFlow<T>` data structure. They take a flow as input and return a **new, decorated `IFlow<T>` instance**, never modifying the original. This guarantees that flow declarations are immutable, reusable, and safe to share.
-*   **The `Do` Operators are Transparent:** The `DoOnSuccess` and `DoOnFailure` operators are an exception to the "return new instance" rule. They are designed for pure side effects and are intended to be completely transparent to the flow's structure. Therefore, they should return the **same `IFlow<T>` instance** they were called on, allowing them to be chained without adding a new node to the AST.
+
+*   **The `Do` Operators are Transparent:** The `DoOnSuccess` and `DoOnFailure` operators are an exception to the "return new instance" rule. They are designed for pure side effects and are intended to be completely transparent to the flow's structure.
 
 This separation ensures the business logic declared in a `Flow` remains pure and testable, while the complexities of execution are handled by the engine.
 
-### 2. `FlowExecutionOptions`: Decoupling Execution from Declaration
+### 1a. The Philosophy: Pragmatism over Purity
 
-All parameters that control a specific execution run (the "how-to-run" instructions) are contained within the `FlowExecutionOptions` object. This includes the `CancellationToken` and the `IFlowExecutionObserver`. This approach keeps the `FlowEngine.ExecuteAsync` signature stable and makes the API extensible, as new execution-time options can be added without breaking changes.
+While Flow is heavily inspired by functional programming concepts (see [Functional Parallels](./FunctionalParallels.md)), it is not a strict FP framework. 
 
-### 3. The Observer Pattern for Diagnostics
+The primary goal is to provide an intuitive, discoverable, and productive API for the typical C# developer.
 
-To provide visibility into the engine's execution, we chose a decoupled observer pattern over baking diagnostics directly into the engine.
+This means the library will always favour a design that is **pragmatic and familiar** over one that is theoretically pure but abstract. 
 
-*   **`IFlowExecutionObserver`:** This interface defines a contract for observing the engine's lifecycle. It is designed to be implemented by users to bridge `Flow` events to their chosen diagnostic or logging framework.
-*   **Multi-Method Interface:** The interface uses specific, discoverable methods (`OnOperationStarted`, `OnFlowSucceeded`, etc.) with default implementations. This provides the best of both worlds: it's easy for users to implement (they only override what they need), and it's extensible for the library (new methods can be added without breaking existing implementations).
-*   **Interface-Based Events:** The events passed to the observer are defined by a hierarchy of interfaces (`IFlowEvent`, `IOperationEvent`, etc.). This allows for flexible, type-safe pattern matching in observer implementations while decoupling the observer from the concrete event implementation classes.
+A good example of this is the approach to concurrency:
 
-### 4. Extensible Enumerations: The `FlowOperationTypes` Pattern
+*   Flow provides `Flow.All` and `Flow.Any`, which are direct conceptual mirrors of `Task.WhenAll` and `Task.WhenAny`. A C# developer will instantly understand what these do.
 
-To identify the type of operation in a diagnostic event, we use a `string` property (`IOperationEvent.OperationType`). To provide compile-time safety for built-in operations, we also provide a `public static class FlowOperationTypes` containing `const string` definitions. This is a standard .NET library pattern that provides the safety of an `enum` for known types and the extensibility of a `string` for user-defined custom operations.
+*   A purist approach might have offered a single, more powerful `Traverse` function. However, that would require users to understand concepts like Applicative Functors, creating a steep learning curve.
 
-### 5. Strongly-Typed IDs
+The design choice is to provide specific, named solutions to common problems rather than a single, generic tool that requires academic knowledge to use. 
 
-Instead of using primitive `string` types for flow and operation identifiers, we use dedicated `FlowId` and `OperationId` classes. This is a best practice that:
+This principle of pragmatism guides the entire API design.
+
+# 2. `FlowExecutionOptions`: Decoupling Execution from Declaration
+
+All parameters that control a specific execution run (the "how-to-run" instructions) are contained within the `FlowExecutionOptions` object. 
+
+This includes the `CancellationToken` and the `IFlowExecutionObserver`. 
+
+This approach keeps the `FlowEngine.ExecuteAsync` signature stable and makes the API extensible, as new execution-time options can be added without breaking changes.
+
+# 3. The Observer Pattern for Diagnostics
+
+To provide visibility into the engine's execution, Flow is designed with a decoupled observer pattern rather than baking diagnostics directly in.
+
+*   **`IFlowExecutionObserver`:** This interface defines a contract for observing the engine's lifecycle. 
+
+_It is designed to be implemented by users to bridge `Flow` events to their chosen diagnostic or logging framework._
+
+*   **Multi-Method Interface:** The interface uses specific, discoverable methods (`OnOperationStarted`, `OnFlowSucceeded`, etc.) with default implementations. 
+
+_This provides the best of both worlds: it's easy for users to implement (they only override what they need), and it's extensible for the library (new methods can be added without breaking existing implementations)._
+
+*   **Interface-Based Events:** The events passed to the observer are defined by a hierarchy of interfaces (`IFlowEvent`, `IOperationEvent`, etc.). 
+
+_This allows for flexible, type-safe pattern matching in observer implementations while decoupling the observer from the concrete event implementation classes._
+
+# 4. Extensible Enumerations: The `FlowOperationTypes` Pattern
+
+To identify the type of operation in a diagnostic event, Flow uses a `string` property (`IOperationEvent.OperationType`).
+
+To provide compile-time safety for built-in operations, Flow additionally provides a `public static class FlowOperationTypes` containing `const string` definitions. 
+
+This is a standard .NET library pattern that provides the safety of an `enum` for known types and the extensibility of a `string` for user-defined custom operations.
+
+# 5. Strongly-Typed IDs
+
+Instead of using primitive `string` types for flow and operation identifiers, Flow uses dedicated `FlowId` and `OperationId` classes. 
+
+This is a best practice that:
 *   Improves type safety throughout the API.
 *   Encapsulates the ID generation logic (`FlowId.Generate()`).
 *   Makes the code more self-documenting.
 
-### 6. The `Failure` Model
+# 6. The `Failure` Model
 
-A `Failure<T>` in the `Outcome<T>` model always contains an `Exception`. This was a deliberate design choice to align with standard .NET idioms. "Business-level" failures (e.g., validation errors) should be modeled as a type of `Success<T>` (e.g., `Success<ValidationResult>`), while the `Failure` path is reserved for true, exceptional circumstances that disrupt the normal flow of a computation.
+A `Failure<T>` in the `Outcome<T>` model always contains an `Exception`. 
 
-### 7. Resource Management Patterns
+This was a deliberate design choice to align with standard .NET idioms. 
+
+"Business-level" failures (e.g., validation errors) should be modeled as a type of `Success<T>` (e.g., `Success<ValidationResult>`), while the `Failure` path is reserved for true, exceptional circumstances that disrupt the normal flow of a computation.
+
+# 7. Resource Management Patterns
 
 The Flow library provides a single, clear pattern for managing resources.
 
