@@ -225,20 +225,26 @@ You then compose operational concerns around it **where they're needed, not wher
 
 Your journey continues here. Use this learning path to explore everything Flow has to offer.
 
-1.  **Start Here → [The Core Toolkit](./docs/TheCoreToolkit.md)**
-    A friendly introduction to the main operators you'll be using to build your own Flows. This is the perfect next step to solidify your understanding.
+1.  **Start Here → [The Core Operators](./docs/CoreOperators.md)**
+    
+A friendly introduction to the foundational primitives you'll be using to build your own Flows.
 
-2.  **See More → [More Examples](./docs/MoreExamples.md)**
-    Ready for more? This document contains a collection of snippets for more advanced scenarios and operators.
+2.  **See More → [Practical Recipes](./docs/PracticalRecipes.md)**
 
-3.  **Go Pro → [Custom Behaviours](./docs/CustomBehaviours.md)**
-    Ready to build your own operators? Learn how to extend `Flow` with custom, reusable behaviours.
+Ready for more? This document contains a collection of snippets for more advanced scenarios.
 
-4.  **The "Why" → [Design Rationale](./docs/DesignRationale.md)**
-    Curious about the principles behind the design? This section explains the core architectural decisions that shape the library.
+3.  **Go Pro → [Behaviours](./docs/Behaviours.md)**
+    
+Ready to explore further? Learn how to extend your Flow with custom, reusable behaviours.
+
+4.   **The "Why" → [Design Rationale](./docs/DesignRationale.md)**
+     
+Curious about the principles behind the design? This section explains the core architectural decisions that shape the library.
 
 5.  **The Blueprint → [API Blueprint](./docs/ApiBlueprint.cs)**
-    For those who want to see the entire public API surface at a glance. This is your high-level map of all the available tools.
+    
+For those who want to see the entire public API surface at a glance. This is your high-level map of all the available tools.
 
 6.  **For FP Fans (λ) → [Functional Parallels](./docs/FunctionalParallels.md)**
-    If you speak monad, this is your decoder ring. See how Flow concepts map to traditional FP patterns.
+    
+If you speak monad, this is your decoder ring. See how Flow concepts map to traditional FP patterns.
