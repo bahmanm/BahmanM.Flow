@@ -223,28 +223,27 @@ You then compose operational concerns around it **where they're needed, not wher
 
 # 🧭 Intrigued!? Here's Your Learning Path!️
 
-Your journey continues here. Use this learning path to explore everything Flow has to offer.
+### Get Started Now (The 5-Minute Guide)
 
 1.  **Start Here → [The Core Operators](./docs/CoreOperators.md)**
-    
-A friendly introduction to the foundational primitives you'll be using to build your own Flows.
+
+    A friendly introduction to the foundational primitives you'll be using to build your own Flows.
 
 2.  **See More → [Practical Recipes](./docs/PracticalRecipes.md)**
 
-Ready for more? This document contains a collection of snippets for more advanced scenarios.
+    Ready for more? This document contains a collection of snippets for more advanced scenarios.
 
-3.  **Go Pro → [Behaviours](./docs/Behaviours.md)**
-    
-Ready to explore further? Learn how to extend your Flow with custom, reusable behaviours.
+### Deeper Dive (For the Curious)
 
-4.   **The "Why" → [Design Rationale](./docs/DesignRationale.md)**
-     
-Curious about the principles behind the design? This section explains the core architectural decisions that shape the library.
+1.  **Go Pro → [Behaviours](./docs/Behaviours.md)**
 
-5.  **The Blueprint → [API Blueprint](./docs/ApiBlueprint.cs)**
-    
-For those who want to see the entire public API surface at a glance. This is your high-level map of all the available tools.
+    Ready to explore further? Learn how to extend your Flow with custom, reusable behaviours.
 
-6.  **For FP Fans (λ) → [Functional Parallels](./docs/FunctionalParallels.md)**
-    
-If you speak monad, this is your decoder ring. See how Flow concepts map to traditional FP patterns.
+
+### Reference Material
+
+1.  **[The "Why" → Design Rationale](./docs/DesignRationale.md)**: Curious about the principles behind the design? 
+
+    This section explains the core architectural decisions that shape the library.
+
+2.  **[API Blueprint](./docs/ApiBlueprint.cs):** A high-level map of the entire public API surface.

@@ -18,7 +18,7 @@ This separation ensures the business logic declared in a `Flow` remains pure and
 
 ### 1a. The Philosophy: Pragmatism over Purity
 
-While Flow is heavily inspired by functional programming concepts (see [Functional Parallels](./FunctionalParallels.md)), it is not a strict FP framework. 
+While Flow is heavily inspired by functional programming concepts, it is not a strict FP framework. 
 
 The primary goal is to provide an intuitive, discoverable, and productive API for the typical C# developer.
 
@@ -33,6 +33,8 @@ A good example of this is the approach to concurrency:
 The design choice is to provide specific, named solutions to common problems rather than a single, generic tool that requires academic knowledge to use. 
 
 This principle of pragmatism guides the entire API design.
+
+(For those interested, a more detailed mapping of Flow concepts to their functional counterparts can be found in [Notes for FP Developers](./ForFPDevelopers.md).)
 
 # 2. `FlowExecutionOptions`: Decoupling Execution from Declaration
 
