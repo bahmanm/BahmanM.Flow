@@ -1,3 +1,5 @@
+using Xunit;
+
 namespace BahmanM.Flow.Tests;
 
 public class FlowExecutionTests
@@ -13,5 +15,19 @@ public class FlowExecutionTests
 
         // Assert
         Assert.Equal(new Success<int>(123), outcome);
+    }
+
+    [Fact]
+    public void Execute_WithFailedFlow_ShouldReturnFailureOutcome()
+    {
+        // Arrange
+        var exception = new InvalidOperationException("Boom!");
+        var failedFlow = Flow.Fail<int>(exception);
+
+        // Act
+        var outcome = FlowEngine.Execute(failedFlow);
+
+        // Assert
+        Assert.Equal(new Failure<int>(exception), outcome);
     }
 }

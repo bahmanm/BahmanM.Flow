@@ -7,6 +7,7 @@ public static class FlowEngine
         return flow switch
         {
             Flow.SucceededFlow<T> successFlow => new Success<T>(successFlow.Value),
+            Flow.FailedFlow<T> failedFlow => new Failure<T>(failedFlow.Exception),
             _ => throw new NotSupportedException($"Unsupported flow type: {flow.GetType().Name}")
         };
     }
