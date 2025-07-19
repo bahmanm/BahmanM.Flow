@@ -14,6 +14,8 @@ The central architectural pattern is a strict separation of concerns:
 
 *   **The `Do` Operators are Transparent:** The `DoOnSuccess` and `DoOnFailure` operators are an exception to the "return new instance" rule. They are designed for pure side effects and are intended to be completely transparent to the flow's structure.
 
+*   **Execution Starts from the End:** When `FlowEngine.ExecuteAsync` is called on an `IFlow<T>` instance, it executes the *entire chain* of operations, not just the final one. The engine first walks backwards from the provided flow through its `Upstream` properties to find the original source, and then executes the entire sequence. This ensures that the result of a flow is always complete and predictable, regardless of which link in the chain you hold a reference to.
+
 This separation ensures the business logic declared in a `Flow` remains pure and testable, while the complexities of execution are handled by the engine.
 
 ### 1a. The Philosophy: Pragmatism over Purity
