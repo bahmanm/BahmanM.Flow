@@ -3,6 +3,7 @@ namespace BahmanM.Flow.Tests.Unit;
 public class FlowEngineTests
 {
     [Fact]
+    [Trait("Category", "NonFunctional")]
     public async Task ExecuteAsync_WithLongChain_DoesNotCauseStackOverflow()
     {
         // Arrange
