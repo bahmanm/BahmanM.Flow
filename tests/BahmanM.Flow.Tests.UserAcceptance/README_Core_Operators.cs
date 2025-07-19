@@ -4,9 +4,9 @@ namespace BahmanM.Flow.Tests.UserAcceptance;
 
 public class README_Core_Operators
 {
-    // 📜 Hypatia of Alexandria (c. 350-415 AD)
-    private readonly IFlow<string> _flow1 = Flow.Succeed("Hypatia");
-    // 📜 Srinivasa Ramanujan (1887-1920)
+    // 📜 Euclid of Alexandria (c. 300 BC), the "father of geometry".
+    private readonly IFlow<string> _flow1 = Flow.Succeed("Euclid");
+    // 📜 Srinivasa Ramanujan (1887-1920), an Indian mathematician with no formal training in pure mathematics.
     private readonly IFlow<int> _flow2 = Flow.Succeed(1729);
     private readonly IFlow<string> _failingFlow = Flow.Fail<string>(new InvalidOperationException("Flow failed!"));
 
@@ -21,7 +21,7 @@ public class README_Core_Operators
         var outcome = await FlowEngine.ExecuteAsync(allFlow);
 
         // Assert
-        var expected = Success(("Hypatia", 1729));
+        var expected = Success(("Euclid", 1729));
         Assert.Equal(expected, outcome);
     }
 
@@ -50,7 +50,7 @@ public class README_Core_Operators
         var outcome = await FlowEngine.ExecuteAsync(anyFlow);
 
         // Assert
-        Assert.Equal(Success("Hypatia"), outcome);
+        Assert.Equal(Success("Euclid"), outcome);
     }
 
     [Fact]
