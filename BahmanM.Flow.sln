@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BahmanM.Flow", "src\BahmanM
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{32D23A3A-A013-4D7C-83AA-3185C18B119E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BahmanM.Flow.Tests", "tests\BahmanM.Flow.Tests\BahmanM.Flow.Tests.csproj", "{0737C3D8-D97F-4E6E-B777-20BE4EFF0D6B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BahmanM.Flow.Tests.Unit", "tests\BahmanM.Flow.Tests.Unit\BahmanM.Flow.Tests.Unit.csproj", "{0737C3D8-D97F-4E6E-B777-20BE4EFF0D6B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
