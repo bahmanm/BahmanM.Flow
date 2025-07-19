@@ -408,3 +408,6 @@ FodyWeavers.xsd
 .genie/
 GEMINI.md
 .env
+
+# MacOS Garbage
+.DS_Store
