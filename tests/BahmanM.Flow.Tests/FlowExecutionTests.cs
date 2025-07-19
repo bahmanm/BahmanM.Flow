@@ -30,4 +30,17 @@ public class FlowExecutionTests
         // Assert
         Assert.Equal(new Failure<int>(exception), outcome);
     }
+
+    [Fact]
+    public void Execute_WithSuccessfulCreateOperation_ShouldReturnSuccessOutcome()
+    {
+        // Arrange
+        var createFlow = Flow.Create(() => 123);
+
+        // Act
+        var outcome = FlowEngine.Execute(createFlow);
+
+        // Assert
+        Assert.Equal(new Success<int>(123), outcome);
+    }
 }

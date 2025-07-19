@@ -6,7 +6,11 @@ public static class Flow
 
     public static IFlow<T> Fail<T>(Exception exception) => new FailedFlow<T>(exception);
 
+    public static IFlow<T> Create<T>(Func<T> operation) => new CreateFlow<T>(operation);
+
     internal sealed record SucceededFlow<T>(T Value) : IFlow<T>;
 
     internal sealed record FailedFlow<T>(Exception Exception) : IFlow<T>;
+
+    internal sealed record CreateFlow<T>(Func<T> Operation) : IFlow<T>;
 }
