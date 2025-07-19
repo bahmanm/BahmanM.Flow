@@ -1,13 +1,18 @@
 namespace BahmanM.Flow;
 
+// The FlowEngine is the interpreter that executes a flow. It is implemented using the Trampoline pattern
+// to prevent stack overflow exceptions when executing deeply nested flows.
+// See: https://en.wikipedia.org/wiki/Trampoline_(computing)
 public static class FlowEngine
 {
+    // This method is intentionally imperative and uses `break` to achieve stack safety.
+    // A recursive approach would be more declarative but would cause a StackOverflowException on long chains
+    // in languages without tail-call optimization. This is the core of the Trampoline pattern.
     public static async Task<Outcome<T>> ExecuteAsync<T>(IFlow<T> flow)
     {
         var continuations = new Stack<object>();
         var currentFlow = flow;
-
-        // 1. Deconstruct the flow into a source and a stack of continuations
+        
         while (true)
         {
             switch (currentFlow)
@@ -20,15 +25,12 @@ public static class FlowEngine
                     continuations.Push(asyncDoOnSuccess.AsyncAction);
                     currentFlow = asyncDoOnSuccess.Upstream;
                     continue;
-                // Other operators will be added here in the future
             }
             break;
         }
-
-        // 2. Execute the source flow to get the initial outcome
+        
         var outcome = await ExecuteSourceFlow(currentFlow);
-
-        // 3. Execute the continuations iteratively
+        
         while (continuations.Count > 0)
         {
             if (outcome is Failure<T>)
@@ -71,7 +73,6 @@ public static class FlowEngine
                     await asyncAction(value);
                     break;
                 default:
-                    // This case will be expanded for other operators like Select, Chain etc.
                     throw new NotSupportedException($"Unsupported continuation type: {continuation.GetType().Name}");
             }
             return Outcome.Success(value);

@@ -6,7 +6,7 @@ namespace BahmanM.Flow.Tests.Unit;
 public class DoOnSuccessTests
 {
     [Fact]
-    public async Task DoOnSuccess_WhenFlowSucceeds_CallsActionAndReturnsOriginalSuccess()
+    public async Task WhenFlowSucceeds_CallsActionAndReturnsOriginalSuccess()
     {
         // Arrange
         var successValue = 123;
@@ -28,7 +28,7 @@ public class DoOnSuccessTests
     }
 
     [Fact]
-    public async Task DoOnSuccess_WhenFlowFails_DoesNotCallActionAndReturnsOriginalFailure()
+    public async Task WhenFlowFails_DoesNotCallActionAndReturnsOriginalFailure()
     {
         // Arrange
         var exception = new InvalidOperationException("Test Failure");
@@ -46,7 +46,7 @@ public class DoOnSuccessTests
     }
 
     [Fact]
-    public async Task DoOnSuccess_WhenActionThrows_ReturnsFailure()
+    public async Task WhenActionThrows_ReturnsFailure()
     {
         // Arrange
         var successValue = 123;
@@ -63,7 +63,7 @@ public class DoOnSuccessTests
     }
     
     [Fact]
-    public async Task AsyncDoOnSuccess_WhenFlowSucceeds_CallsActionAndReturnsOriginalSuccess()
+    public async Task WhenFlowSucceeds_CallsAsyncActionAndReturnsOriginalSuccess()
     {
         // Arrange
         var successValue = 123;
@@ -86,7 +86,7 @@ public class DoOnSuccessTests
     }
 
     [Fact]
-    public async Task AsyncDoOnSuccess_WhenFlowFails_DoesNotCallActionAndReturnsOriginalFailure()
+    public async Task WhenFlowFails_DoesNotCallAsyncActionAndReturnsOriginalFailure()
     {
         // Arrange
         var exception = new InvalidOperationException("Test Failure");
@@ -108,7 +108,7 @@ public class DoOnSuccessTests
     }
 
     [Fact]
-    public async Task AsyncDoOnSuccess_WhenActionThrows_ReturnsFailure()
+    public async Task WhenAsyncActionThrows_ReturnsFailure()
     {
         // Arrange
         var successValue = 123;
