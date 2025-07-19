@@ -43,4 +43,18 @@ public class FlowExecutionTests
         // Assert
         Assert.Equal(new Success<int>(123), outcome);
     }
+
+    [Fact]
+    public void Execute_WithFailingCreateOperation_ShouldReturnFailureOutcome()
+    {
+        // Arrange
+        var exception = new InvalidOperationException("Boom!");
+        var createFlow = Flow.Create<int>(() => throw exception);
+
+        // Act
+        var outcome = FlowEngine.Execute(createFlow);
+
+        // Assert
+        Assert.Equal(new Failure<int>(exception), outcome);
+    }
 }
