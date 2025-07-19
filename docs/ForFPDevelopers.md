@@ -8,7 +8,9 @@ This section provides a brief mapping from Flows concepts to their traditional F
 
 *   **`Outcome<T>` as `Either<Exception, T>`:** The `Outcome<T>` type, which is the result of executing a Flows, is a classic sum type representing one of two possible outcomes. It is directly analogous to the `Either` monad, where `Success<T>` corresponds to `Right<T>` and `Failure<T>` corresponds to `Left<Exception>`.
 
-*   **`Flow.Succeed()` as `return` or `pure`:** This is the monadic unit function. It takes a simple value and lifts it into the monadic context (Flows).
+*   **`Flow.Succeed()` and `Flow.Of()` as `return` or `pure`:** These are the monadic unit functions. They take a simple value and lift it into the monadic context (Flows). `Flow.Succeed()` is an alias for `Flow.Of()`.
+
+*   **`Flow.Create()` as `liftF` or `IO.delay`**: This function captures an effectful computation (e.g., an I/O operation or a function that might throw an exception) and defers its execution. It's analogous to `liftF` in a Free monad context or `IO.delay`/`IO.suspend` in libraries like Cats Effect. It allows you to bring impure actions into the `Flow` context safely.
 
 *   **`.Chain()` as `bind` or `flatMap`:** This is the quintessential monadic binding function (`>>=`). It takes a value from a monadic context, applies a function that returns a new monad (`A -> M<B>`), and flattens the result (`M<B>`). This is the foundation of sequencing in Flows.
 
