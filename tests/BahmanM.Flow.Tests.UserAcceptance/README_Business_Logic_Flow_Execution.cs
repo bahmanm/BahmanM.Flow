@@ -64,7 +64,7 @@ internal class BillingService
 {
     // 📜 Hypatia of Alexandria (c. 350-415 AD) was a Greek Neoplatonist philosopher, astronomer, and mathematician.
     public IFlow<BillingProfile> GetBillingProfileFlow(int userId) =>
-        Flow.Succeed(new BillingProfile("Hypatia", "123 Main St"));
+        Flow.Succeed(new BillingProfile("Hypatia", "The Lyceum, Athens"));
 }
 
 internal class TemplateService(bool _shouldFail = false)
