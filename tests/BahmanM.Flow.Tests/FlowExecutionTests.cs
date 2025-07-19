@@ -14,7 +14,7 @@ public class FlowExecutionTests
         var outcome = FlowEngine.Execute(successfulFlow);
 
         // Assert
-        Assert.Equal(new Success<int>(123), outcome);
+        Assert.Equal(Outcome.Success(123), outcome);
     }
 
     [Fact]
@@ -28,7 +28,7 @@ public class FlowExecutionTests
         var outcome = FlowEngine.Execute(failedFlow);
 
         // Assert
-        Assert.Equal(new Failure<int>(exception), outcome);
+        Assert.Equal(Outcome.Failure<int>(exception), outcome);
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class FlowExecutionTests
         var outcome = FlowEngine.Execute(createFlow);
 
         // Assert
-        Assert.Equal(new Success<int>(123), outcome);
+        Assert.Equal(Outcome.Success(123), outcome);
     }
 
     [Fact]
@@ -55,6 +55,6 @@ public class FlowExecutionTests
         var outcome = FlowEngine.Execute(createFlow);
 
         // Assert
-        Assert.Equal(new Failure<int>(exception), outcome);
+        Assert.Equal(Outcome.Failure<int>(exception), outcome);
     }
 }
