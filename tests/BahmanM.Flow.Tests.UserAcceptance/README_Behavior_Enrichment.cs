@@ -37,6 +37,23 @@ public class README_Behavior_Enrichment
         Assert.IsType<Failure<string>>(outcome);
         Assert.Equal(4, flakyService.CallCount); // 1 initial call + 3 retries
     }
+
+    [Fact]
+    [Trait("Category", "Acceptance")]
+    public async Task Should_Fail_With_Timeout_When_Operation_Is_Too_Slow()
+    {
+        // Arrange
+        var slowService = new SlowService(delay: TimeSpan.FromMilliseconds(100));
+        var timeoutFlow = slowService.GetValueFlow()
+            .WithTimeout(TimeSpan.FromMilliseconds(20));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(timeoutFlow);
+
+        // Assert
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Value);
+    }
 }
 
 #region Mocks and Stubs
@@ -54,6 +71,18 @@ internal class FlakyService(int succeedOnAttempt)
             {
                 throw new InvalidOperationException($"Failed on attempt {CallCount}");
             }
+            return "Success!";
+        });
+    }
+}
+
+internal class SlowService(TimeSpan delay)
+{
+    public IFlow<string> GetValueFlow()
+    {
+        return Flow.Create(async () =>
+        {
+            await Task.Delay(delay);
             return "Success!";
         });
     }
