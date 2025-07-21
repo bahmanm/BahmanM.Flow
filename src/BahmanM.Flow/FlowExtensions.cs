@@ -16,4 +16,7 @@ public static class FlowExtensions
 
     public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, IFlow<TOut>> operation) =>
         new ChainNode<TIn, TOut>(flow, operation);
+
+    public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, Task<IFlow<TOut>>> asyncOperation) =>
+        new AsyncChainNode<TIn, TOut>(flow, asyncOperation);
 }
