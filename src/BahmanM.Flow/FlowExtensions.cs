@@ -6,5 +6,11 @@ public static class FlowExtensions
         new DoOnSuccessNode<T>(flow, action);
 
     public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Func<T, Task> asyncAction) =>
-        new AsyncDoOnSuccessFlow<T>(flow, asyncAction);
+        new AsyncDoOnSuccessNode<T>(flow, asyncAction);
+
+    public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, TOut> operation) =>
+        new SelectNode<TIn, TOut>(flow, operation);
+
+    public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, Task<TOut>> asyncOperation) =>
+        new AsyncSelectNode<TIn, TOut>(flow, asyncOperation);
 }
