@@ -1,72 +1,114 @@
-using static BahmanM.Flow.Outcome;
-
 namespace BahmanM.Flow;
 
-public static class FlowEngine
+public class FlowEngine
 {
+    #region Public API
+
     public static Task<Outcome<T>> ExecuteAsync<T>(IFlow<T> flow)
     {
-        return flow switch
+        var node = (IFlowNode<T>)flow;
+        return node.ExecuteWith(new FlowEngine());
+    }
+
+    #endregion
+
+    #region Constructors
+
+    private FlowEngine() { }
+
+    #endregion
+
+    #region Visitor Methods
+
+    internal Task<Outcome<T>> Execute<T>(SucceededNode<T> node) =>
+        Task.FromResult(Outcome.Success(node.Value));
+
+    internal Task<Outcome<T>> Execute<T>(FailedNode<T> node) =>
+        Task.FromResult(Outcome.Failure<T>(node.Exception));
+
+    internal Task<Outcome<T>> Execute<T>(CreateNode<T> node) =>
+        TryOperation(node.Operation);
+
+    internal Task<Outcome<T>> Execute<T>(AsyncCreateNode<T> node) =>
+        TryOperation(node.Operation);
+
+    internal async Task<Outcome<T>> Execute<T>(DoOnSuccessNode<T> node)
+    {
+        var upstreamOutcome = await ((IFlowNode<T>)node.Upstream).ExecuteWith(this);
+
+        if (upstreamOutcome is Success<T> success)
         {
-            SucceededFlow<T> s => Task.FromResult(Success(s.Value)),
-            FailedFlow<T> f => Task.FromResult(Failure<T>(f.Exception)),
-            CreateFlow<T> c => TryOperation(c.Operation),
-            AsyncCreateFlow<T> ac => TryOperation(ac.Operation),
-            DoOnSuccessFlow<T> dos => HandleDoOnSuccess(dos.Upstream, dos.Action),
-            AsyncDoOnSuccessFlow<T> ados => HandleDoOnSuccess(ados.Upstream, ados.AsyncAction),
-            _ => throw new NotSupportedException($"Unsupported source flow type: {flow.GetType().Name}")
+            try
+            {
+                node.Action(success.Value);
+                return upstreamOutcome;
+            }
+            catch (Exception ex)
+            {
+                return Outcome.Failure<T>(ex);
+            }
+        }
+
+        return upstreamOutcome;
+    }
+
+    internal async Task<Outcome<T>> Execute<T>(AsyncDoOnSuccessNode<T> node)
+    {
+        var upstreamOutcome = await ((IFlowNode<T>)node.Upstream).ExecuteWith(this);
+
+        if (upstreamOutcome is Success<T> success)
+        {
+            try
+            {
+                await node.AsyncAction(success.Value);
+                return upstreamOutcome;
+            }
+            catch (Exception ex)
+            {
+                return Outcome.Failure<T>(ex);
+            }
+        }
+
+        return upstreamOutcome;
+    }
+
+    internal async Task<Outcome<TOut>> Execute<TIn, TOut>(SelectNode<TIn, TOut> node)
+    {
+        var upstreamOutcome = await ((IFlowNode<TIn>)node.Upstream).ExecuteWith(this);
+
+        return upstreamOutcome switch
+        {
+            Success<TIn> s => await TryOperation(() => node.Operation(s.Value)),
+            Failure<TIn> f => Outcome.Failure<TOut>(f.Exception),
+            _ => throw new NotSupportedException($"Unsupported outcome type: {upstreamOutcome.GetType().Name}")
         };
     }
 
-    private static async Task<Outcome<T>> HandleDoOnSuccess<T>(IFlow<T> upstream, Action<T> action)
+    internal async Task<Outcome<TOut>> Execute<TIn, TOut>(AsyncSelectNode<TIn, TOut> node)
     {
-        var upstreamOutcome = await ExecuteAsync(upstream);
+        var upstreamOutcome = await ((IFlowNode<TIn>)node.Upstream).ExecuteWith(this);
 
-        if (upstreamOutcome is Success<T> success)
+        return upstreamOutcome switch
         {
-            try
-            {
-                action(success.Value);
-                return upstreamOutcome;
-            }
-            catch (Exception ex)
-            {
-                return Failure<T>(ex);
-            }
-        }
-
-        return upstreamOutcome;
+            Success<TIn> s => await TryOperation(async () => await node.Operation(s.Value)),
+            Failure<TIn> f => Outcome.Failure<TOut>(f.Exception),
+            _ => throw new NotSupportedException($"Unsupported outcome type: {upstreamOutcome.GetType().Name}")
+        };
     }
 
-    private static async Task<Outcome<T>> HandleDoOnSuccess<T>(IFlow<T> upstream, Func<T, Task> asyncAction)
-    {
-        var upstreamOutcome = await ExecuteAsync(upstream);
+    #endregion
 
-        if (upstreamOutcome is Success<T> success)
-        {
-            try
-            {
-                await asyncAction(success.Value);
-                return upstreamOutcome;
-            }
-            catch (Exception ex)
-            {
-                return Failure<T>(ex);
-            }
-        }
-
-        return upstreamOutcome;
-    }
+    #region Private Helpers
 
     private static Task<Outcome<T>> TryOperation<T>(Func<T> operation)
     {
         try
         {
-            return Task.FromResult(Success(operation()));
+            return Task.FromResult(Outcome.Success(operation()));
         }
         catch (Exception ex)
         {
-            return Task.FromResult(Failure<T>(ex));
+            return Task.FromResult(Outcome.Failure<T>(ex));
         }
     }
 
@@ -74,11 +116,13 @@ public static class FlowEngine
     {
         try
         {
-            return Success(await operation());
+            return Outcome.Success(await operation());
         }
         catch (Exception ex)
         {
-            return Failure<T>(ex);
+            return Outcome.Failure<T>(ex);
         }
     }
+
+    #endregion
 }

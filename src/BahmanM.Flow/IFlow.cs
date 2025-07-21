@@ -1,5 +1,5 @@
 namespace BahmanM.Flow;
 
-public interface IFlow<out T>
+public interface IFlow<T>
 {
 }
