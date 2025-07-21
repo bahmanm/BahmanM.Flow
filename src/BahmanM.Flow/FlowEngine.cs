@@ -37,7 +37,7 @@ public class FlowEngine
     {
         var upstreamOutcome = await ((IVisitableFlow<T>)flow.Upstream).ExecuteWith(this);
 
-        if (upstreamOutcome is Success<T> success)
+        return upstreamOutcome switch
         {
             try
             {
