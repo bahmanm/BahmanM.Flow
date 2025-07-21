@@ -44,4 +44,28 @@ internal sealed record AsyncDoOnSuccessFlow<T>(IFlow<T> Upstream, Func<T, Task> 
 
 #endregion
 
+#region Select Nodes
+
+internal sealed record SelectNode<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, TOut> Operation) : IFlowNode<TOut>
+{
+    public Task<Outcome<TOut>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+}
+
+internal sealed record AsyncSelectNode<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, Task<TOut>> Operation) : IFlowNode<TOut>
+{
+    public Task<Outcome<TOut>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+}
+
+
+#endregion
+
+#region Chain Nodes
+
+internal sealed record ChainNode<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, IFlow<TOut>> Operation) : IFlowNode<TOut>
+{
+    public Task<Outcome<TOut>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+}
+
+#endregion
+
 #endregion
