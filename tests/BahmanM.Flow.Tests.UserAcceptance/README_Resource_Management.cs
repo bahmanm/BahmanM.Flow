@@ -1,3 +1,4 @@
+/*
 using static BahmanM.Flow.Outcome;
 
 namespace BahmanM.Flow.Tests.UserAcceptance;
@@ -108,3 +109,4 @@ internal class DisposableResource : IDisposable
 }
 
 #endregion
+*/

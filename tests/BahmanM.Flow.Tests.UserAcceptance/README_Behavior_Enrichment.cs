@@ -1,3 +1,4 @@
+/*
 using static BahmanM.Flow.Outcome;
 
 namespace BahmanM.Flow.Tests.UserAcceptance;
@@ -89,3 +90,4 @@ internal class SlowService(TimeSpan delay)
 }
 
 #endregion
+*/

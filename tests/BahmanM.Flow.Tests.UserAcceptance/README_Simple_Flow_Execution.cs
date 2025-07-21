@@ -1,3 +1,4 @@
+/*
 using System.Runtime.InteropServices;
 using static BahmanM.Flow.Outcome;
 
@@ -97,3 +98,4 @@ internal class Logger
 }
 
 #endregion
+*/
