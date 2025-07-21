@@ -44,18 +44,4 @@ internal sealed record AsyncDoOnSuccessFlow<T>(IFlow<T> Upstream, Func<T, Task> 
 
 #endregion
 
-#region Select
-
-internal sealed record SelectFlow<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, TOut> Operation) : IVisitableFlow<TOut>
-{
-    public Task<Outcome<TOut>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
-}
-
-internal sealed record AsyncSelectFlow<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, Task<TOut>> Operation) : IVisitableFlow<TOut>
-{
-    public Task<Outcome<TOut>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
-}
-
-#endregion
-
 #endregion

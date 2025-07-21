@@ -73,30 +73,6 @@ public class FlowEngine
         return upstreamOutcome;
     }
 
-    internal async Task<Outcome<TOut>> Execute<TIn, TOut>(SelectFlow<TIn, TOut> flow)
-    {
-        var upstreamOutcome = await ((IVisitableFlow<TIn>)flow.Upstream).ExecuteWith(this);
-
-        return upstreamOutcome switch
-        {
-            Success<TIn> s => await TryOperation(() => flow.Operation(s.Value)),
-            Failure<TIn> f => Failure<TOut>(f.Exception),
-            _ => throw new NotSupportedException($"Unsupported outcome type: {upstreamOutcome.GetType().Name}")
-        };
-    }
-
-    internal async Task<Outcome<TOut>> Execute<TIn, TOut>(AsyncSelectFlow<TIn, TOut> flow)
-    {
-        var upstreamOutcome = await ((IVisitableFlow<TIn>)flow.Upstream).ExecuteWith(this);
-
-        return upstreamOutcome switch
-        {
-            Success<TIn> s => await TryOperation(() => flow.Operation(s.Value)),
-            Failure<TIn> f => Failure<TOut>(f.Exception),
-            _ => throw new NotSupportedException($"Unsupported outcome type: {upstreamOutcome.GetType().Name}")
-        };
-    }
-
     #endregion
 
     #region Private Helpers
