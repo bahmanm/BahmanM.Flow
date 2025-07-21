@@ -106,8 +106,15 @@ public class FlowEngine
             return Outcome.Failure<TOut>(((Failure<TIn>)upstreamOutcome).Exception);
         }
 
-        var nextFlow = (IFlowNode<TOut>)node.Operation(success.Value);
-        return await nextFlow.ExecuteWith(this);
+        try
+        {
+            var nextFlow = (IFlowNode<TOut>)node.Operation(success.Value);
+            return await nextFlow.ExecuteWith(this);
+        }
+        catch (Exception ex)
+        {
+            return Outcome.Failure<TOut>(ex);
+        }
     }
 
     #endregion

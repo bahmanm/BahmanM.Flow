@@ -41,4 +41,19 @@ public class ChainTests
         Assert.False(chainExecuted);
         Assert.Equal(Failure<int>(exception), outcome);
     }
+
+    [Fact]
+    public async Task WhenChainFunctionThrows_ReturnsFailure()
+    {
+        // Arrange
+        var exception = new InvalidOperationException("Chain function failed!");
+        var initialFlow = Flow.Succeed(10);
+        var chainedFlow = initialFlow.Chain<int, int>(value => throw exception);
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(chainedFlow);
+
+        // Assert
+        Assert.Equal(Failure<int>(exception), outcome);
+    }
 }
