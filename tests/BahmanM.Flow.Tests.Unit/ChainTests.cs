@@ -74,4 +74,26 @@ public class ChainTests
         // Assert
         Assert.Equal(Success(20), outcome);
     }
+
+    [Fact]
+    public async Task AsyncChain_OnFailedFlow_DoesNotExecuteAndPropagatesFailure()
+    {
+        // Arrange
+        var exception = new Exception("Initial failure");
+        var initialFlow = Flow.Fail<int>(exception);
+        var chainExecuted = false;
+        var chainedFlow = initialFlow.Chain(async value =>
+        {
+            chainExecuted = true;
+            await Task.Delay(10);
+            return Flow.Succeed(value * 2);
+        });
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(chainedFlow);
+
+        // Assert
+        Assert.False(chainExecuted);
+        Assert.Equal(Failure<int>(exception), outcome);
+    }
 }
