@@ -1,66 +1,57 @@
 namespace BahmanM.Flow;
 
-#region Internal Contracts
-
-internal interface IFlowNode<T> : IFlow<T>
-{
-    Task<Outcome<T>> ExecuteWith(FlowEngine engine);
-}
-
-#endregion
-
 #region Internal Flow AST Nodes
 
-#region Source Nodes
+#region Source
 
-internal sealed record SucceededNode<T>(T Value) : IFlowNode<T>
+internal sealed record SucceededFlow<T>(T Value) : IVisitableFlow<T>
 {
     public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
 }
 
-internal sealed record FailedNode<T>(Exception Exception) : IFlowNode<T>
-{
-    public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
-}
-
-#endregion
-
-#region Create Nodes
-
-internal sealed record CreateNode<T>(Func<T> Operation) : IFlowNode<T>
-{
-    public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
-}
-
-internal sealed record AsyncCreateNode<T>(Func<Task<T>> Operation) : IFlowNode<T>
+internal sealed record FailedFlow<T>(Exception Exception) : IVisitableFlow<T>
 {
     public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
 }
 
 #endregion
 
-#region DoOnSuccess Nodes
+#region Create
 
-internal sealed record DoOnSuccessNode<T>(IFlow<T> Upstream, Action<T> Action) : IFlowNode<T>
+internal sealed record CreateFlow<T>(Func<T> Operation) : IVisitableFlow<T>
 {
     public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
 }
 
-internal sealed record AsyncDoOnSuccessNode<T>(IFlow<T> Upstream, Func<T, Task> AsyncAction) : IFlowNode<T>
+internal sealed record AsyncCreateFlow<T>(Func<Task<T>> Operation) : IVisitableFlow<T>
 {
     public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
 }
 
 #endregion
 
-#region Select Nodes
+#region DoOnSuccess
 
-internal sealed record SelectNode<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, TOut> Operation) : IFlowNode<TOut>
+internal sealed record DoOnSuccessFlow<T>(IFlow<T> Upstream, Action<T> Action) : IVisitableFlow<T>
+{
+    public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+}
+
+internal sealed record AsyncDoOnSuccessFlow<T>(IFlow<T> Upstream, Func<T, Task> AsyncAction) : IVisitableFlow<T>
+{
+    public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+}
+
+#endregion
+
+#region Select
+
+internal sealed record SelectFlow<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, TOut> Operation) : IVisitableFlow<TOut>
 {
     public Task<Outcome<TOut>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
 }
 
-internal sealed record AsyncSelectNode<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, Task<TOut>> Operation) : IFlowNode<TOut>
+internal sealed record AsyncSelectFlow<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, Task<TOut>> Operation) : IVisitableFlow<TOut>
 {
     public Task<Outcome<TOut>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
 }
