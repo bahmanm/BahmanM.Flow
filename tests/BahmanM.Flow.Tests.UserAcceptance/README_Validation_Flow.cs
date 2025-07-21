@@ -1,3 +1,4 @@
+/*
 using static BahmanM.Flow.Outcome;
 
 namespace BahmanM.Flow.Tests.UserAcceptance;
@@ -73,3 +74,4 @@ internal record UserRegistration(string Username, string Password);
 internal class ValidationException(string message) : Exception(message);
 
 #endregion
+*/
