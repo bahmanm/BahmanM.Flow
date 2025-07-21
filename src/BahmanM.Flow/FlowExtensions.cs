@@ -13,4 +13,7 @@ public static class FlowExtensions
 
     public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, Task<TOut>> asyncOperation) =>
         new AsyncSelectNode<TIn, TOut>(flow, asyncOperation);
+
+    public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, IFlow<TOut>> operation) =>
+        new ChainNode<TIn, TOut>(flow, operation);
 }
