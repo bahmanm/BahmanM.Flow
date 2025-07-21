@@ -132,7 +132,7 @@ namespace BahmanM.Flow.Behaviours.Retry
 //========================================================================================
 namespace BahmanM.Flow.Execution
 {
-    public static class FlowEngine
+    public class FlowEngine
     {
         public static Task<Outcome<T>> ExecuteAsync<T>(IFlow<T> flow, FlowExecutionOptions options = null);
     }

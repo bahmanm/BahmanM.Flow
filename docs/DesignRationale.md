@@ -6,19 +6,24 @@ This section documents the key architectural decisions that shape the Flow API, 
 
 The central architectural pattern is a strict separation of concerns:
 
-*   **`IFlow<T>` is the Recipe:** It is a purely declarative, **immutable** data structure representing the sequence of operations. It is an Abstract Syntax Tree (AST) that defines *what* to do, not *how* to do it.
+*   **`IFlow<T>` is the Recipe:** It is a purely declarative, **immutable** data structure representing a sequence of operations. It is an Abstract Syntax Tree (AST) that defines *what* to do, not *how* to do it. Each operation in a `Flow` (e.g., `SucceededFlow`, `SelectFlow`) is a node in this AST.
 
-*   **`FlowEngine` is the Chef:** It is the interpreter that knows how to execute an `IFlow<T>` AST. It is the single source of execution logic.
+*   **`FlowEngine` is the Chef:** It is the interpreter that executes the `IFlow<T>` AST. The engine uses the **Visitor pattern** to traverse the AST, executing each node in a type-safe manner. This provides compile-time safety, ensuring that every possible operation in our Flow "language" is handled by the engine.
 
-*   **Operators are Pure Functions on the Flow:** With the exception of the `Do` family of operators, all extension methods in `FlowExtensions` (e.g., `.Chain()`, `.Select()`, `.Recover()`) are themselves pure functions with respect to the `IFlow<T>` data structure. They take a flow as input and return a **new, decorated `IFlow<T>` instance**, never modifying the original. This guarantees that flow declarations are immutable, reusable, and safe to share.
+*   **Operators are Pure Functions:** All extension methods in `FlowExtensions` (e.g., `.Chain()`, `.Select()`) are pure functions. They take a flow as input and return a **new, decorated `IFlow<T>` instance**, never modifying the original. This guarantees that flow declarations are immutable, reusable, and safe to share.
 
-*   **The `Do` Operators are Transparent:** The `DoOnSuccess` and `DoOnFailure` operators are an exception to the "return new instance" rule. They are designed for pure side effects and are intended to be completely transparent to the flow's structure.
+### 1a. The Visitor Pattern in Detail
 
-*   **Execution Starts from the End:** When `FlowEngine.ExecuteAsync` is called on an `IFlow<T>` instance, it executes the *entire chain* of operations, not just the final one. The engine first walks backwards from the provided flow through its `Upstream` properties to find the original source, and then executes the entire sequence. This ensures that the result of a flow is always complete and predictable, regardless of which link in the chain you hold a reference to.
+To keep the public `IFlow<T>` interface lean, the Visitor pattern is implemented using an `internal` interface:
 
-This separation ensures the business logic declared in a `Flow` remains pure and testable, while the complexities of execution are handled by the engine.
+1.  **`public interface IFlow<T>`:** The public-facing interface, which remains a simple, clean marker.
+2.  **`internal interface IVisitableFlow<T>`:** An internal interface that adds an `ExecuteWith(FlowEngine engine)` method.
+3.  **Concrete Flow Types:** All internal AST nodes (e.g., `SucceededFlow<T>`) implement `IVisitableFlow<T>`.
+4.  **`FlowEngine` as the Visitor:** The `FlowEngine` is an instance class with overloaded `Execute(...)` methods for each concrete flow type.
 
-### 1a. The Philosophy: Pragmatism over Purity
+When `FlowEngine.ExecuteAsync` is called, it casts the public `IFlow<T>` to the internal `IVisitableFlow<T>` and begins the execution. This design provides the static, compile-time safety of the Visitor pattern without polluting the public API, at the cost of a single, controlled cast at the entry point.
+
+### 1b. The Philosophy: Pragmatism over Purity
 
 While Flow is heavily inspired by functional programming concepts, it is not a strict FP framework. 
 
@@ -74,7 +79,7 @@ This is a standard .NET library pattern that provides the safety of an `enum` fo
 
 Instead of using primitive `string` types for flow and operation identifiers, Flow uses dedicated `FlowId` and `OperationId` classes. 
 
-This is a best practice that:
+This is the best practice that:
 *   Improves type safety throughout the API.
 *   Encapsulates the ID generation logic (`FlowId.Generate()`).
 *   Makes the code more self-documenting.
