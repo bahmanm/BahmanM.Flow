@@ -73,4 +73,13 @@ internal sealed record AsyncChainNode<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, 
 
 #endregion
 
+#region Retry Nodes
+
+internal sealed record WithRetryNode<T>(IFlow<T> Upstream, int MaxAttempts) : IFlowNode<T>
+{
+    public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+}
+
+#endregion
+
 #endregion
