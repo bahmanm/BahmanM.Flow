@@ -8,9 +8,6 @@ internal class RetryStrategy : IBehaviourStrategy
 
     public RetryStrategy(int maxAttempts)
     {
-        /* FOR GENIE:
-         * Throwing from a constructor!? Use a factory method instead.
-         */
         if (maxAttempts <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(maxAttempts), "Max attempts must be a positive integer.");
@@ -22,7 +19,7 @@ internal class RetryStrategy : IBehaviourStrategy
     {
         Func<T> newOperation = () =>
         {
-            Exception lastException = null;
+            Exception lastException = null!;
             for (var i = 0; i < _maxAttempts; i++)
             {
                 try
@@ -34,24 +31,16 @@ internal class RetryStrategy : IBehaviourStrategy
                     lastException = ex;
                 }
             }
-            /** FOR GENIE:
-             * Should we throw a custom Flow exception here which *contains* lastException or maybe even
-             * the whole list of exceptions?
-             */
             throw lastException!;
         };
         return new CreateNode<T>(newOperation);
     }
 
-    /* FOR GENIE:
-     * We agreed that "retry" (and all other behaviours?) should be applied ONLY to the LAST node.
-     */
     public IFlow<T> ApplyTo<TIn, T>(ChainNode<TIn, T> node)
     {
-        // Recursively apply the same retry strategy to the *result* of the chain.
         Func<TIn, IFlow<T>> newOperation = (value) =>
-            node.Operation(value).Apply(this);
+            ((IFlowNode<T>)node.Operation(value)).Apply(this);
 
-        return new ChainNode<TIn, T>(node.Upstream, newOperation);
+        return node with { Operation = newOperation };
     }
 }
