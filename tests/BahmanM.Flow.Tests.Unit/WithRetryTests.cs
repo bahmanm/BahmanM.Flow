@@ -1,7 +1,3 @@
-using System;
-using System.Threading.Tasks;
-using BahmanM.Flow;
-using Xunit;
 using static BahmanM.Flow.Outcome;
 
 namespace BahmanM.Flow.Tests.Unit
@@ -114,6 +110,28 @@ namespace BahmanM.Flow.Tests.Unit
             // Assert
             Assert.Equal(3, attempts);
             Assert.Equal(Success(AlBiruni), outcome);
+        }
+
+        [Fact]
+        public async Task WithRetry_WhenAllAttemptsFail_ReturnsLastFailure()
+        {
+            // Arrange
+            var attempts = 0;
+            var lastException = new InvalidOperationException("Final failure");
+            var flakyFlow = Flow.Create((Func<string>)(() =>
+            {
+                attempts++;
+                throw (attempts == 3) ? lastException : new InvalidOperationException("Intermediate failure");
+            }));
+
+            var resilientFlow = flakyFlow.WithRetry(3);
+
+            // Act
+            var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
+
+            // Assert
+            Assert.Equal(3, attempts);
+            Assert.Equal(Failure<string>(lastException), outcome);
         }
     }
 }
