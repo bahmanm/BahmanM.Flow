@@ -137,11 +137,6 @@ public class FlowEngine
         }
     }
 
-    internal Task<Outcome<T>> Execute<T>(WithRetryNode<T> node)
-    {
-        return ((IFlowNode<T>)node.Upstream).ExecuteWith(this);
-    }
-
     #endregion
 
     #region Private Helpers
