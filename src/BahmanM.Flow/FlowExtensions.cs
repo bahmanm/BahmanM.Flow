@@ -20,6 +20,9 @@ public static class FlowExtensions
     public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, Task<IFlow<TOut>>> asyncOperation) =>
         new AsyncChainNode<TIn, TOut>(flow, asyncOperation);
 
-    public static IFlow<T> WithRetry<T>(this IFlow<T> flow, int maxAttempts) =>
-        new WithRetryNode<T>(flow, maxAttempts);
+    public static IFlow<T> WithRetry<T>(this IFlow<T> flow, int maxAttempts)
+    {
+        var strategy = new RetryStrategy(maxAttempts);
+        return ((IFlowNode<T>)flow).Apply(strategy);
+    }
 }
