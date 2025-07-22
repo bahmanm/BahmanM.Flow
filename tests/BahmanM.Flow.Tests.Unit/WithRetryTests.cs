@@ -89,5 +89,31 @@ namespace BahmanM.Flow.Tests.Unit
             Assert.Equal(3, flakyAttempts);
             Assert.Equal(Success("final value"), outcome);
         }
+
+        [Fact]
+        public async Task WithRetry_OnFlakyAsyncOperation_SucceedsAfterRetries()
+        {
+            // Arrange
+            var attempts = 0;
+            var flakyFlow = Flow.Create(async () =>
+            {
+                attempts++;
+                await Task.Delay(1);
+                if (attempts < 3)
+                {
+                    throw new InvalidOperationException("Service is not ready yet.");
+                }
+                return AlBiruni;
+            });
+
+            var resilientFlow = flakyFlow.WithRetry(3);
+
+            // Act
+            var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
+
+            // Assert
+            Assert.Equal(3, attempts);
+            Assert.Equal(Success(AlBiruni), outcome);
+        }
     }
 }

@@ -43,4 +43,25 @@ internal class RetryStrategy : IBehaviourStrategy
 
         return node with { Operation = newOperation };
     }
+
+    public IFlow<T> ApplyTo<T>(AsyncCreateNode<T> node)
+    {
+        Func<Task<T>> newOperation = async () =>
+        {
+            Exception lastException = null!;
+            for (var i = 0; i < _maxAttempts; i++)
+            {
+                try
+                {
+                    return await node.Operation();
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                }
+            }
+            throw lastException!;
+        };
+        return new AsyncCreateNode<T>(newOperation);
+    }
 }

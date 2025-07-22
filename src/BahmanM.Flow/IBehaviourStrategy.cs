@@ -6,6 +6,7 @@ internal interface IBehaviourStrategy
 {
     IFlow<T> ApplyTo<T>(CreateNode<T> node);
     IFlow<T> ApplyTo<TIn, T>(ChainNode<TIn, T> node);
+    IFlow<T> ApplyTo<T>(AsyncCreateNode<T> node);
 
     // TODO: Add overloads for async nodes
 
