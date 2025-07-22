@@ -13,7 +13,7 @@ namespace BahmanM.Flow.Tests.Unit
         // also distinguished himself as a historian, chronologist and linguist.
         private const string AlBiruni = "Al-Biruni";
 
-        [Fact(Skip = "Ideal API definition. This test will guide the implementation.")]
+        [Fact]
         public async Task WithRetry_OnFlakyOperation_SucceedsAfterRetries()
         {
             // Arrange
@@ -57,6 +57,37 @@ namespace BahmanM.Flow.Tests.Unit
             // Assert
             Assert.Equal(1, attempts);
             Assert.Equal(Success(AlBiruni), outcome);
+        }
+
+        [Fact]
+        public async Task WithRetry_DoesNotReExecuteUpstreamSideEffects()
+        {
+            // Arrange
+            var sideEffectCount = 0;
+            var flakyAttempts = 0;
+
+            var flowWithSideEffect = Flow.Succeed("start")
+                .DoOnSuccess(_ => sideEffectCount++);
+
+            var flakyFlow = flowWithSideEffect.Chain(_ => Flow.Create(() =>
+            {
+                flakyAttempts++;
+                if (flakyAttempts < 3)
+                {
+                    throw new InvalidOperationException("Flaky part failed.");
+                }
+                return "final value";
+            }));
+
+            var resilientFlow = flakyFlow.WithRetry(3);
+
+            // Act
+            var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
+
+            // Assert
+            Assert.Equal(1, sideEffectCount);
+            Assert.Equal(3, flakyAttempts);
+            Assert.Equal(Success("final value"), outcome);
         }
     }
 }
