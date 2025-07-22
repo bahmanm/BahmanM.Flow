@@ -15,6 +15,15 @@ internal class RetryStrategy : IBehaviourStrategy
         _maxAttempts = maxAttempts;
     }
 
+    // Pass-through for non-failable nodes
+    public IFlow<T> ApplyTo<T>(SucceededNode<T> node) => node;
+    public IFlow<T> ApplyTo<T>(FailedNode<T> node) => node;
+    public IFlow<T> ApplyTo<T>(DoOnSuccessNode<T> node) => node;
+    public IFlow<T> ApplyTo<T>(AsyncDoOnSuccessNode<T> node) => node;
+    public IFlow<TOut> ApplyTo<TIn, TOut>(SelectNode<TIn, TOut> node) => node;
+    public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncSelectNode<TIn, TOut> node) => node;
+
+    // Rewriting logic for failable nodes
     public IFlow<T> ApplyTo<T>(CreateNode<T> node)
     {
         Func<T> newOperation = () =>
@@ -36,10 +45,10 @@ internal class RetryStrategy : IBehaviourStrategy
         return new CreateNode<T>(newOperation);
     }
 
-    public IFlow<T> ApplyTo<TIn, T>(ChainNode<TIn, T> node)
+    public IFlow<TOut> ApplyTo<TIn, TOut>(ChainNode<TIn, TOut> node)
     {
-        Func<TIn, IFlow<T>> newOperation = (value) =>
-            ((IFlowNode<T>)node.Operation(value)).Apply(this);
+        Func<TIn, IFlow<TOut>> newOperation = (value) =>
+            ((IFlowNode<TOut>)node.Operation(value)).Apply(this);
 
         return node with { Operation = newOperation };
     }
@@ -63,5 +72,13 @@ internal class RetryStrategy : IBehaviourStrategy
             throw lastException!;
         };
         return new AsyncCreateNode<T>(newOperation);
+    }
+
+    public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncChainNode<TIn, TOut> node)
+    {
+        Func<TIn, Task<IFlow<TOut>>> newOperation = async (value) =>
+            ((IFlowNode<TOut>)await node.Operation(value)).Apply(this);
+
+        return node with { Operation = newOperation };
     }
 }
