@@ -99,3 +99,30 @@ The Flow library provides a single, clear pattern for managing resources.
 *   **`Flow.WithResource`:** This factory is used for **isolated, operation-scoped resources**. The mandatory `acquire` function makes it explicit that a new resource is created for the scope of the `use` function. The `where TResource : IDisposable` constraint ensures that the resource is properly disposed of by the engine, mirroring the behavior of a standard C# `using` block. It is the correct tool for encapsulated resources, like an `HttpClient` for a single API call.
 
 *   **Shared Resources (Deferred):** The problem of managing resources that must be shared across multiple, independent operations (e.g., a `DbTransaction`) is a more advanced use case. The exploration of a `FlowEnvironment` (`Reader` monad) pattern to solve this has been deferred to a future work item (`dx006`) to keep the core API lean and focused.
+
+# 8. The Behaviour System: AST Rewriting
+
+Operators like `.WithRetry()` and `.WithTimeout()` are fundamentally different from simple operators like `.Select()`. They don't just transform a value; they alter the **execution strategy** of a preceding operation. A naive implementation that simply re-executes the entire upstream flow is dangerous, as it can lead to the re-execution of unintended side-effects (e.g., sending an email multiple times).
+
+To solve this problem correctly while keeping the `FlowEngine` simple, behaviours are implemented using an **AST (Abstract Syntax Tree) Rewriting** approach.
+
+*   **Operators as Rewriters:** When an operator like `.WithRetry()` is called, it does not simply wrap the existing flow in a new node. Instead, it inspects the final node of the upstream flow and returns a *new, rewritten flow* with the behaviour's logic baked directly into the failable operation.
+
+*   **The Visitor Pattern for Rewriting:** This rewriting is implemented internally using a second Visitor pattern.
+    1.  An exhaustive `internal interface IBehaviourStrategy` defines the contract for rewriting, with a method for every `IFlowNode` type. This ensures compile-time safety when new node types are added.
+    2.  A concrete implementation, like `RetryStrategy`, contains the specific logic for how to rewrite failable nodes (`CreateNode`, `ChainNode`) to incorporate retry logic.
+    3.  The public `.WithRetry()` extension method creates a `RetryStrategy` and passes it to the flow's internal `Apply` method, which triggers the Visitor dispatch.
+
+This design keeps the `FlowEngine` completely ignorant of complex behaviours, fulfilling its role as a simple, dumb interpreter.
+
+### 8a. The Pragmatic API Trade-off
+
+A key design decision was how to handle the application of a behaviour to a non-failable operation, such as `flow.Select(...).WithRetry(...)`.
+
+While the library could throw a runtime `InvalidOperationException`, the chosen behavior is to make this a **silent no-op**. The `.WithRetry()` operator will simply return the original flow, unchanged.
+
+This is a conscious, pragmatic trade-off that prioritizes a frictionless developer experience over strict, fail-fast semantics in this specific case. 
+
+The rationale is to prevent "brittle" code. A user might refactor a `Chain` into a `Select` (because the operation was made pure), and they should not be punished by having their code suddenly throw a runtime exception because they forgot to remove a now-redundant `.WithRetry()` call. 
+
+The library favors robustness and predictability, and in this case, treating the invalid application as a no-op is the most robust and least surprising behavior.
