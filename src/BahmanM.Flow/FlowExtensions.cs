@@ -25,4 +25,10 @@ public static class FlowExtensions
         var strategy = new RetryStrategy(maxAttempts);
         return ((IFlowNode<T>)flow).Apply(strategy);
     }
+
+    public static IFlow<T> WithTimeout<T>(this IFlow<T> flow, TimeSpan duration)
+    {
+        var strategy = new TimeoutStrategy(duration);
+        return ((IFlowNode<T>)flow).Apply(strategy);
+    }
 }
