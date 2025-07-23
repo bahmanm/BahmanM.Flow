@@ -1,7 +1,5 @@
 namespace BahmanM.Flow;
 
-// The 'Visitor' interface for applying behaviours.
-// It is exhaustive over all IFlowNode types to ensure compile-time safety.
 internal interface IBehaviourStrategy
 {
     IFlow<T> ApplyTo<T>(SucceededNode<T> node);
