@@ -4,7 +4,7 @@ namespace BahmanM.Flow.Tests.Unit
 {
     public class WithRetryTests
     {
-        // Al-Biruni was a Persian polymath of the Islamic Golden Age. He was a
+        // Al-Biruni (c. 973–1050) was a Persian polymath of the Islamic Golden Age. He was a
         // scholar in physics, mathematics, astronomy, and natural sciences, and
         // also distinguished himself as a historian, chronologist and linguist.
         private const string AlBiruni = "Al-Biruni";

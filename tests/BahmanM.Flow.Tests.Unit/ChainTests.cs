@@ -4,7 +4,9 @@ namespace BahmanM.Flow.Tests.Unit;
 
 public class ChainTests
 {
-    // Al-Kindi was a 9th-century Arab philosopher, mathematician, and physician.
+    // Al-Kindi (c. 801–873) was a 9th-century Arab philosopher, mathematician, and physician,
+    // often called the "father of Islamic philosophy." He made significant
+    // contributions to various fields, including metaphysics, ethics, and optics.
     private const string AlKindi = "Al-Kindi";
 
     [Fact]
