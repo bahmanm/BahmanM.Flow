@@ -29,6 +29,31 @@ public class WithTimeoutTests
 
         // Assert
         Assert.True(outcome.IsFailure());
-        Assert.IsType<TimeoutException>(outcome.ExceptionOrDefault());
+        var exception = outcome switch
+        {
+            Failure<string> f => f.Exception,
+            _ => null
+        };
+        Assert.IsType<TimeoutException>(exception);
+    }
+
+    [Fact]
+    public async Task WithTimeout_WhenOperationCompletesWithinDuration_Succeeds()
+    {
+        // Arrange
+        var flow = Flow.Create(async () =>
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(50));
+            return SimoneDeBeauvoir;
+        });
+
+        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(200));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(timedFlow);
+
+        // Assert
+        Assert.True(outcome.IsSuccess());
+        Assert.Equal(SimoneDeBeauvoir, outcome.GetOrElse("fallback"));
     }
 }
