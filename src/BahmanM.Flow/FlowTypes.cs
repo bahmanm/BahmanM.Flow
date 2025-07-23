@@ -74,7 +74,6 @@ internal sealed record AsyncSelectNode<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn,
     public IFlow<TOut> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }
 
-
 #endregion
 
 #region Chain Nodes

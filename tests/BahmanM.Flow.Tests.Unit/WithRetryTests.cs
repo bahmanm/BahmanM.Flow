@@ -133,5 +133,31 @@ namespace BahmanM.Flow.Tests.Unit
             Assert.Equal(3, attempts);
             Assert.Equal(Failure<string>(lastException), outcome);
         }
+
+        [Fact]
+        public void WithRetry_OnNonFailableSelectNode_ReturnsOriginalFlow()
+        {
+            // Arrange
+            var flow = Flow.Succeed(10).Select(x => x * 2);
+
+            // Act
+            var resilientFlow = flow.WithRetry(3);
+
+            // Assert
+            Assert.Same(flow, resilientFlow);
+        }
+
+        [Fact]
+        public void WithRetry_OnSucceededNode_ReturnsOriginalFlow()
+        {
+            // Arrange
+            var flow = Flow.Succeed(10);
+
+            // Act
+            var resilientFlow = flow.WithRetry(3);
+
+            // Assert
+            Assert.Same(flow, resilientFlow);
+        }
     }
 }

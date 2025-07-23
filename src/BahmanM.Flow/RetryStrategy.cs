@@ -1,19 +1,10 @@
-using System;
-
 namespace BahmanM.Flow;
 
-internal class RetryStrategy : IBehaviourStrategy
+internal class RetryStrategy(int maxAttempts) : IBehaviourStrategy
 {
-    private readonly int _maxAttempts;
-
-    public RetryStrategy(int maxAttempts)
-    {
-        if (maxAttempts <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(maxAttempts), "Max attempts must be a positive integer.");
-        }
-        _maxAttempts = maxAttempts;
-    }
+    private readonly int _maxAttempts = maxAttempts > 0
+        ? maxAttempts
+        : throw new ArgumentOutOfRangeException(nameof(maxAttempts), "Max attempts must be a positive integer.");
 
     // Pass-through for non-failable nodes
     public IFlow<T> ApplyTo<T>(SucceededNode<T> node) => node;
@@ -31,14 +22,8 @@ internal class RetryStrategy : IBehaviourStrategy
             Exception lastException = null!;
             for (var i = 0; i < _maxAttempts; i++)
             {
-                try
-                {
-                    return node.Operation();
-                }
-                catch (Exception ex)
-                {
-                    lastException = ex;
-                }
+                try { return node.Operation(); }
+                catch (Exception ex) { lastException = ex; }
             }
             throw lastException!;
         };
@@ -49,7 +34,6 @@ internal class RetryStrategy : IBehaviourStrategy
     {
         Func<TIn, IFlow<TOut>> newOperation = (value) =>
             ((IFlowNode<TOut>)node.Operation(value)).Apply(this);
-
         return node with { Operation = newOperation };
     }
 
@@ -60,14 +44,8 @@ internal class RetryStrategy : IBehaviourStrategy
             Exception lastException = null!;
             for (var i = 0; i < _maxAttempts; i++)
             {
-                try
-                {
-                    return await node.Operation();
-                }
-                catch (Exception ex)
-                {
-                    lastException = ex;
-                }
+                try { return await node.Operation(); }
+                catch (Exception ex) { lastException = ex; }
             }
             throw lastException!;
         };
@@ -78,7 +56,6 @@ internal class RetryStrategy : IBehaviourStrategy
     {
         Func<TIn, Task<IFlow<TOut>>> newOperation = async (value) =>
             ((IFlowNode<TOut>)await node.Operation(value)).Apply(this);
-
         return node with { Operation = newOperation };
     }
 }
