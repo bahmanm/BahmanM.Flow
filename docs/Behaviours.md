@@ -18,6 +18,8 @@ _Each operator is concerned with a single, specific part of the Flow._
 
 _Behaviours are applied with operators that start with `With` (e.g., `.WithRetry`, `.WithTimeout`) to signify that you are creating a new Flow *with* an added superpower._
 
+> **Note:** Behaviours are only applicable to failable operations, such as `Flow.Create()` or `.Chain()`. Applying a behaviour to a pure transformation, like `.Select()`, is a logical no-op and will result in the original flow being returned, unchanged.
+
 This entire system is designed for extensibility: The `IBehaviour<T>` interface is your entry point for building any custom behaviour you can imagine, which you can then apply using the generic `.WithBehaviour()` operator.
 
 # When Do You Need a Custom Behaviour?
