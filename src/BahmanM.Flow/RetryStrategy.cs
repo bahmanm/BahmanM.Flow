@@ -6,7 +6,8 @@ internal class RetryStrategy(int maxAttempts) : IBehaviourStrategy
         ? maxAttempts
         : throw new ArgumentOutOfRangeException(nameof(maxAttempts), "Max attempts must be a positive integer.");
 
-    // Pass-through for non-failable nodes
+    #region Pass-through Implementations
+
     public IFlow<T> ApplyTo<T>(SucceededNode<T> node) => node;
     public IFlow<T> ApplyTo<T>(FailedNode<T> node) => node;
     public IFlow<T> ApplyTo<T>(DoOnSuccessNode<T> node) => node;
@@ -14,7 +15,9 @@ internal class RetryStrategy(int maxAttempts) : IBehaviourStrategy
     public IFlow<TOut> ApplyTo<TIn, TOut>(SelectNode<TIn, TOut> node) => node;
     public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncSelectNode<TIn, TOut> node) => node;
 
-    // Rewriting logic for failable nodes
+    #endregion
+
+    #region Rewriting Implementations
     public IFlow<T> ApplyTo<T>(CreateNode<T> node)
     {
         Func<T> newOperation = () =>
@@ -58,4 +61,6 @@ internal class RetryStrategy(int maxAttempts) : IBehaviourStrategy
             ((IFlowNode<TOut>)await node.Operation(value)).Apply(this);
         return node with { Operation = newOperation };
     }
+
+    #endregion
 }
