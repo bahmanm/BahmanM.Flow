@@ -1,6 +1,7 @@
 namespace BahmanM.Flow;
 
-public interface IBehaviour<T>
+public interface IBehaviour
 {
-    IFlow<T> Apply(IFlow<T> originalFlow);
+    string OperationType { get; }
+    IFlow<T> Apply<T>(IFlow<T> originalFlow);
 }

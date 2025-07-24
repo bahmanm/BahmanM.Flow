@@ -1,45 +1,17 @@
 namespace BahmanM.Flow;
 
-internal class CustomBehaviourStrategy<T>(IBehaviour<T> behaviour) : IBehaviourStrategy
+internal class CustomBehaviourStrategy(IBehaviour behaviour) : IBehaviourStrategy
 {
-    #region Rewriting Implementations
-    
-    public IFlow<TNode> ApplyTo<TNode>(CreateNode<TNode> node) =>
-        node is CreateNode<T> typedNode ? (IFlow<TNode>)behaviour.Apply(typedNode) : node;
-
-    public IFlow<TNode> ApplyTo<TNode>(AsyncCreateNode<TNode> node) =>
-        node is AsyncCreateNode<T> typedNode ? (IFlow<TNode>)behaviour.Apply(typedNode) : node;
-
-    public IFlow<TOut> ApplyTo<TIn, TOut>(ChainNode<TIn, TOut> node)
-    {
-        if (node is IFlow<T> flow)
-        {
-            return (IFlow<TOut>)behaviour.Apply(flow);
-        }
-        return node;
-    }
-
-    public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncChainNode<TIn, TOut> node)
-    {
-        if (node is IFlow<T> flow)
-        {
-            return (IFlow<TOut>)behaviour.Apply(flow);
-        }
-        return node;
-    }
-
-    #endregion
-
-    #region Pass-through Implementations
-    
-    public IFlow<TNode> ApplyTo<TNode>(SucceededNode<TNode> node) => node;
-    public IFlow<TNode> ApplyTo<TNode>(FailedNode<TNode> node) => node;
-    public IFlow<TNode> ApplyTo<TNode>(DoOnSuccessNode<TNode> node) => node;
-    public IFlow<TNode> ApplyTo<TNode>(AsyncDoOnSuccessNode<TNode> node) => node;
-    public IFlow<TNode> ApplyTo<TNode>(DoOnFailureNode<TNode> node) => node;
-    public IFlow<TNode> ApplyTo<TNode>(AsyncDoOnFailureNode<TNode> node) => node;
-    public IFlow<TOut> ApplyTo<TIn, TOut>(SelectNode<TIn, TOut> node) => node;
-    public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncSelectNode<TIn, TOut> node) => node;
-
-    #endregion
+    public IFlow<T> ApplyTo<T>(SucceededNode<T> node) => behaviour.Apply(node);
+    public IFlow<T> ApplyTo<T>(FailedNode<T> node) => behaviour.Apply(node);
+    public IFlow<T> ApplyTo<T>(CreateNode<T> node) => behaviour.Apply(node);
+    public IFlow<T> ApplyTo<T>(AsyncCreateNode<T> node) => behaviour.Apply(node);
+    public IFlow<T> ApplyTo<T>(DoOnSuccessNode<T> node) => behaviour.Apply(node);
+    public IFlow<T> ApplyTo<T>(AsyncDoOnSuccessNode<T> node) => behaviour.Apply(node);
+    public IFlow<T> ApplyTo<T>(DoOnFailureNode<T> node) => behaviour.Apply(node);
+    public IFlow<T> ApplyTo<T>(AsyncDoOnFailureNode<T> node) => behaviour.Apply(node);
+    public IFlow<TOut> ApplyTo<TIn, TOut>(SelectNode<TIn, TOut> node) => behaviour.Apply(node);
+    public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncSelectNode<TIn, TOut> node) => behaviour.Apply(node);
+    public IFlow<TOut> ApplyTo<TIn, TOut>(ChainNode<TIn, TOut> node) => behaviour.Apply(node);
+    public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncChainNode<TIn, TOut> node) => behaviour.Apply(node);
 }

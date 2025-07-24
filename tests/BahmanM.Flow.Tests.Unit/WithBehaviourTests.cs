@@ -3,9 +3,11 @@ using static BahmanM.Flow.Outcome;
 namespace BahmanM.Flow.Tests.Unit;
 
 // Test fixture implementing the IBehaviour interface, as described in docs/Behaviours.md
-file class CircuitBreakerBehaviour<T>(CircuitBreakerState state, int failureThreshold = 3) : IBehaviour<T>
+file class CircuitBreakerBehaviour(CircuitBreakerState state, int failureThreshold = 3) : IBehaviour
 {
-    public IFlow<T> Apply(IFlow<T> originalFlow)
+    public string OperationType => "Test.CircuitBreaker";
+
+    public IFlow<T> Apply<T>(IFlow<T> originalFlow)
     {
         if (state.IsTripped(failureThreshold))
         {
@@ -39,7 +41,7 @@ public class WithBehaviourTests
     {
         // Arrange
         var state = new CircuitBreakerState();
-        var circuitBreaker = new CircuitBreakerBehaviour<string>(state);
+        var circuitBreaker = new CircuitBreakerBehaviour(state);
         var flow = Flow.Create(() => AdaLovelace);
 
         // Act
@@ -56,7 +58,7 @@ public class WithBehaviourTests
     {
         // Arrange
         var state = new CircuitBreakerState();
-        var circuitBreaker = new CircuitBreakerBehaviour<string>(state);
+        var circuitBreaker = new CircuitBreakerBehaviour(state);
         var exception = new InvalidOperationException("Test failure");
         var flow = Flow.Fail<string>(exception);
 
