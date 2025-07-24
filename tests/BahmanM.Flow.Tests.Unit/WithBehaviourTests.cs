@@ -9,11 +9,12 @@ file class CircuitBreakerBehaviour<T>(CircuitBreakerState state, int failureThre
     {
         if (state.IsTripped(failureThreshold))
         {
-            return Flow.Fail<T>(new System.Exception("Circuit breaker is open."));
+            return Flow.Fail<T>(new Exception("Circuit breaker is open."));
         }
 
         return originalFlow
-            .DoOnSuccess(_ => state.RecordSuccess());
+            .DoOnSuccess(_ => state.RecordSuccess())
+            .DoOnFailure(_ => state.RecordFailure());
     }
 }
 
@@ -34,7 +35,7 @@ public class WithBehaviourTests
     private const string AdaLovelace = "Ada Lovelace";
 
     [Fact]
-    public async Task WithBehaviour_OnSuccessfulFlow_AppliesBehaviourCorrectly()
+    public async Task WithBehaviour_WhenFlowSucceeds_ExecutesSuccessPathSideEffectFromBehaviour()
     {
         // Arrange
         var state = new CircuitBreakerState();
@@ -48,5 +49,23 @@ public class WithBehaviourTests
         // Assert
         Assert.Equal(Success(AdaLovelace), outcome);
         Assert.Equal(0, state.ConsecutiveFailures); // Success was recorded
+    }
+
+    [Fact]
+    public async Task WithBehaviour_WhenFlowFails_ExecutesFailurePathSideEffectFromBehaviour()
+    {
+        // Arrange
+        var state = new CircuitBreakerState();
+        var circuitBreaker = new CircuitBreakerBehaviour<string>(state);
+        var exception = new InvalidOperationException("Test failure");
+        var flow = Flow.Fail<string>(exception);
+
+        // Act
+        var resilientFlow = flow.WithBehaviour(circuitBreaker);
+        var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
+
+        // Assert
+        Assert.Equal(Failure<string>(exception), outcome);
+        Assert.Equal(1, state.ConsecutiveFailures); // Failure was recorded
     }
 }
