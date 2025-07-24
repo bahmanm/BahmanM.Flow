@@ -79,8 +79,15 @@ public class FlowEngine
 
         if (upstreamOutcome is Failure<T> failure)
         {
-            try { node.Action(failure.Exception); }
-            catch { /* Ignore */ }
+            try
+            {
+                node.Action(failure.Exception);
+            }
+            catch
+            {
+                // Per the contract, if the action throws, we ignore the new exception
+                // and propagate the original failure.
+            }
         }
 
         return upstreamOutcome;
@@ -92,8 +99,15 @@ public class FlowEngine
 
         if (upstreamOutcome is Failure<T> failure)
         {
-            try { await node.AsyncAction(failure.Exception); }
-            catch { /* Ignore */ }
+            try
+            {
+                await node.AsyncAction(failure.Exception);
+            }
+            catch
+            {
+                // Per the contract, if the action throws, we ignore the new exception
+                // and propagate the original failure.
+            }
         }
 
         return upstreamOutcome;
