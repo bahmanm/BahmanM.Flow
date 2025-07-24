@@ -28,6 +28,18 @@ file class CircuitBreakerState
     public void RecordSuccess() => ConsecutiveFailures = 0;
 }
 
+file class SpyBehaviour : IBehaviour
+{
+    public int ApplyCallCount { get; private set; }
+    public string OperationType => "Test.Spy";
+
+    public IFlow<T> Apply<T>(IFlow<T> originalFlow)
+    {
+        ApplyCallCount++;
+        return originalFlow;
+    }
+}
+
 
 public class WithBehaviourTests
 {
@@ -35,6 +47,36 @@ public class WithBehaviourTests
     // for her work on Charles Babbage's proposed mechanical general-purpose computer,
     // the Analytical Engine.
     private const string AdaLovelace = "Ada Lovelace";
+
+    public static readonly TheoryData<IFlow<string>> AllNodeTypes = new()
+    {
+        Flow.Succeed("succeeded"),
+        Flow.Fail<string>(new Exception("dummy")),
+        Flow.Create(() => "created"),
+        Flow.Create(async () => { await Task.Delay(1); return "async created"; }),
+        Flow.Succeed("s").DoOnSuccess(_ => { }),
+        Flow.Succeed("s").DoOnSuccess(async _ => await Task.Delay(1)),
+        Flow.Succeed("s").DoOnFailure(_ => { }),
+        Flow.Succeed("s").DoOnFailure(async _ => await Task.Delay(1)),
+        Flow.Succeed("s").Select(_ => "selected"),
+        Flow.Succeed("s").Select(async _ => { await Task.Delay(1); return "async selected"; }),
+        Flow.Succeed("s").Chain(_ => Flow.Succeed<string>("chained")),
+        Flow.Succeed("s").Chain(async _ => { await Task.Delay(1); return Flow.Succeed<string>("async chained"); })
+    };
+
+    [Theory]
+    [MemberData(nameof(AllNodeTypes), MemberType = typeof(WithBehaviourTests))]
+    public void WithBehaviour_OnAnyNodeType_AppliesBehaviourExactlyOnce(IFlow<string> flow)
+    {
+        // Arrange
+        var spy = new SpyBehaviour();
+
+        // Act
+        _ = flow.WithBehaviour(spy);
+
+        // Assert
+        Assert.Equal(1, spy.ApplyCallCount);
+    }
 
     [Fact]
     public async Task WithBehaviour_WhenFlowSucceeds_ExecutesSuccessPathSideEffectFromBehaviour()
@@ -69,5 +111,41 @@ public class WithBehaviourTests
         // Assert
         Assert.Equal(Failure<string>(exception), outcome);
         Assert.Equal(1, state.ConsecutiveFailures); // Failure was recorded
+    }
+
+    [Fact]
+    public void WithBehaviour_WhenChained_AppliesEachBehaviourOnce()
+    {
+        // Arrange
+        var spy1 = new SpyBehaviour();
+        var spy2 = new SpyBehaviour();
+        var flow = Flow.Create(() => "action");
+
+        // Act
+        _ = flow.WithBehaviour(spy1).WithBehaviour(spy2);
+
+        // Assert
+        // The first behaviour is applied to the CreateNode.
+        // The second behaviour is applied to the result of the first application.
+        Assert.Equal(1, spy1.ApplyCallCount);
+        Assert.Equal(1, spy2.ApplyCallCount);
+    }
+
+    [Fact]
+    public void WithBehaviour_WhenInterleaved_AppliesEachBehaviourOnceAtPointOfApplication()
+    {
+        // Arrange
+        var spy1 = new SpyBehaviour();
+        var spy2 = new SpyBehaviour();
+
+        // Act
+        _ = Flow.Create(() => 1)
+            .WithBehaviour(spy1) // Applied once to the CreateNode
+            .Select(i => i.ToString())
+            .WithBehaviour(spy2); // Applied once to the SelectNode
+
+        // Assert
+        Assert.Equal(1, spy1.ApplyCallCount);
+        Assert.Equal(1, spy2.ApplyCallCount);
     }
 }
