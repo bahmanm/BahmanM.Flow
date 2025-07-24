@@ -43,9 +43,9 @@ public static class FlowExtensions
         return ((IFlowNode<T>)flow).Apply(strategy);
     }
 
-    public static IFlow<T> WithBehaviour<T>(this IFlow<T> flow, IBehaviour<T> behaviour)
+    public static IFlow<T> WithBehaviour<T>(this IFlow<T> flow, IBehaviour behaviour)
     {
-        var strategy = new CustomBehaviourStrategy<T>(behaviour);
+        var strategy = new CustomBehaviourStrategy(behaviour);
         return ((IFlowNode<T>)flow).Apply(strategy);
     }
 }
