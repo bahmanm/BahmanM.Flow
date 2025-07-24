@@ -42,4 +42,16 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         };
         return node with { Operation = newOperation };
     }
+
+    public IFlow<T[]> ApplyTo<T>(AllNode<T> node)
+    {
+        Func<Task<T[]>> newOperation = () => FlowEngine.ExecuteAsync(node).WaitAsync(duration).Unwrap();
+        return new AsyncCreateNode<T[]>(newOperation);
+    }
+
+    public IFlow<T> ApplyTo<T>(AnyNode<T> node)
+    {
+        Func<Task<T>> newOperation = () => FlowEngine.ExecuteAsync(node).WaitAsync(duration).Unwrap();
+        return new AsyncCreateNode<T>(newOperation);
+    }
 }
