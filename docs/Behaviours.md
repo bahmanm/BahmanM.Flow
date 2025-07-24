@@ -4,7 +4,7 @@ You've mastered the core operators, but have you ever wondered how `.WithRetry()
 
 Welcome to the **Behaviour** system.
 
-This is where you level up from being a user of Flow to a creator, forging your own reusable superpowers to extend the library.
+This is where you level up from being a user of Flow to a creator, forging your own reusable superpowers to extend Flow.
 
 # Operator vs. Behaviour
 
@@ -18,7 +18,13 @@ _Each operator is concerned with a single, specific part of the Flow._
 
 _Behaviours are applied with operators that start with `With` (e.g., `.WithRetry`, `.WithTimeout`) to signify that you are creating a new Flow *with* an added superpower._
 
-> **Note:** Behaviours are only applicable to failable operations, such as `Flow.Create()` or `.Chain()`. Applying a behaviour to a pure transformation, like `.Select()`, is a logical no-op and will result in the original flow being returned, unchanged.
+> **Note on Applicability**
+>
+> The built-in behaviours that alter execution - `.WithRetry()` and `.WithTimeout()` - are only applicable to failable operations, such as `Flow.Create()` or `.Chain()`. 
+> Applying them to a pure transformation, like `.Select()`, is a logical no-op and will result in an equivalent flow being returned.
+>
+> However, the generic `.WithBehaviour()` operator is different. 
+> It is designed to be a universal tool for applying any custom logic, including logging or auditing, to *any* part of a flow. Therefore, it can be applied to any operator, not just failable ones.
 
 This entire system is designed for extensibility: The `IBehaviour` interface is your entry point for building any custom behaviour you can imagine, which you can then apply using the generic `.WithBehaviour()` operator.
 
@@ -105,6 +111,6 @@ var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
 That's it! You now know how to extend `Flow` with your own powerful, reusable behaviours.
 
 From here, you have a few options:
-*   Dive into the **[Design Rationale](./DesignRationale.md)** to better understand the "why" behind the library's architecture.
+*   Dive into the **[Design Rationale](./DesignRationale.md)** to better understand the "why" behind Flow's architecture.
 *   Browse the **[API Blueprint](./ApiBlueprint.cs)** to see all available methods and operators.
 *   Head back to the **[Learning Path in the main README](../README.md#intrigued-heres-your-learning-path-🗺️)** to choose your next destination.

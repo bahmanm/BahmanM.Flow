@@ -48,24 +48,39 @@ public class WithBehaviourTests
     // the Analytical Engine.
     private const string AdaLovelace = "Ada Lovelace";
 
-    public static readonly TheoryData<IFlow<string>> AllNodeTypes = new()
+    public class AllNodeTypesTheoryData : TheoryData<IFlow<string>>
     {
-        Flow.Succeed("succeeded"),
-        Flow.Fail<string>(new Exception("dummy")),
-        Flow.Create(() => "created"),
-        Flow.Create(async () => { await Task.Delay(1); return "async created"; }),
-        Flow.Succeed("s").DoOnSuccess(_ => { }),
-        Flow.Succeed("s").DoOnSuccess(async _ => await Task.Delay(1)),
-        Flow.Succeed("s").DoOnFailure(_ => { }),
-        Flow.Succeed("s").DoOnFailure(async _ => await Task.Delay(1)),
-        Flow.Succeed("s").Select(_ => "selected"),
-        Flow.Succeed("s").Select(async _ => { await Task.Delay(1); return "async selected"; }),
-        Flow.Succeed("s").Chain(_ => Flow.Succeed<string>("chained")),
-        Flow.Succeed("s").Chain(async _ => { await Task.Delay(1); return Flow.Succeed<string>("async chained"); })
-    };
+        public AllNodeTypesTheoryData()
+        {
+            Add(Flow.Succeed("succeeded"));
+            Add(Flow.Fail<string>(new Exception("dummy")));
+            Add(Flow.Create(() => "created"));
+            Add(Flow.Create(async () =>
+            {
+                await Task.Delay(1);
+                return "async created";
+            }));
+            Add(Flow.Succeed("s").DoOnSuccess(_ => { }));
+            Add(Flow.Succeed("s").DoOnSuccess(async _ => await Task.Delay(1)));
+            Add(Flow.Succeed("s").DoOnFailure(_ => { }));
+            Add(Flow.Succeed("s").DoOnFailure(async _ => await Task.Delay(1)));
+            Add(Flow.Succeed("s").Select(_ => "selected"));
+            Add(Flow.Succeed("s").Select(async _ =>
+            {
+                await Task.Delay(1);
+                return "async selected";
+            }));
+            Add(Flow.Succeed("s").Chain(_ => Flow.Succeed<string>("chained")));
+            Add(Flow.Succeed("s").Chain(async _ =>
+            {
+                await Task.Delay(1);
+                return Flow.Succeed<string>("async chained");
+            }));
+        }
+    }
 
     [Theory]
-    [MemberData(nameof(AllNodeTypes), MemberType = typeof(WithBehaviourTests))]
+    [ClassData(typeof(AllNodeTypesTheoryData))]
     public void WithBehaviour_OnAnyNodeType_AppliesBehaviourExactlyOnce(IFlow<string> flow)
     {
         // Arrange

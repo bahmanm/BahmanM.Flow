@@ -29,7 +29,7 @@ While Flow is heavily inspired by functional programming concepts, it is not a s
 
 The primary goal is to provide an intuitive, discoverable, and productive API for the typical C# developer.
 
-This means the library will always favour a design that is **pragmatic and familiar** over one that is theoretically pure but abstract. 
+This means Flow will always favour a design that is **pragmatic and familiar** over one that is theoretically pure but abstract. 
 
 A good example of this is the approach to concurrency:
 
@@ -61,7 +61,7 @@ _It is designed to be implemented by users to bridge `Flow` events to their chos
 
 *   **Multi-Method Interface:** The interface uses specific, discoverable methods (`OnOperationStarted`, `OnFlowSucceeded`, etc.) with default implementations. 
 
-_This provides the best of both worlds: it's easy for users to implement (they only override what they need), and it's extensible for the library (new methods can be added without breaking existing implementations)._
+_This provides the best of both worlds: it's easy for users to implement (they only override what they need), and it's extensible for Flow (new methods can be added without breaking existing implementations)._
 
 *   **Interface-Based Events:** The events passed to the observer are defined by a hierarchy of interfaces (`IFlowEvent`, `IOperationEvent`, etc.). 
 
@@ -115,14 +115,32 @@ To solve this problem correctly while keeping the `FlowEngine` simple, behaviour
 
 This design keeps the `FlowEngine` completely ignorant of complex behaviours, fulfilling its role as a simple, dumb interpreter.
 
-### 8a. The Pragmatic API Trade-off
+### 8a. The Pragmatic API for Behaviours
 
-A key design decision was how to handle the application of a behaviour to a non-failable operation, such as `flow.Select(...).WithRetry(...)`.
+A key design decision was how to handle the application of a behaviour to different types of operations. Flow takes a pragmatic approach, distinguishing between behaviours that alter execution strategy and those that apply custom logic.
 
-While the library could throw a runtime `InvalidOperationException`, the chosen behavior is to make this a **silent no-op**. The `.WithRetry()` operator will simply return the original flow, unchanged.
+*   **Execution Behaviours (`.WithRetry()`, `.WithTimeout()`): A Silent No-Op**
 
-This is a conscious, pragmatic trade-off that prioritizes a frictionless developer experience over strict, fail-fast semantics in this specific case. 
+    These built-in behaviours are designed to modify failable operations like `Create` or `Chain`. Applying a retry or a timeout to a pure, non-failable transformation like `Select` is a logical contradiction.
 
-The rationale is to prevent "brittle" code. A user might refactor a `Chain` into a `Select` (because the operation was made pure), and they should not be punished by having their code suddenly throw a runtime exception because they forgot to remove a now-redundant `.WithRetry()` call. 
+    While Flow could throw a runtime `InvalidOperationException` in this case, the chosen behavior is to make this a **silent no-op**. The operator will simply return an equivalent flow.
 
-The library favors robustness and predictability, and in this case, treating the invalid application as a no-op is the most robust and least surprising behavior.
+    This is a conscious trade-off that prioritizes a frictionless developer experience. 
+
+    A user might refactor a `Chain` into a `Select` (because the operation was made pure), and they should not be punished by having their code suddenly throw an exception because they forgot to remove a now-redundant `.WithRetry()` call. 
+
+    Flow favors robustness, and treating the invalid application as a no-op is the most robust and least surprising behavior.
+
+*   **Custom Behaviours (`.WithBehaviour()`): Universal Application**
+
+    The generic `.WithBehaviour()` operator, in contrast, is designed for maximum flexibility. 
+    
+    It allows users to create any kind of cross-cutting concern, such as logging, auditing, or state tracking. 
+    
+    These concerns are often relevant to *every* step in a flow, not just the failable ones.
+
+    Therefore, `.WithBehaviour()` can be applied to *any* node in the flow. 
+
+    It does not perform a no-op on pure transformations, allowing developers to build powerful, universal behaviours that can observe or interact with the entire pipeline.
+
+This two-pronged approach provides both safety and predictability for the built-in execution modifiers and maximum power and flexibility for user-defined custom behaviours.

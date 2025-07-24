@@ -96,5 +96,5 @@ var userProfileFlow = Flow.Succeed("user-123")
 Now that you've seen some practical recipes, you can dive deeper into the concepts that power them.
 
 *   Learn to build your own behaviours in **[Behaviours](./Behaviours.md)**.
-*   Read the **[Design Rationale](./DesignRationale.md)** to understand the "why" behind the library.
+*   Read the **[Design Rationale](./DesignRationale.md)** to understand the "why" behind Flow.
 *   Browse the **[API Blueprint](./ApiBlueprint.cs)** to see all available methods.
