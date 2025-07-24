@@ -159,5 +159,28 @@ namespace BahmanM.Flow.Tests.Unit
             // Assert
             Assert.Same(flow, resilientFlow);
         }
+
+        [Fact]
+        public async Task WithRetry_WhenNonRetryableExceptionThrown_FailsImmediately()
+        {
+            // Arrange
+            var attempts = 0;
+            var customException = new InvalidOperationException("Non-retryable exception");
+            var flow = Flow.Create((Func<string>)(() =>
+            {
+                attempts++;
+                throw customException;
+            }));
+
+            // Configure WithRetry to treat InvalidOperationException as non-retryable
+            var resilientFlow = flow.WithRetry(3, typeof(InvalidOperationException));
+
+            // Act
+            var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
+
+            // Assert
+            Assert.Equal(1, attempts); // Should only attempt once
+            Assert.Equal(Failure<string>(customException), outcome);
+        }
     }
 }
