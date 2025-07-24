@@ -56,4 +56,96 @@ public class WithTimeoutTests
         Assert.True(outcome.IsSuccess());
         Assert.Equal(SimoneDeBeauvoir, outcome.GetOrElse("fallback"));
     }
+
+    [Fact]
+    public async Task WithTimeout_WhenAsyncChainExceedsDuration_FailsWithTimeoutException()
+    {
+        // Arrange
+        var flow = Flow.Succeed("start").Chain(async _ =>
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(200));
+            return Flow.Succeed(SimoneDeBeauvoir);
+        });
+
+        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(50));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(timedFlow);
+
+        // Assert
+        Assert.True(outcome.IsFailure());
+        Assert.IsType<TimeoutException>(outcome switch { Failure<string> f => f.Exception, _ => null });
+    }
+
+    [Fact]
+    public async Task WithTimeout_WhenSyncOperationExceedsDuration_FailsWithTimeoutException()
+    {
+        // Arrange
+        var flow = Flow.Create(() =>
+        {
+            System.Threading.Thread.Sleep(TimeSpan.FromMilliseconds(200));
+            return SimoneDeBeauvoir;
+        });
+
+        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(50));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(timedFlow);
+
+        // Assert
+        Assert.True(outcome.IsFailure());
+        Assert.IsType<TimeoutException>(outcome switch { Failure<string> f => f.Exception, _ => null });
+    }
+
+    [Fact]
+    public async Task WithRetryThenWithTimeout_WhenRetriesSucceedWithinTimeout_Succeeds()
+    {
+        // Arrange
+        var attempts = 0;
+        var flow = Flow.Create(async () =>
+        {
+            attempts++;
+            await Task.Delay(TimeSpan.FromMilliseconds(40));
+            if (attempts < 3)
+            {
+                throw new InvalidOperationException("Flaky");
+            }
+            return SimoneDeBeauvoir;
+        });
+
+        // Total time will be ~120ms (3 * 40ms). Timeout is 200ms.
+        var resilientFlow = flow.WithRetry(3).WithTimeout(TimeSpan.FromMilliseconds(200));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
+
+        // Assert
+        Assert.Equal(3, attempts);
+        Assert.True(outcome.IsSuccess());
+    }
+
+    [Fact]
+    public async Task WithTimeoutThenWithRetry_WhenFirstAttemptTimesOut_DoesNotRetry()
+    {
+        // Arrange
+        var attempts = 0;
+        var flow = Flow.Create(async () =>
+        {
+            attempts += 1;
+            await Task.Delay(TimeSpan.FromMilliseconds(200));
+            return SimoneDeBeauvoir;
+        });
+
+        // Timeout is 50ms, so the first attempt will fail.
+        // Since the default policy for WithRetry is to not retry on TimeoutException, the retry should NOT happen
+        var resilientFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(50)).WithRetry(3);
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
+
+        // Assert
+        Assert.Equal(1, attempts);
+        Assert.True(outcome.IsFailure());
+        Assert.IsType<TimeoutException>(outcome switch { Failure<string> f => f.Exception, _ => null });
+    }
 }
