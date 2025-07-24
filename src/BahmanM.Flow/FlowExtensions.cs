@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace BahmanM.Flow;
 
 public static class FlowExtensions
