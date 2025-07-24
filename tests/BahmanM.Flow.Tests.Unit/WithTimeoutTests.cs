@@ -148,4 +148,32 @@ public class WithTimeoutTests
         Assert.True(outcome.IsFailure());
         Assert.IsType<TimeoutException>(outcome switch { Failure<string> f => f.Exception, _ => null });
     }
+
+    [Fact]
+    public async Task WithRetryThenWithTimeout_WhenRetriesExceedTimeout_FailsWithTimeoutException()
+    {
+        // Arrange
+        var attempts = 0;
+        var flow = Flow.Create<string>(async () =>
+        {
+            attempts++;
+            // Each attempt takes 75ms
+            await Task.Delay(TimeSpan.FromMilliseconds(75));
+            // Always throw to force retries
+            throw new InvalidOperationException($"Attempt {attempts} failed");
+        });
+
+        // Total timeout is 200ms, which should allow for 2 full attempts (150ms) but not 3 (225ms)
+        var resilientFlow = flow.WithRetry(5) // Max 5 retries, but timeout should occur first
+                               .WithTimeout(TimeSpan.FromMilliseconds(200));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
+
+        // Assert
+        // Should make 2 or 3 attempts depending on timing (3rd might start but not finish)
+        Assert.InRange(attempts, 2, 3);
+        Assert.True(outcome.IsFailure());
+        Assert.IsType<TimeoutException>(outcome switch { Failure<string> f => f.Exception, _ => null });
+    }
 }
