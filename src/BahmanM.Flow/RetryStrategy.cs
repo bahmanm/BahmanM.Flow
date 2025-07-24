@@ -1,10 +1,21 @@
 namespace BahmanM.Flow;
 
-internal class RetryStrategy(int maxAttempts) : IBehaviourStrategy
+internal class RetryStrategy : IBehaviourStrategy
 {
-    private readonly int _maxAttempts = maxAttempts > 0
-        ? maxAttempts
-        : throw new ArgumentOutOfRangeException(nameof(maxAttempts), "Max attempts must be a positive integer.");
+    private readonly Type[] _nonRetryableExceptions;
+    private readonly int _maxAttempts;
+
+    public RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptions)
+    {
+        _nonRetryableExceptions = nonRetryableExceptions;
+        _maxAttempts = maxAttempts > 0
+            ? maxAttempts
+            : throw new ArgumentOutOfRangeException(nameof(maxAttempts), "Max attempts must be a positive integer.");
+    }
+    
+    public RetryStrategy(int maxAttempts) : this(maxAttempts, [typeof(TimeoutException)])
+    {
+    }
 
     #region Pass-through Implementations
 
@@ -18,6 +29,7 @@ internal class RetryStrategy(int maxAttempts) : IBehaviourStrategy
     #endregion
 
     #region Rewriting Implementations
+    
     public IFlow<T> ApplyTo<T>(CreateNode<T> node)
     {
         Func<T> newOperation = () =>
@@ -25,8 +37,16 @@ internal class RetryStrategy(int maxAttempts) : IBehaviourStrategy
             Exception lastException = null!;
             for (var i = 0; i < _maxAttempts; i++)
             {
-                try { return node.Operation(); }
-                catch (Exception ex) { lastException = ex; }
+                try
+                {
+                    return node.Operation();
+                }
+                catch (Exception ex)
+                {
+                    if (_nonRetryableExceptions.Contains(ex.GetType())) 
+                        throw;
+                    lastException = ex;
+                }
             }
             throw lastException!;
         };
@@ -47,8 +67,16 @@ internal class RetryStrategy(int maxAttempts) : IBehaviourStrategy
             Exception lastException = null!;
             for (var i = 0; i < _maxAttempts; i++)
             {
-                try { return await node.Operation(); }
-                catch (Exception ex) { lastException = ex; }
+                try
+                {
+                    return await node.Operation();
+                }
+                catch (Exception ex)
+                {
+                    if (_nonRetryableExceptions.Contains(ex.GetType())) 
+                        throw;
+                    lastException = ex;
+                }
             }
             throw lastException!;
         };

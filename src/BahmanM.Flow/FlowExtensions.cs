@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace BahmanM.Flow;
 
 public static class FlowExtensions
@@ -20,10 +22,15 @@ public static class FlowExtensions
     public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, Task<IFlow<TOut>>> asyncOperation) =>
         new AsyncChainNode<TIn, TOut>(flow, asyncOperation);
 
+    public static IFlow<T> WithRetry<T>(this IFlow<T> flow, int maxAttempts, params Type[] nonRetryableExceptions)
+    {
+        var strategy = new RetryStrategy(maxAttempts, nonRetryableExceptions);
+        return ((IFlowNode<T>)flow).Apply(strategy);
+    }
+    
     public static IFlow<T> WithRetry<T>(this IFlow<T> flow, int maxAttempts)
     {
-        var strategy = new RetryStrategy(maxAttempts);
-        return ((IFlowNode<T>)flow).Apply(strategy);
+        return WithRetry(flow, maxAttempts, typeof(TimeoutException));
     }
 
     public static IFlow<T> WithTimeout<T>(this IFlow<T> flow, TimeSpan duration)
