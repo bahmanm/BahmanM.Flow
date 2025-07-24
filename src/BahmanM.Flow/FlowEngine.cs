@@ -202,11 +202,11 @@ public class FlowEngine
 
     #region Private Helpers
 
-    private async Task<Outcome<T>> ExecuteAnyRecursively<T>(List<Task<Outcome<T>>> remainingTasks, List<Exception> exceptions)
+    private async Task<Outcome<T>> TryFindFirstSuccessfulFlow<T>(List<Task<Outcome<T>>> remainingTasks, List<Exception> accumulatedExceptions)
     {
         if (remainingTasks is [])
         {
-            return Outcome.Failure<T>(new AggregateException(exceptions));
+            return Outcome.Failure<T>(new AggregateException(accumulatedExceptions));
         }
 
         var completedTask = await Task.WhenAny(remainingTasks);
@@ -221,8 +221,8 @@ public class FlowEngine
             return success;
         }
 
-        exceptions.Add(((Failure<T>)outcome).Exception);
-        return await ExecuteAnyRecursively(remainingTasks, exceptions);
+        accumulatedExceptions.Add(((Failure<T>)outcome).Exception);
+        return await TryFindFirstSuccessfulFlow(remainingTasks, accumulatedExceptions);
     }
 
     private static Task<Outcome<T>> TryOperation<T>(Func<T> operation)
