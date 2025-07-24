@@ -42,4 +42,10 @@ public static class FlowExtensions
         var strategy = new TimeoutStrategy(duration);
         return ((IFlowNode<T>)flow).Apply(strategy);
     }
+
+    public static IFlow<T> WithBehaviour<T>(this IFlow<T> flow, IBehaviour<T> behaviour)
+    {
+        var strategy = new CustomBehaviourStrategy<T>(behaviour);
+        return ((IFlowNode<T>)flow).Apply(strategy);
+    }
 }
