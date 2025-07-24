@@ -71,17 +71,17 @@ namespace BahmanM.Flow.Annotations
 //========================================================================================
 namespace BahmanM.Flow.Behaviours
 {
-    public interface IBehaviour<T>
+    public interface IBehaviour
     {
         string OperationType { get; }
-        IFlow<T> Apply(IFlow<T> originalFlow);
+        IFlow<T> Apply<T>(IFlow<T> originalFlow);
     }
 
     public interface IFlowPolicy { }
 
     public static class FlowExtensions
     {
-        public static IFlow<T> WithBehaviour<T>(this IFlow<T> flow, IBehaviour<T> behaviour, OperationId operationId = null);
+        public static IFlow<T> WithBehaviour<T>(this IFlow<T> flow, IBehaviour behaviour, OperationId operationId = null);
     }
 }
 
