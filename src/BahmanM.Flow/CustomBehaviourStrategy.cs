@@ -36,6 +36,8 @@ internal class CustomBehaviourStrategy<T>(IBehaviour<T> behaviour) : IBehaviourS
     public IFlow<TNode> ApplyTo<TNode>(FailedNode<TNode> node) => node;
     public IFlow<TNode> ApplyTo<TNode>(DoOnSuccessNode<TNode> node) => node;
     public IFlow<TNode> ApplyTo<TNode>(AsyncDoOnSuccessNode<TNode> node) => node;
+    public IFlow<TNode> ApplyTo<TNode>(DoOnFailureNode<TNode> node) => node;
+    public IFlow<TNode> ApplyTo<TNode>(AsyncDoOnFailureNode<TNode> node) => node;
     public IFlow<TOut> ApplyTo<TIn, TOut>(SelectNode<TIn, TOut> node) => node;
     public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncSelectNode<TIn, TOut> node) => node;
 

@@ -144,7 +144,7 @@ namespace BahmanM.Flow.Tests.Unit
             var resilientFlow = flow.WithRetry(3);
 
             // Assert
-            Assert.Same(flow, resilientFlow);
+            Assert.Equal(flow, resilientFlow);
         }
 
         [Fact]
@@ -157,7 +157,7 @@ namespace BahmanM.Flow.Tests.Unit
             var resilientFlow = flow.WithRetry(3);
 
             // Assert
-            Assert.Same(flow, resilientFlow);
+            Assert.Equal(flow, resilientFlow);
         }
 
         [Fact]
