@@ -9,6 +9,36 @@ namespace BahmanM.Flow.Tests.Unit
         // also distinguished himself as a historian, chronologist and linguist.
         private const string AlBiruni = "Al-Biruni";
 
+        public class NonFailableFlowsTheoryData : TheoryData<IFlow<string>>
+        {
+            public NonFailableFlowsTheoryData()
+            {
+                Add(Flow.Succeed("succeeded"));
+                Add(Flow.Fail<string>(new Exception("dummy")));
+                Add(Flow.Succeed("s").Select(_ => "selected"));
+                Add(Flow.Succeed("s").Select(async _ => { await Task.Delay(1); return "async selected"; }));
+                Add(Flow.Succeed("s").DoOnSuccess(_ => { }));
+                Add(Flow.Succeed("s").DoOnSuccess(async _ => await Task.Delay(1)));
+                Add(Flow.Succeed("s").DoOnFailure(_ => { }));
+                Add(Flow.Succeed("s").DoOnFailure(async _ => await Task.Delay(1)));
+            }
+        }
+
+
+        [Theory]
+        [ClassData(typeof(NonFailableFlowsTheoryData))]
+        public void WithRetry_OnNonFailableNodes_IsANoOpAndReturnsSameInstance(IFlow<string> nonFailableFlow)
+        {
+            // Arrange
+            var originalFlow = nonFailableFlow;
+
+            // Act
+            var resultFlow = originalFlow.WithRetry(3);
+
+            // Assert
+            Assert.Equal(originalFlow, resultFlow);
+        }
+
         [Fact]
         public async Task WithRetry_OnFlakyOperation_SucceedsAfterRetries()
         {
@@ -134,31 +164,7 @@ namespace BahmanM.Flow.Tests.Unit
             Assert.Equal(Failure<string>(lastException), outcome);
         }
 
-        [Fact]
-        public void WithRetry_OnNonFailableSelectNode_ReturnsOriginalFlow()
-        {
-            // Arrange
-            var flow = Flow.Succeed(10).Select(x => x * 2);
-
-            // Act
-            var resilientFlow = flow.WithRetry(3);
-
-            // Assert
-            Assert.Equal(flow, resilientFlow);
-        }
-
-        [Fact]
-        public void WithRetry_OnSucceededNode_ReturnsOriginalFlow()
-        {
-            // Arrange
-            var flow = Flow.Succeed(10);
-
-            // Act
-            var resilientFlow = flow.WithRetry(3);
-
-            // Assert
-            Assert.Equal(flow, resilientFlow);
-        }
+        
 
         [Fact]
         public async Task WithRetry_WhenNonRetryableExceptionThrown_FailsImmediately()

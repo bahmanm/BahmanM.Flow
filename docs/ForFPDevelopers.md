@@ -28,11 +28,11 @@ This design philosophy is a direct consequence of the C# language itself, specif
 
 Without those features, it's impossible to create a single, generic `Traverse` function or a truly universal `Select` that works across all "monadic" types.
 
-As a result, the library makes a deliberate trade-off:
+As a result, Flow makes a deliberate trade-off:
 
 *   It provides concrete, named methods like `Flow.All` and `Flow.Any` that mirror the well-known `Task.WhenAll` and `Task.WhenAny`, rather than exposing a single, more abstract `Traverse` function with different `Applicative` implementations for you to choose from.
 *   It focuses on providing a single, powerful Flow type that solves a specific set of problems, rather than attempting to be a generic functional toolkit.
 
 The goal is to leverage the power and safety of functional patterns internally and where it helps Flows be more robust, while presenting a simple, intuitive, and productive toolkit externally. 
 
-The rich functional nature of the library is an implementation detail, not a user-facing prerequisite.
+The rich functional nature of Flow is an implementation detail, not a user-facing prerequisite.

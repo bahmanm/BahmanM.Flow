@@ -6,6 +6,41 @@ public class WithTimeoutTests
     // political activist, feminist, and social theorist.
     private const string SimoneDeBeauvoir = "Simone de Beauvoir";
 
+    public class NonFailableFlowsTheoryData : TheoryData<IFlow<string>>
+    {
+        public NonFailableFlowsTheoryData()
+        {
+            Add(Flow.Succeed("succeeded"));
+            Add(Flow.Fail<string>(new Exception("dummy")));
+            Add(Flow.Succeed("s").Select(_ => "selected"));
+            Add(Flow.Succeed("s").Select(async _ =>
+            {
+                await Task.Delay(1);
+                return "async selected";
+            }));
+            Add(Flow.Succeed("s").DoOnSuccess(_ => { }));
+            Add(Flow.Succeed("s").DoOnSuccess(async _ => await Task.Delay(1)));
+            Add(Flow.Succeed("s").DoOnFailure(_ => { }));
+            Add(Flow.Succeed("s").DoOnFailure(async _ => await Task.Delay(1)));
+        }
+    }
+
+
+    [Theory]
+    [ClassData(typeof(NonFailableFlowsTheoryData))]
+    public void WithTimeout_OnNonFailableNodes_IsANoOp(IFlow<string> nonFailableFlow)
+    {
+        // Arrange
+        var originalFlow = nonFailableFlow;
+        var timeout = TimeSpan.FromSeconds(1);
+
+        // Act
+        var resultFlow = originalFlow.WithTimeout(timeout);
+
+        // Assert
+        Assert.Equal(originalFlow, resultFlow);
+    }
+
     [Fact]
     public async Task WithTimeout_WhenOperationExceedsDuration_FailsWithTimeoutException()
     {
@@ -70,14 +105,14 @@ public class WithTimeoutTests
         Assert.True(outcome.IsFailure());
         Assert.IsType<TimeoutException>(outcome switch { Failure<string> f => f.Exception, _ => null });
     }
-
+    
     [Fact]
     public async Task WithTimeout_WhenSyncOperationExceedsDuration_FailsWithTimeoutException()
     {
         // Arrange
         var flow = Flow.Create(() =>
         {
-            System.Threading.Thread.Sleep(TimeSpan.FromMilliseconds(200));
+            Task.Delay(TimeSpan.FromMilliseconds(200)).Wait(); // Intentionally blocking to simulate a long-running synchronous operation
             return SimoneDeBeauvoir;
         });
 
