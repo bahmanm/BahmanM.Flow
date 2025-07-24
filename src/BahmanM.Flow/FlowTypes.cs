@@ -65,13 +65,13 @@ internal sealed record AsyncDoOnSuccessFlow<T>(IFlow<T> Upstream, Func<T, Task> 
 internal sealed record DoOnFailureNode<T>(IFlow<T> Upstream, Action<Exception> Action) : IFlowNode<T>
 {
     public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
-    public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo<T>(this);
+    public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }
 
 internal sealed record AsyncDoOnFailureNode<T>(IFlow<T> Upstream, Func<Exception, Task> AsyncAction) : IFlowNode<T>
 {
     public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
-    public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo<T>(this);
+    public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }
 
 #endregion
@@ -104,6 +104,22 @@ internal sealed record AsyncChainNode<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, 
 {
     public Task<Outcome<TOut>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
     public IFlow<TOut> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
+}
+
+#endregion
+
+#region Concurrency Nodes
+
+internal sealed record AllNode<T>(IReadOnlyList<IFlow<T>> Flows) : IFlowNode<T[]>
+{
+    public Task<Outcome<T[]>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+    public IFlow<T[]> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
+}
+
+internal sealed record AnyNode<T>(IReadOnlyList<IFlow<T>> Flows) : IFlowNode<T>
+{
+    public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+    public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }
 
 #endregion

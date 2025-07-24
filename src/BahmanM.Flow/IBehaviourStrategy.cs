@@ -14,4 +14,6 @@ internal interface IBehaviourStrategy
     IFlow<TOut> ApplyTo<TIn, TOut>(AsyncSelectNode<TIn, TOut> node);
     IFlow<TOut> ApplyTo<TIn, TOut>(ChainNode<TIn, TOut> node);
     IFlow<TOut> ApplyTo<TIn, TOut>(AsyncChainNode<TIn, TOut> node);
+    IFlow<T[]> ApplyTo<T>(AllNode<T> node);
+    IFlow<T> ApplyTo<T>(AnyNode<T> node);
 }

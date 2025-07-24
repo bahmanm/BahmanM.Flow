@@ -79,15 +79,8 @@ public class FlowEngine
 
         if (upstreamOutcome is Failure<T> failure)
         {
-            try
-            {
-                node.Action(failure.Exception);
-            }
-            catch
-            {
-                // Per the contract, if the action throws, we ignore the new exception
-                // and propagate the original failure.
-            }
+            try { node.Action(failure.Exception); }
+            catch { /* Ignore */ }
         }
 
         return upstreamOutcome;
@@ -99,15 +92,8 @@ public class FlowEngine
 
         if (upstreamOutcome is Failure<T> failure)
         {
-            try
-            {
-                await node.AsyncAction(failure.Exception);
-            }
-            catch
-            {
-                // Per the contract, if the action throws, we ignore the new exception
-                // and propagate the original failure.
-            }
+            try { await node.AsyncAction(failure.Exception); }
+            catch { /* Ignore */ }
         }
 
         return upstreamOutcome;
@@ -177,9 +163,53 @@ public class FlowEngine
         }
     }
 
+    internal async Task<Outcome<T[]>> Execute<T>(AllNode<T> node)
+    {
+        // This implementation waits for all flows to complete. If any have failed, it
+        // aggregates all their exceptions. This provides the most comprehensive diagnostic
+        // information to the caller, rather than failing fast on the first exception.
+        var outcomes = await Task.WhenAll(node.Flows.Select(f => ((IFlowNode<T>)f).ExecuteWith(this)));
+
+        var exceptions = outcomes.OfType<Failure<T>>().Select(f => f.Exception).ToList();
+
+        return exceptions is not []
+            ? Outcome.Failure<T[]>(new AggregateException(exceptions))
+            : Outcome.Success(outcomes.OfType<Success<T>>().Select(s => s.Value).ToArray());
+    }
+
+    internal async Task<Outcome<T>> Execute<T>(AnyNode<T> node)
+    {
+        return await ExecuteAnyRecursively(
+            node.Flows.Select(f => ((IFlowNode<T>)f).ExecuteWith(this)).ToList(),
+            []);
+    }
+
     #endregion
 
     #region Private Helpers
+
+    private async Task<Outcome<T>> ExecuteAnyRecursively<T>(List<Task<Outcome<T>>> remainingTasks, List<Exception> exceptions)
+    {
+        if (remainingTasks is [])
+        {
+            return Outcome.Failure<T>(new AggregateException(exceptions));
+        }
+
+        var completedTask = await Task.WhenAny(remainingTasks);
+        remainingTasks.Remove(completedTask);
+
+        var outcome = await completedTask;
+
+        if (outcome is Success<T> success)
+        {
+            // TODO: Cancel the remaining tasks. This requires passing a CancellationTokenSource through the engine.
+            // For now, we let them run to completion but ignore their results.
+            return success;
+        }
+
+        exceptions.Add(((Failure<T>)outcome).Exception);
+        return await ExecuteAnyRecursively(remainingTasks, exceptions);
+    }
 
     private static Task<Outcome<T>> TryOperation<T>(Func<T> operation)
     {
