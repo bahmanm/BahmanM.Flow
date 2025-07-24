@@ -1,21 +1,10 @@
 namespace BahmanM.Flow;
 
-internal class RetryStrategy : IBehaviourStrategy
+internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptions) : IBehaviourStrategy
 {
-    private readonly Type[] _nonRetryableExceptions;
-    private readonly int _maxAttempts;
-
-    public RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptions)
-    {
-        _nonRetryableExceptions = nonRetryableExceptions;
-        _maxAttempts = maxAttempts > 0
-            ? maxAttempts
-            : throw new ArgumentOutOfRangeException(nameof(maxAttempts), "Max attempts must be a positive integer.");
-    }
-    
-    public RetryStrategy(int maxAttempts) : this(maxAttempts, [typeof(TimeoutException)])
-    {
-    }
+    private readonly int _maxAttempts = maxAttempts > 0
+        ? maxAttempts
+        : throw new ArgumentOutOfRangeException(nameof(maxAttempts), "Max attempts must be a positive integer.");
 
     #region Pass-through Implementations
 
@@ -23,6 +12,8 @@ internal class RetryStrategy : IBehaviourStrategy
     public IFlow<T> ApplyTo<T>(FailedNode<T> node) => node;
     public IFlow<T> ApplyTo<T>(DoOnSuccessNode<T> node) => node;
     public IFlow<T> ApplyTo<T>(AsyncDoOnSuccessNode<T> node) => node;
+    public IFlow<T> ApplyTo<T>(DoOnFailureNode<T> node) => node;
+    public IFlow<T> ApplyTo<T>(AsyncDoOnFailureNode<T> node) => node;
     public IFlow<TOut> ApplyTo<TIn, TOut>(SelectNode<TIn, TOut> node) => node;
     public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncSelectNode<TIn, TOut> node) => node;
 
@@ -43,7 +34,7 @@ internal class RetryStrategy : IBehaviourStrategy
                 }
                 catch (Exception ex)
                 {
-                    if (_nonRetryableExceptions.Contains(ex.GetType())) 
+                    if (nonRetryableExceptions.Contains(ex.GetType())) 
                         throw;
                     lastException = ex;
                 }
@@ -73,7 +64,7 @@ internal class RetryStrategy : IBehaviourStrategy
                 }
                 catch (Exception ex)
                 {
-                    if (_nonRetryableExceptions.Contains(ex.GetType())) 
+                    if (nonRetryableExceptions.Contains(ex.GetType())) 
                         throw;
                     lastException = ex;
                 }

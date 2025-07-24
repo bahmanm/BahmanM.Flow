@@ -60,6 +60,22 @@ internal sealed record AsyncDoOnSuccessFlow<T>(IFlow<T> Upstream, Func<T, Task> 
 
 #endregion
 
+#region DoOnFailure Nodes
+
+internal sealed record DoOnFailureNode<T>(IFlow<T> Upstream, Action<Exception> Action) : IFlowNode<T>
+{
+    public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+    public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo<T>(this);
+}
+
+internal sealed record AsyncDoOnFailureNode<T>(IFlow<T> Upstream, Func<Exception, Task> AsyncAction) : IFlowNode<T>
+{
+    public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+    public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo<T>(this);
+}
+
+#endregion
+
 #region Select Nodes
 
 internal sealed record SelectNode<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, TOut> Operation) : IFlowNode<TOut>
