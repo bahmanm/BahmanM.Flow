@@ -14,4 +14,6 @@ internal class CustomBehaviourStrategy(IBehaviour behaviour) : IBehaviourStrateg
     public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncSelectNode<TIn, TOut> node) => behaviour.Apply(node);
     public IFlow<TOut> ApplyTo<TIn, TOut>(ChainNode<TIn, TOut> node) => behaviour.Apply(node);
     public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncChainNode<TIn, TOut> node) => behaviour.Apply(node);
+    public IFlow<T[]> ApplyTo<T>(AllNode<T> node) => behaviour.Apply(node);
+    public IFlow<T> ApplyTo<T>(AnyNode<T> node) => behaviour.Apply(node);
 }
