@@ -14,6 +14,11 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
     public IFlow<T> ApplyTo<T>(DoOnSuccessNode<T> node) => node;
 
     public IFlow<T> ApplyTo<T>(AsyncDoOnSuccessNode<T> node) => node;
+    public IFlow<T> ApplyTo<T>(CancellableAsyncDoOnSuccessNode<T> node)
+    {
+        throw new NotImplementedException();
+    }
+
     public IFlow<T> ApplyTo<T>(DoOnFailureNode<T> node) => node;
     public IFlow<T> ApplyTo<T>(AsyncDoOnFailureNode<T> node) => node;
     public IFlow<TOut> ApplyTo<TIn, TOut>(SelectNode<TIn, TOut> node) => node;

@@ -8,6 +8,11 @@ internal class CustomBehaviourStrategy(IBehaviour behaviour) : IBehaviourStrateg
     public IFlow<T> ApplyTo<T>(AsyncCreateNode<T> node) => behaviour.Apply(node);
     public IFlow<T> ApplyTo<T>(DoOnSuccessNode<T> node) => behaviour.Apply(node);
     public IFlow<T> ApplyTo<T>(AsyncDoOnSuccessNode<T> node) => behaviour.Apply(node);
+    public IFlow<T> ApplyTo<T>(CancellableAsyncDoOnSuccessNode<T> node)
+    {
+        throw new NotImplementedException();
+    }
+
     public IFlow<T> ApplyTo<T>(DoOnFailureNode<T> node) => behaviour.Apply(node);
     public IFlow<T> ApplyTo<T>(AsyncDoOnFailureNode<T> node) => behaviour.Apply(node);
     public IFlow<TOut> ApplyTo<TIn, TOut>(SelectNode<TIn, TOut> node) => behaviour.Apply(node);

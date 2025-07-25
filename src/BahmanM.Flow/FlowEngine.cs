@@ -73,6 +73,28 @@ public class FlowEngine
         return upstreamOutcome;
     }
 
+    internal async Task<Outcome<T>> Execute<T>(CancellableAsyncDoOnSuccessNode<T> node)
+    {
+        var upstreamOutcome = await ((IFlowNode<T>)node.Upstream).ExecuteWith(this);
+
+        if (upstreamOutcome is Success<T> success)
+        {
+            try
+            {
+                // This needs the CancellationToken from the engine, which isn't available yet.
+                // This will be properly implemented when we tackle issue #68.
+                await node.AsyncAction(success.Value, CancellationToken.None);
+                return upstreamOutcome;
+            }
+            catch (Exception ex)
+            {
+                return Outcome.Failure<T>(ex);
+            }
+        }
+
+        return upstreamOutcome;
+    }
+
     internal async Task<Outcome<T>> Execute<T>(DoOnFailureNode<T> node)
     {
         var upstreamOutcome = await ((IFlowNode<T>)node.Upstream).ExecuteWith(this);

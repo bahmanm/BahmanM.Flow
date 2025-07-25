@@ -10,7 +10,7 @@ public class DoOnSuccessTests
         // Arrange
         var successValue = 123;
         var actionCalled = false;
-        Action<int> onSuccess = val =>
+        Operations.DoOnSuccess.Sync<int> onSuccess = val =>
         {
             Assert.Equal(successValue, val);
             actionCalled = true;
@@ -32,7 +32,7 @@ public class DoOnSuccessTests
         // Arrange
         var exception = new InvalidOperationException("Test Failure");
         var actionCalled = false;
-        Action<int> onSuccess = _ => actionCalled = true;
+        Operations.DoOnSuccess.Sync<int> onSuccess = _ => actionCalled = true;
 
         var flow = Flow.Fail<int>(exception).DoOnSuccess(onSuccess);
 
@@ -50,7 +50,7 @@ public class DoOnSuccessTests
         // Arrange
         var successValue = 123;
         var exception = new InvalidOperationException("Action failed!");
-        Action<int> onSuccess = _ => throw exception;
+        Operations.DoOnSuccess.Sync<int> onSuccess = _ => throw exception;
 
         var flow = Flow.Succeed(successValue).DoOnSuccess(onSuccess);
 
@@ -67,7 +67,7 @@ public class DoOnSuccessTests
         // Arrange
         var successValue = 123;
         var actionCalled = false;
-        Func<int, Task> onSuccess = async val =>
+        Operations.DoOnSuccess.Async<int> onSuccess = async val =>
         {
             Assert.Equal(successValue, val);
             await Task.Delay(10);
@@ -90,7 +90,7 @@ public class DoOnSuccessTests
         // Arrange
         var exception = new InvalidOperationException("Test Failure");
         var actionCalled = false;
-        Func<int, Task> onSuccess = async _ =>
+        Operations.DoOnSuccess.Async<int> onSuccess = async _ =>
         {
             await Task.Delay(10);
             actionCalled = true;
@@ -112,7 +112,7 @@ public class DoOnSuccessTests
         // Arrange
         var successValue = 123;
         var exception = new InvalidOperationException("Action failed!");
-        Func<int, Task> onSuccess = _ => throw exception;
+        Operations.DoOnSuccess.Async<int> onSuccess = _ => throw exception;
 
         var flow = Flow.Succeed(successValue).DoOnSuccess(onSuccess);
 

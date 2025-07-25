@@ -2,11 +2,14 @@ namespace BahmanM.Flow;
 
 public static class FlowExtensions
 {
-    public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Action<T> action) =>
+    public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Operations.DoOnSuccess.Sync<T> action) =>
         new DoOnSuccessNode<T>(flow, action);
 
-    public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Func<T, Task> asyncAction) =>
+    public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Operations.DoOnSuccess.Async<T> asyncAction) =>
         new AsyncDoOnSuccessNode<T>(flow, asyncAction);
+
+    public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Operations.DoOnSuccess.CancellableAsync<T> asyncAction) =>
+        new CancellableAsyncDoOnSuccessNode<T>(flow, asyncAction);
 
     public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Action<Exception> action) =>
         new DoOnFailureNode<T>(flow, action);

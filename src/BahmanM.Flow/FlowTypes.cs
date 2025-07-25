@@ -46,13 +46,21 @@ internal sealed record AsyncCreateFlow<T>(Func<Task<T>> Operation) : IVisitableF
 
 #region DoOnSuccess
 
-internal sealed record DoOnSuccessFlow<T>(IFlow<T> Upstream, Action<T> Action) : IVisitableFlow<T>
+internal sealed record DoOnSuccessNode<T>(IFlow<T> Upstream, Operations.DoOnSuccess.Sync<T> Action) : IFlowNode<T>
 {
     public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
     public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }
 
-internal sealed record AsyncDoOnSuccessFlow<T>(IFlow<T> Upstream, Func<T, Task> AsyncAction) : IVisitableFlow<T>
+internal sealed record AsyncDoOnSuccessNode<T>(IFlow<T> Upstream, Operations.DoOnSuccess.Async<T> AsyncAction) : IFlowNode<T>
+{
+    public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+    public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
+}
+
+internal sealed record CancellableAsyncDoOnSuccessNode<T>(
+    IFlow<T> Upstream,
+    Operations.DoOnSuccess.CancellableAsync<T> AsyncAction) : IFlowNode<T>
 {
     public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
     public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
