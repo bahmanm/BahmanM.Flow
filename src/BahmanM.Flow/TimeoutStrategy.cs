@@ -17,12 +17,28 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         return new AsyncCreateNode<T>(newOperation);
     }
 
-    public IFlow<T> ApplyTo<T>(DoOnSuccessNode<T> node) => node;
-    public IFlow<T> ApplyTo<T>(AsyncDoOnSuccessNode<T> node) => node;
-    public IFlow<T> ApplyTo<T>(DoOnFailureNode<T> node) => node;
-    public IFlow<T> ApplyTo<T>(AsyncDoOnFailureNode<T> node) => node;
-    public IFlow<TOut> ApplyTo<TIn, TOut>(SelectNode<TIn, TOut> node) => node;
-    public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncSelectNode<TIn, TOut> node) => node;
+    public IFlow<T> ApplyTo<T>(DoOnSuccessNode<T> node) =>
+        node with { Upstream = ((IFlowNode<T>)node.Upstream).Apply(this) };
+
+    public IFlow<T> ApplyTo<T>(AsyncDoOnSuccessNode<T> node) =>
+        node with { Upstream = ((IFlowNode<T>)node.Upstream).Apply(this) };
+
+    public IFlow<T> ApplyTo<T>(CancellableAsyncDoOnSuccessNode<T> node)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IFlow<T> ApplyTo<T>(DoOnFailureNode<T> node) =>
+        node with { Upstream = ((IFlowNode<T>)node.Upstream).Apply(this) };
+
+    public IFlow<T> ApplyTo<T>(AsyncDoOnFailureNode<T> node) =>
+        node with { Upstream = ((IFlowNode<T>)node.Upstream).Apply(this) };
+
+    public IFlow<TOut> ApplyTo<TIn, TOut>(SelectNode<TIn, TOut> node) =>
+        node with { Upstream = ((IFlowNode<TIn>)node.Upstream).Apply(this) };
+
+    public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncSelectNode<TIn, TOut> node) =>
+        node with { Upstream = ((IFlowNode<TIn>)node.Upstream).Apply(this) };
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(ChainNode<TIn, TOut> node)
     {
