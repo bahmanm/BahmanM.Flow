@@ -11,11 +11,29 @@ public class FlowEngine
         return executableFlow.ExecuteWith(new FlowEngine());
     }
 
+    public static Task<Outcome<T>> ExecuteAsync<T>(IFlow<T> flow, FlowExecutionOptions options)
+    {
+        var node = (IFlowNode<T>)flow;
+        return node.ExecuteWith(new FlowEngine(options));
+    }
+
     #endregion
 
     #region Constructors
-    
-    private FlowEngine() { }
+
+    private readonly FlowExecutionOptions _options;
+
+    private CancellationToken CancellationToken => _options.CancellationToken;
+
+    private FlowEngine()
+    {
+        _options = new FlowExecutionOptions();
+    }
+
+    private FlowEngine(FlowExecutionOptions options)
+    {
+        _options = options;
+    }
 
     #endregion
 
@@ -81,9 +99,7 @@ public class FlowEngine
         {
             try
             {
-                // This needs the CancellationToken from the engine, which isn't available yet.
-                // This will be properly implemented when we tackle issue #68.
-                await node.AsyncAction(success.Value, CancellationToken.None);
+                await node.AsyncAction(success.Value, CancellationToken);
                 return upstreamOutcome;
             }
             catch (Exception ex)
