@@ -2,22 +2,31 @@ namespace BahmanM.Flow;
 
 internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptions) : IBehaviourStrategy
 {
-    private readonly int _maxAttempts = maxAttempts > 0
-        ? maxAttempts
-        : throw new ArgumentOutOfRangeException(nameof(maxAttempts), "Max attempts must be a positive integer.");
+    private readonly Type[] _nonRetryableExceptions;
+    private readonly int _maxAttempts;
+
+    public RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptions)
+    {
+        _nonRetryableExceptions = nonRetryableExceptions;
+        _maxAttempts = maxAttempts > 0
+            ? maxAttempts
+            : throw new ArgumentOutOfRangeException(nameof(maxAttempts), "Max attempts must be a positive integer.");
+    }
+
+    public RetryStrategy(int maxAttempts) : this(maxAttempts, [typeof(TimeoutException)])
+    {
+    }
 
     #region Pass-through Implementations
 
     public IFlow<T> ApplyTo<T>(SucceededNode<T> node) => node;
     public IFlow<T> ApplyTo<T>(FailedNode<T> node) => node;
-
     public IFlow<T> ApplyTo<T>(CancellableAsyncCreateNode<T> node)
     {
         throw new NotImplementedException();
     }
 
     public IFlow<T> ApplyTo<T>(DoOnSuccessNode<T> node) => node;
-
     public IFlow<T> ApplyTo<T>(AsyncDoOnSuccessNode<T> node) => node;
     public IFlow<T> ApplyTo<T>(CancellableAsyncDoOnSuccessNode<T> node)
     {
@@ -26,16 +35,16 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
 
     public IFlow<T> ApplyTo<T>(DoOnFailureNode<T> node) => node;
     public IFlow<T> ApplyTo<T>(AsyncDoOnFailureNode<T> node) => node;
+    public IFlow<T> ApplyTo<T>(CancellableAsyncDoOnFailureNode<T> node) => node;
+
     public IFlow<TOut> ApplyTo<TIn, TOut>(SelectNode<TIn, TOut> node) => node;
-
     public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncSelectNode<TIn, TOut> node) => node;
-
     public IFlow<TOut> ApplyTo<TIn, TOut>(CancellableAsyncSelectNode<TIn, TOut> node) => node;
 
     #endregion
 
     #region Rewriting Implementations
-    
+
     public IFlow<T> ApplyTo<T>(CreateNode<T> node)
     {
         Operations.Create.Sync<T> newOperation = () =>
@@ -49,7 +58,7 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
                 }
                 catch (Exception ex)
                 {
-                    if (nonRetryableExceptions.Contains(ex.GetType())) 
+                    if (_nonRetryableExceptions.Contains(ex.GetType()))
                         throw;
                     lastException = ex;
                 }
@@ -79,7 +88,7 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
                 }
                 catch (Exception ex)
                 {
-                    if (nonRetryableExceptions.Contains(ex.GetType())) 
+                    if (_nonRetryableExceptions.Contains(ex.GetType()))
                         throw;
                     lastException = ex;
                 }
@@ -104,6 +113,7 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
     }
 
     public IFlow<T[]> ApplyTo<T>(AllNode<T> node) => node;
+
     public IFlow<T> ApplyTo<T>(AnyNode<T> node) => node;
 
     #endregion

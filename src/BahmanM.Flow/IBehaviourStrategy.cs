@@ -12,6 +12,7 @@ internal interface IBehaviourStrategy
     IFlow<T> ApplyTo<T>(CancellableAsyncDoOnSuccessNode<T> node);
     IFlow<T> ApplyTo<T>(DoOnFailureNode<T> node);
     IFlow<T> ApplyTo<T>(AsyncDoOnFailureNode<T> node);
+    IFlow<T> ApplyTo<T>(CancellableAsyncDoOnFailureNode<T> node);
     IFlow<TOut> ApplyTo<TIn, TOut>(SelectNode<TIn, TOut> node);
     IFlow<TOut> ApplyTo<TIn, TOut>(AsyncSelectNode<TIn, TOut> node);
     IFlow<TOut> ApplyTo<TIn, TOut>(CancellableAsyncSelectNode<TIn, TOut> node);

@@ -11,11 +11,14 @@ public static class FlowExtensions
     public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Operations.DoOnSuccess.CancellableAsync<T> asyncAction) =>
         new CancellableAsyncDoOnSuccessNode<T>(flow, asyncAction);
 
-    public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Action<Exception> action) =>
+    public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Operations.DoOnFailure.Sync action) =>
         new DoOnFailureNode<T>(flow, action);
 
-    public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Func<Exception, Task> asyncAction) =>
+    public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Operations.DoOnFailure.Async asyncAction) =>
         new AsyncDoOnFailureNode<T>(flow, asyncAction);
+
+    public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Operations.DoOnFailure.CancellableAsync asyncAction) =>
+        new CancellableAsyncDoOnFailureNode<T>(flow, asyncAction);
 
     public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Operations.Select.Sync<TIn, TOut> operation) =>
         new SelectNode<TIn, TOut>(flow, operation);
