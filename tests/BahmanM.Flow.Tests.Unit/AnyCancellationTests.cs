@@ -10,13 +10,13 @@ public class AnyCancellationTests
         // Arrange
         var sideEffects = new ConcurrentBag<string>();
 
-        var fastFlow = Flow.Create(async () =>
+        var fastFlow = Flow.Create<string>(async () =>
         {
             await Task.Delay(10);
             return "fast";
         });
 
-        var slowFlow = Flow.Create(async () =>
+        var slowFlow = Flow.Create<string>(async () =>
         {
             await Task.Delay(100);
             sideEffects.Add("slow flow ran to completion");

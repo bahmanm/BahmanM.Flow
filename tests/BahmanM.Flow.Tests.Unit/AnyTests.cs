@@ -14,7 +14,7 @@ public class AnyTests
     public async Task Any_WhenOneFlowSucceeds_ReturnsSucceededOutcomeWithFirstValue()
     {
         // Arrange
-        var flow1 = Flow.Create(async () =>
+        var flow1 = Flow.Create<string>(async () =>
         {
             await Task.Delay(20);
             return SophieGermain;
@@ -55,12 +55,12 @@ public class AnyTests
     public async Task Any_WhenMultipleFlowsSucceed_ReturnsTheFirstOneToFinish()
     {
         // Arrange
-        var flow1 = Flow.Create(async () =>
+        var flow1 = Flow.Create<string>(async () =>
         {
             await Task.Delay(50);
             return "Slow";
         });
-        var flow2 = Flow.Create(async () =>
+        var flow2 = Flow.Create<string>(async () =>
         {
             await Task.Delay(10);
             return "Fast";
@@ -78,8 +78,8 @@ public class AnyTests
     public async Task Any_FollowedByChain_ChainsTheFirstSuccessfulResult()
     {
         // Arrange
-        var slowSuccess = Flow.Create(async () => { await Task.Delay(50); return "slow"; });
-        var fastSuccess = Flow.Create(async () => { await Task.Delay(10); return "fast"; });
+        var slowSuccess = Flow.Create<string>(async () => { await Task.Delay(50); return "slow"; });
+        var fastSuccess = Flow.Create<string>(async () => { await Task.Delay(10); return "fast"; });
         var failed = Flow.Fail<string>(new Exception("failure"));
 
         // Act
@@ -96,8 +96,8 @@ public class AnyTests
     public async Task WithTimeout_OnAny_FailsIfNoFlowSucceedsWithinDuration()
     {
         // Arrange
-        var flow1 = Flow.Create(async () => { await Task.Delay(100); return "A"; });
-        var flow2 = Flow.Create(async () => { await Task.Delay(120); return "B"; });
+        var flow1 = Flow.Create<string>(async () => { await Task.Delay(100); return "A"; });
+        var flow2 = Flow.Create<string>(async () => { await Task.Delay(120); return "B"; });
 
         // Act
         var timedAny = Flow.Any(flow1, flow2).WithTimeout(TimeSpan.FromMilliseconds(50));

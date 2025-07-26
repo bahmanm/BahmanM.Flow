@@ -49,7 +49,7 @@ public class FlowExecutionTests
     {
         // Arrange
         var exception = new InvalidOperationException("Boom!");
-        var createFlow = Flow.Create((Func<int>)(() => throw exception));
+        var createFlow = Flow.Create<int>(async () => throw exception);
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(createFlow);

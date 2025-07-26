@@ -6,6 +6,7 @@ internal interface IBehaviourStrategy
     IFlow<T> ApplyTo<T>(FailedNode<T> node);
     IFlow<T> ApplyTo<T>(CreateNode<T> node);
     IFlow<T> ApplyTo<T>(AsyncCreateNode<T> node);
+    IFlow<T> ApplyTo<T>(CancellableAsyncCreateNode<T> node);
     IFlow<T> ApplyTo<T>(DoOnSuccessNode<T> node);
     IFlow<T> ApplyTo<T>(AsyncDoOnSuccessNode<T> node);
     IFlow<T> ApplyTo<T>(CancellableAsyncDoOnSuccessNode<T> node);
