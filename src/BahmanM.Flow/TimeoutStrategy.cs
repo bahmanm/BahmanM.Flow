@@ -46,6 +46,9 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
     public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncSelectNode<TIn, TOut> node) =>
         node with { Upstream = ((IFlowNode<TIn>)node.Upstream).Apply(this) };
 
+    public IFlow<TOut> ApplyTo<TIn, TOut>(CancellableAsyncSelectNode<TIn, TOut> node) =>
+        node with { Upstream = ((IFlowNode<TIn>)node.Upstream).Apply(this) };
+
     public IFlow<TOut> ApplyTo<TIn, TOut>(ChainNode<TIn, TOut> node)
     {
         Func<TIn, Task<IFlow<TOut>>> newOperation = async (value) =>

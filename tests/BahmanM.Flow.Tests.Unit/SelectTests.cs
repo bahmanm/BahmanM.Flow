@@ -37,7 +37,7 @@ public class SelectTests
     {
         // Arrange
         var exception = new InvalidOperationException("Selector failed!");
-        var flow = Flow.Succeed(123).Select((Func<int, int>)(_ => throw exception));
+        var flow = Flow.Succeed(123).Select((Operations.Select.Sync<int, int>)((_) => throw exception));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(flow);
@@ -51,11 +51,11 @@ public class SelectTests
     {
         // Arrange
         var successValue = 123;
-        var flow = Flow.Succeed(successValue).Select(async x =>
+        var flow = Flow.Succeed(successValue).Select((Operations.Select.Async<int, int>)(async x =>
         {
             await Task.Delay(10);
             return x * 2;
-        });
+        }));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(flow);
@@ -80,5 +80,48 @@ public class SelectTests
 
         // Assert
         Assert.Equal(Failure<int>(exception), outcome);
+    }
+
+    [Fact]
+    public async Task WhenCancellableAsyncFlowSucceeds_AppliesSelectorAndReturnsNewSuccess()
+    {
+        // Arrange
+        var successValue = 123;
+        var flow = Flow.Succeed(successValue).Select(async (x, token) =>
+        {
+            await Task.Delay(10, token);
+            return x * 2;
+        });
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(flow);
+
+        // Assert
+        Assert.Equal(Success(246), outcome);
+    }
+
+    [Fact]
+    public async Task WhenCancellableAsyncSelectorIsCancelled_ReturnsFailure()
+    {
+        // Arrange
+        var cts = new CancellationTokenSource();
+        var options = new FlowExecutionOptions { CancellationToken = cts.Token };
+
+        var flow = Flow.Succeed(123).Select(async (x, token) =>
+        {
+            await Task.Delay(100, token);
+            return x * 2;
+        });
+
+        // Act
+        await cts.CancelAsync();
+        var outcome = await FlowEngine.ExecuteAsync(flow, options);
+
+        // Assert
+        var failure = Assert.IsType<Failure<int>>(outcome);
+        Assert.IsType<TaskCanceledException>(failure.Exception);
+        
+        // Clean up
+        cts.Dispose();
     }
 }

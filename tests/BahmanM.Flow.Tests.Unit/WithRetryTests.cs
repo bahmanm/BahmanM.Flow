@@ -16,7 +16,7 @@ namespace BahmanM.Flow.Tests.Unit
                 Add(Flow.Succeed("succeeded"));
                 Add(Flow.Fail<string>(new Exception("dummy")));
                 Add(Flow.Succeed("s").Select(_ => "selected"));
-                Add(Flow.Succeed("s").Select(async _ => { await Task.Delay(1); return "async selected"; }));
+                Add(Flow.Succeed("s").Select<string,string>(async _ => { await Task.Delay(1); return "async selected"; }));
                 Add(Flow.Succeed("s").DoOnSuccess(_ => { }));
                 Add(Flow.Succeed("s").DoOnSuccess(async _ => await Task.Delay(1)));
                 Add(Flow.Succeed("s").DoOnFailure(_ => { }));
