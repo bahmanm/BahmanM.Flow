@@ -116,13 +116,21 @@ internal sealed record CancellableAsyncSelectNode<TIn, TOut>(
 
 #region Chain Nodes
 
-internal sealed record ChainNode<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, IFlow<TOut>> Operation) : IFlowNode<TOut>
+internal sealed record ChainNode<TIn, TOut>(IFlow<TIn> Upstream, Operations.Chain.Sync<TIn, TOut> Operation) : IFlowNode<TOut>
 {
     public Task<Outcome<TOut>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
     public IFlow<TOut> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }
 
-internal sealed record AsyncChainNode<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, Task<IFlow<TOut>>> Operation) : IFlowNode<TOut>
+internal sealed record AsyncChainNode<TIn, TOut>(IFlow<TIn> Upstream, Operations.Chain.Async<TIn, TOut> Operation) : IFlowNode<TOut>
+{
+    public Task<Outcome<TOut>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+    public IFlow<TOut> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
+}
+
+internal sealed record CancellableAsyncChainNode<TIn, TOut>(
+    IFlow<TIn> Upstream,
+    Operations.Chain.CancellableAsync<TIn, TOut> Operation) : IFlowNode<TOut>
 {
     public Task<Outcome<TOut>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
     public IFlow<TOut> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);

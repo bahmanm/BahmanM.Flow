@@ -228,6 +228,31 @@ public class FlowEngine
             return Outcome.Failure<TOut>(ex);
         }
     }
+    
+    internal async Task<Outcome<TOut>> Execute<TIn, TOut>(CancellableAsyncChainNode<TIn, TOut> node)
+    {
+        var upstreamOutcome = await ((IFlowNode<TIn>)node.Upstream).ExecuteWith(this);
+
+        if (upstreamOutcome is not Success<TIn> success)
+        {
+            return Outcome.Failure<TOut>(((Failure<TIn>)upstreamOutcome).Exception);
+        }
+
+        try
+        {
+            if (CancellationToken.IsCancellationRequested)
+            {
+                return Outcome.Failure<TOut>(new TaskCanceledException());
+            }
+
+            var nextFlow = (IFlowNode<TOut>)await node.Operation(success.Value, CancellationToken);
+            return await nextFlow.ExecuteWith(this);
+        }
+        catch (Exception ex)
+        {
+            return Outcome.Failure<TOut>(ex);
+        }
+    }
 
     internal async Task<Outcome<T[]>> Execute<T>(AllNode<T> node)
     {

@@ -26,11 +26,14 @@ public static class FlowExtensions
     public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Operations.Select.CancellableAsync<TIn, TOut> asyncOperation) =>
         new CancellableAsyncSelectNode<TIn, TOut>(flow, asyncOperation);
 
-    public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, IFlow<TOut>> operation) =>
+    public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Operations.Chain.Sync<TIn, TOut> operation) =>
         new ChainNode<TIn, TOut>(flow, operation);
 
-    public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, Task<IFlow<TOut>>> asyncOperation) =>
+    public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Operations.Chain.Async<TIn, TOut> asyncOperation) =>
         new AsyncChainNode<TIn, TOut>(flow, asyncOperation);
+
+    public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Operations.Chain.CancellableAsync<TIn, TOut> asyncOperation) =>
+        new CancellableAsyncChainNode<TIn, TOut>(flow, asyncOperation);
 
     public static IFlow<T> WithRetry<T>(this IFlow<T> flow, int maxAttempts, params Type[] nonRetryableExceptions)
     {
