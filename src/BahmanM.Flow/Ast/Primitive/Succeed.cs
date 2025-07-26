@@ -1,4 +1,4 @@
-namespace BahmanM.Flow.Ast.Pure;
+namespace BahmanM.Flow.Ast.Primitive;
 
 internal sealed record Succeed<T>(T Value) : INode<T>
 {

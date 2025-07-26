@@ -1,9 +1,11 @@
+using BahmanM.Flow.Ast.Primitive;
+
 namespace BahmanM.Flow;
 
 internal interface IBehaviourStrategy
 {
-    IFlow<T> ApplyTo<T>(Ast.Pure.Succeed<T> node);
-    IFlow<T> ApplyTo<T>(Ast.Pure.Fail<T> node);
+    IFlow<T> ApplyTo<T>(Succeed<T> node);
+    IFlow<T> ApplyTo<T>(Fail<T> node);
     IFlow<T> ApplyTo<T>(Ast.Create.Sync<T> node);
     IFlow<T> ApplyTo<T>(Ast.Create.Async<T> node);
     IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node);

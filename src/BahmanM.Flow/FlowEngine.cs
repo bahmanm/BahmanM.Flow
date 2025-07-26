@@ -1,3 +1,5 @@
+using BahmanM.Flow.Ast.Primitive;
+
 namespace BahmanM.Flow;
 
 public class FlowEngine
@@ -38,10 +40,10 @@ public class FlowEngine
 
     #region Visitor Methods
 
-    internal Task<Outcome<T>> Execute<T>(Ast.Pure.Succeed<T> node) =>
+    internal Task<Outcome<T>> Execute<T>(Succeed<T> node) =>
         Task.FromResult(Outcome.Success(node.Value));
 
-    internal Task<Outcome<T>> Execute<T>(Ast.Pure.Fail<T> node) =>
+    internal Task<Outcome<T>> Execute<T>(Fail<T> node) =>
         Task.FromResult(Outcome.Failure<T>(node.Exception));
 
     internal Task<Outcome<T>> Execute<T>(Ast.Create.Sync<T> node) =>
