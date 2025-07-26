@@ -92,13 +92,21 @@ internal sealed record AsyncDoOnFailureNode<T>(IFlow<T> Upstream, Func<Exception
 
 #region Select Nodes
 
-internal sealed record SelectNode<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, TOut> Operation) : IFlowNode<TOut>
+internal sealed record SelectNode<TIn, TOut>(IFlow<TIn> Upstream, Operations.Select.Sync<TIn, TOut> Operation) : IFlowNode<TOut>
 {
     public Task<Outcome<TOut>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
     public IFlow<TOut> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }
 
-internal sealed record AsyncSelectNode<TIn, TOut>(IFlow<TIn> Upstream, Func<TIn, Task<TOut>> Operation) : IFlowNode<TOut>
+internal sealed record AsyncSelectNode<TIn, TOut>(IFlow<TIn> Upstream, Operations.Select.Async<TIn, TOut> Operation) : IFlowNode<TOut>
+{
+    public Task<Outcome<TOut>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+    public IFlow<TOut> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
+}
+
+internal sealed record CancellableAsyncSelectNode<TIn, TOut>(
+    IFlow<TIn> Upstream,
+    Operations.Select.CancellableAsync<TIn, TOut> Operation) : IFlowNode<TOut>
 {
     public Task<Outcome<TOut>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
     public IFlow<TOut> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);

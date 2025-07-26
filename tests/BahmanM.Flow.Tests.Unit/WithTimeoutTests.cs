@@ -13,7 +13,7 @@ public class WithTimeoutTests
             Add(Flow.Succeed("succeeded"));
             Add(Flow.Fail<string>(new Exception("dummy")));
             Add(Flow.Succeed("s").Select(_ => "selected"));
-            Add(Flow.Succeed("s").Select(async _ =>
+            Add(Flow.Succeed("s").Select<string,string>(async _ =>
             {
                 await Task.Delay(1);
                 return "async selected";

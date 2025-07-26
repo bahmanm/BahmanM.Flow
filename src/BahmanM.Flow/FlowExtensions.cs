@@ -17,11 +17,14 @@ public static class FlowExtensions
     public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Func<Exception, Task> asyncAction) =>
         new AsyncDoOnFailureNode<T>(flow, asyncAction);
 
-    public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, TOut> operation) =>
+    public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Operations.Select.Sync<TIn, TOut> operation) =>
         new SelectNode<TIn, TOut>(flow, operation);
 
-    public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, Task<TOut>> asyncOperation) =>
+    public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Operations.Select.Async<TIn, TOut> asyncOperation) =>
         new AsyncSelectNode<TIn, TOut>(flow, asyncOperation);
+
+    public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Operations.Select.CancellableAsync<TIn, TOut> asyncOperation) =>
+        new CancellableAsyncSelectNode<TIn, TOut>(flow, asyncOperation);
 
     public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, IFlow<TOut>> operation) =>
         new ChainNode<TIn, TOut>(flow, operation);

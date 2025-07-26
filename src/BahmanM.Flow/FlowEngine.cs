@@ -46,7 +46,7 @@ public class FlowEngine
         Task.FromResult(Failure<T>(flow.Exception));
 
     internal Task<Outcome<T>> Execute<T>(CreateNode<T> node) =>
-        TryOperation.TrySync<T>(node.Operation);
+        TryOperation.TrySync<T>(() => node.Operation());
 
     internal Task<Outcome<T>> Execute<T>(AsyncCreateNode<T> node) =>
         TryOperation.TryAsync<T>(() => node.Operation());
@@ -171,7 +171,19 @@ public class FlowEngine
 
         return upstreamOutcome switch
         {
-            Success<TIn> s => await TryOperation.TryAsync(async () => await node.Operation(s.Value)),
+            Success<TIn> s => await TryOperation.TryAsync(() => node.Operation(s.Value)),
+            Failure<TIn> f => Outcome.Failure<TOut>(f.Exception),
+            _ => throw new NotSupportedException($"Unsupported outcome type: {upstreamOutcome.GetType().Name}")
+        };
+    }
+
+    internal async Task<Outcome<TOut>> Execute<TIn, TOut>(CancellableAsyncSelectNode<TIn, TOut> node)
+    {
+        var upstreamOutcome = await ((IFlowNode<TIn>)node.Upstream).ExecuteWith(this);
+
+        return upstreamOutcome switch
+        {
+            Success<TIn> s => await TryOperation.TryCancellableAsync(ct => node.Operation(s.Value, ct), CancellationToken),
             Failure<TIn> f => Outcome.Failure<TOut>(f.Exception),
             _ => throw new NotSupportedException($"Unsupported outcome type: {upstreamOutcome.GetType().Name}")
         };
@@ -265,7 +277,7 @@ internal static class TryOperation
         return await TryFindFirstSuccessfulFlow(remainingTasks, accumulatedExceptions);
     }
 
-    internal static Task<Outcome<T>> TrySync<T>(Operations.Create.Sync<T> operation)
+    internal static Task<Outcome<T>> TrySync<T>(Func<T> operation)
     {
         try
         {
