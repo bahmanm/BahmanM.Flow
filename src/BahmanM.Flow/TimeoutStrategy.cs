@@ -51,18 +51,29 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(ChainNode<TIn, TOut> node)
     {
-        Func<TIn, Task<IFlow<TOut>>> newOperation = async (value) =>
+        Operations.Chain.Async<TIn, TOut> newOperation = async (value) =>
         {
             var nextFlow = await Task.Run(() => node.Operation(value)).WaitAsync(duration);
             return ((IFlowNode<TOut>)nextFlow).Apply(this);
         };
         return new AsyncChainNode<TIn, TOut>(node.Upstream, newOperation);
     }
+
     public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncChainNode<TIn, TOut> node)
     {
-        Func<TIn, Task<IFlow<TOut>>> newOperation = async (value) =>
+        Operations.Chain.Async<TIn, TOut> newOperation = async (value) =>
         {
             var nextFlow = await node.Operation(value).WaitAsync(duration);
+            return ((IFlowNode<TOut>)nextFlow).Apply(this);
+        };
+        return node with { Operation = newOperation };
+    }
+
+    public IFlow<TOut> ApplyTo<TIn, TOut>(CancellableAsyncChainNode<TIn, TOut> node)
+    {
+        Operations.Chain.CancellableAsync<TIn, TOut> newOperation = async (value, cancellationToken) =>
+        {
+            var nextFlow = await node.Operation(value, cancellationToken).WaitAsync(duration, cancellationToken);
             return ((IFlowNode<TOut>)nextFlow).Apply(this);
         };
         return node with { Operation = newOperation };

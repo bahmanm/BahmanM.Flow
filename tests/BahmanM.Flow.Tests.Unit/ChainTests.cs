@@ -50,7 +50,7 @@ public class ChainTests
         // Arrange
         var exception = new InvalidOperationException("Chain function failed!");
         var initialFlow = Flow.Succeed(10);
-        var chainedFlow = initialFlow.Chain((Func<int, IFlow<int>>)(_ => throw exception));
+        var chainedFlow = initialFlow.Chain((Operations.Chain.Sync<int, int>)((_) => throw exception));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(chainedFlow);
@@ -105,12 +105,55 @@ public class ChainTests
         // Arrange
         var exception = new InvalidOperationException("Async chain function failed!");
         var initialFlow = Flow.Succeed(10);
-        var chainedFlow = initialFlow.Chain((Func<int, Task<IFlow<int>>>)(_ => throw exception));
+        var chainedFlow = initialFlow.Chain((Operations.Chain.Async<int, int>)((_) => throw exception));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(chainedFlow);
 
         // Assert
         Assert.Equal(Failure<int>(exception), outcome);
+    }
+
+    [Fact]
+    public async Task CancellableAsyncChain_OnSuccessfulFlow_ExecutesAndReturnsNewFlow()
+    {
+        // Arrange
+        var initialFlow = Flow.Succeed(10);
+        var chainedFlow = initialFlow.Chain(async (value, token) =>
+        {
+            await Task.Delay(10, token);
+            return Flow.Succeed(value * 2);
+        });
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(chainedFlow);
+
+        // Assert
+        Assert.Equal(Success(20), outcome);
+    }
+
+    [Fact]
+    public async Task WhenCancellableAsyncChainIsCancelled_ReturnsFailure()
+    {
+        // Arrange
+        var cts = new CancellationTokenSource();
+        var options = new FlowExecutionOptions { CancellationToken = cts.Token };
+
+        var chainedFlow = Flow.Succeed(10).Chain(async (value, token) =>
+        {
+            await Task.Delay(100, token);
+            return Flow.Succeed(value * 2);
+        });
+
+        // Act
+        await cts.CancelAsync();
+        var outcome = await FlowEngine.ExecuteAsync(chainedFlow, options);
+
+        // Assert
+        var failure = Assert.IsType<Failure<int>>(outcome);
+        Assert.IsType<TaskCanceledException>(failure.Exception);
+
+        // Clean up
+        cts.Dispose();
     }
 }
