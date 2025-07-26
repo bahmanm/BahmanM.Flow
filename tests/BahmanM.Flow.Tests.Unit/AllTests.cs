@@ -80,7 +80,7 @@ public class AllTests
         const string liuHui = "Liu Hui";
         var flow1 = Flow.Succeed(EmilieDuChatelet);
         var flow2 = Flow.Create(() => Brahmagupta);
-        var flow3 = Flow.Create(async () =>
+        var flow3 = Flow.Create<string>(async () =>
         {
             await Task.Delay(1);
             return liuHui;

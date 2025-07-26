@@ -30,13 +30,19 @@ internal sealed record FailedFlow<T>(Exception Exception) : IVisitableFlow<T>
 
 #region Create
 
-internal sealed record CreateFlow<T>(Func<T> Operation) : IVisitableFlow<T>
+internal sealed record CreateNode<T>(Operations.Create.Sync<T> Operation) : IFlowNode<T>
 {
     public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
     public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }
 
-internal sealed record AsyncCreateFlow<T>(Func<Task<T>> Operation) : IVisitableFlow<T>
+internal sealed record AsyncCreateNode<T>(Operations.Create.Async<T> Operation) : IFlowNode<T>
+{
+    public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+    public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
+}
+
+internal sealed record CancellableAsyncCreateNode<T>(Operations.Create.CancellableAsync<T> Operation) : IFlowNode<T>
 {
     public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
     public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);

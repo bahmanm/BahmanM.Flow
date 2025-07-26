@@ -45,7 +45,7 @@ public class WithTimeoutTests
     public async Task WithTimeout_WhenOperationExceedsDuration_FailsWithTimeoutException()
     {
         // Arrange
-        var flow = Flow.Create(async () =>
+        var flow = Flow.Create<string>(async () =>
         {
             await Task.Delay(TimeSpan.FromMilliseconds(200));
             return SimoneDeBeauvoir;
@@ -70,7 +70,7 @@ public class WithTimeoutTests
     public async Task WithTimeout_WhenOperationCompletesWithinDuration_Succeeds()
     {
         // Arrange
-        var flow = Flow.Create(async () =>
+        var flow = Flow.Create<string>(async () =>
         {
             await Task.Delay(TimeSpan.FromMilliseconds(50));
             return SimoneDeBeauvoir;
@@ -110,7 +110,7 @@ public class WithTimeoutTests
     public async Task WithTimeout_WhenSyncOperationExceedsDuration_FailsWithTimeoutException()
     {
         // Arrange
-        var flow = Flow.Create(() =>
+        var flow = Flow.Create<string>(() =>
         {
             Task.Delay(TimeSpan.FromMilliseconds(200)).Wait(); // Intentionally blocking to simulate a long-running synchronous operation
             return SimoneDeBeauvoir;
@@ -131,7 +131,7 @@ public class WithTimeoutTests
     {
         // Arrange
         var attempts = 0;
-        var flow = Flow.Create(async () =>
+        var flow = Flow.Create<string>(async () =>
         {
             attempts++;
             await Task.Delay(TimeSpan.FromMilliseconds(40));
@@ -158,7 +158,7 @@ public class WithTimeoutTests
     {
         // Arrange
         var attempts = 0;
-        var flow = Flow.Create(async () =>
+        var flow = Flow.Create<string>(async () =>
         {
             attempts += 1;
             await Task.Delay(TimeSpan.FromMilliseconds(200));

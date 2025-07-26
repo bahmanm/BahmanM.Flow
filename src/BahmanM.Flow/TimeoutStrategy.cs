@@ -7,15 +7,21 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<T> ApplyTo<T>(CreateNode<T> node)
     {
-        Func<Task<T>> newOperation = () => Task.Run(node.Operation).WaitAsync(duration);
+        Operations.Create.Async<T> newOperation = () => Task.Run(() => node.Operation()).WaitAsync(duration);
         return new AsyncCreateNode<T>(newOperation);
     }
 
     public IFlow<T> ApplyTo<T>(AsyncCreateNode<T> node)
     {
-        Func<Task<T>> newOperation = () => node.Operation().WaitAsync(duration);
+        Operations.Create.Async<T> newOperation = () => node.Operation().WaitAsync(duration);
         return new AsyncCreateNode<T>(newOperation);
     }
+
+    public IFlow<T> ApplyTo<T>(CancellableAsyncCreateNode<T> node)
+    {
+        throw new NotImplementedException();
+    }
+
 
     public IFlow<T> ApplyTo<T>(DoOnSuccessNode<T> node) =>
         node with { Upstream = ((IFlowNode<T>)node.Upstream).Apply(this) };
@@ -61,13 +67,14 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<T[]> ApplyTo<T>(AllNode<T> node)
     {
-        Func<Task<T[]>> newOperation = () => FlowEngine.ExecuteAsync(node).WaitAsync(duration).Unwrap();
+        Operations.Create.Async<T[]> newOperation = () => FlowEngine.ExecuteAsync(node).WaitAsync(duration).Unwrap();
         return new AsyncCreateNode<T[]>(newOperation);
     }
 
     public IFlow<T> ApplyTo<T>(AnyNode<T> node)
     {
-        Func<Task<T>> newOperation = () => FlowEngine.ExecuteAsync(node).WaitAsync(duration).Unwrap();
+        Operations.Create.Async<T> newOperation = () => FlowEngine.ExecuteAsync(node).WaitAsync(duration).Unwrap();
         return new AsyncCreateNode<T>(newOperation);
     }
+
 }

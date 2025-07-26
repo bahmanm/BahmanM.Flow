@@ -55,7 +55,7 @@ public class WithBehaviourTests
             Add(Flow.Succeed("succeeded"));
             Add(Flow.Fail<string>(new Exception("dummy")));
             Add(Flow.Create(() => "created"));
-            Add(Flow.Create(async () =>
+            Add(Flow.Create<string>(async () =>
             {
                 await Task.Delay(1);
                 return "async created";
