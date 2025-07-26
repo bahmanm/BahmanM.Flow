@@ -19,33 +19,33 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
 
     #region Pass-through Implementations
 
-    public IFlow<T> ApplyTo<T>(SucceededNode<T> node) => node;
-    public IFlow<T> ApplyTo<T>(FailedNode<T> node) => node;
-    public IFlow<T> ApplyTo<T>(CancellableAsyncCreateNode<T> node)
+    public IFlow<T> ApplyTo<T>(Ast.Pure.Succeed<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.Pure.Fail<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node)
     {
         throw new NotImplementedException();
     }
 
-    public IFlow<T> ApplyTo<T>(DoOnSuccessNode<T> node) => node;
-    public IFlow<T> ApplyTo<T>(AsyncDoOnSuccessNode<T> node) => node;
-    public IFlow<T> ApplyTo<T>(CancellableAsyncDoOnSuccessNode<T> node)
+    public IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.Sync<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.Async<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.CancellableAsync<T> node)
     {
         throw new NotImplementedException();
     }
 
-    public IFlow<T> ApplyTo<T>(DoOnFailureNode<T> node) => node;
-    public IFlow<T> ApplyTo<T>(AsyncDoOnFailureNode<T> node) => node;
-    public IFlow<T> ApplyTo<T>(CancellableAsyncDoOnFailureNode<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.DoOnFailure.Sync<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.DoOnFailure.Async<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.DoOnFailure.CancellableAsync<T> node) => node;
 
-    public IFlow<TOut> ApplyTo<TIn, TOut>(SelectNode<TIn, TOut> node) => node;
-    public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncSelectNode<TIn, TOut> node) => node;
-    public IFlow<TOut> ApplyTo<TIn, TOut>(CancellableAsyncSelectNode<TIn, TOut> node) => node;
+    public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Select.Sync<TIn, TOut> node) => node;
+    public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Select.Async<TIn, TOut> node) => node;
+    public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Select.CancellableAsync<TIn, TOut> node) => node;
 
     #endregion
 
     #region Rewriting Implementations
 
-    public IFlow<T> ApplyTo<T>(CreateNode<T> node)
+    public IFlow<T> ApplyTo<T>(Ast.Create.Sync<T> node)
     {
         Operations.Create.Sync<T> newOperation = () =>
         {
@@ -65,17 +65,17 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
             }
             throw lastException!;
         };
-        return new CreateNode<T>(newOperation);
+        return new Ast.Create.Sync<T>(newOperation);
     }
 
-    public IFlow<TOut> ApplyTo<TIn, TOut>(ChainNode<TIn, TOut> node)
+    public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Sync<TIn, TOut> node)
     {
         Operations.Chain.Sync<TIn,TOut> newOperation = (value) =>
-            ((IFlowNode<TOut>)node.Operation(value)).Apply(this);
+            ((Ast.INode<TOut>)node.Operation(value)).Apply(this);
         return node with { Operation = newOperation };
     }
 
-    public IFlow<T> ApplyTo<T>(AsyncCreateNode<T> node)
+    public IFlow<T> ApplyTo<T>(Ast.Create.Async<T> node)
     {
         Operations.Create.Async<T> newOperation = async () =>
         {
@@ -95,26 +95,26 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
             }
             throw lastException!;
         };
-        return new AsyncCreateNode<T>(newOperation);
+        return new Ast.Create.Async<T>(newOperation);
     }
 
-    public IFlow<TOut> ApplyTo<TIn, TOut>(AsyncChainNode<TIn, TOut> node)
+    public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Async<TIn, TOut> node)
     {
         Operations.Chain.Async<TIn, TOut> newOperation = async (value) =>
-            ((IFlowNode<TOut>)await node.Operation(value)).Apply(this);
+            ((Ast.INode<TOut>)await node.Operation(value)).Apply(this);
         return node with { Operation = newOperation };
     }
 
-    public IFlow<TOut> ApplyTo<TIn, TOut>(CancellableAsyncChainNode<TIn, TOut> node)
+    public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.CancellableAsync<TIn, TOut> node)
     {
         Operations.Chain.CancellableAsync<TIn, TOut> newOperation = async (value, cancellationToken) =>
-            ((IFlowNode<TOut>)await node.Operation(value, cancellationToken)).Apply(this);
+            ((Ast.INode<TOut>)await node.Operation(value, cancellationToken)).Apply(this);
         return node with { Operation = newOperation };
     }
 
-    public IFlow<T[]> ApplyTo<T>(AllNode<T> node) => node;
+    public IFlow<T[]> ApplyTo<T>(Ast.Primitive.All<T> node) => node;
 
-    public IFlow<T> ApplyTo<T>(AnyNode<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.Primitive.Any<T> node) => node;
 
     #endregion
 }
