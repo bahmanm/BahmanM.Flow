@@ -76,13 +76,21 @@ internal sealed record CancellableAsyncDoOnSuccessNode<T>(
 
 #region DoOnFailure Nodes
 
-internal sealed record DoOnFailureNode<T>(IFlow<T> Upstream, Action<Exception> Action) : IFlowNode<T>
+internal sealed record DoOnFailureNode<T>(IFlow<T> Upstream, Operations.DoOnFailure.Sync Action) : IFlowNode<T>
 {
     public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
     public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }
 
-internal sealed record AsyncDoOnFailureNode<T>(IFlow<T> Upstream, Func<Exception, Task> AsyncAction) : IFlowNode<T>
+internal sealed record AsyncDoOnFailureNode<T>(IFlow<T> Upstream, Operations.DoOnFailure.Async AsyncAction) : IFlowNode<T>
+{
+    public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+    public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
+}
+
+internal sealed record CancellableAsyncDoOnFailureNode<T>(
+    IFlow<T> Upstream,
+    Operations.DoOnFailure.CancellableAsync AsyncAction) : IFlowNode<T>
 {
     public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
     public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
