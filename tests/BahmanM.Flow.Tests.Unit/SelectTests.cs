@@ -1,4 +1,3 @@
-using BahmanM.Flow.Execution;
 using static BahmanM.Flow.Outcome;
 
 namespace BahmanM.Flow.Tests.Unit;
@@ -106,7 +105,7 @@ public class SelectTests
     {
         // Arrange
         var cts = new CancellationTokenSource();
-        var options = new FlowExecutionOptions { CancellationToken = cts.Token };
+        var options = new Execution.Options(CancellationToken: cts.Token);
 
         var flow = Flow.Succeed(123).Select(async (x, token) =>
         {
@@ -121,7 +120,7 @@ public class SelectTests
         // Assert
         var failure = Assert.IsType<Failure<int>>(outcome);
         Assert.IsType<TaskCanceledException>(failure.Exception);
-        
+
         // Clean up
         cts.Dispose();
     }

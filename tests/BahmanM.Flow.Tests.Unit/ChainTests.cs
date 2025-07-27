@@ -1,4 +1,3 @@
-using BahmanM.Flow.Execution;
 using static BahmanM.Flow.Outcome;
 
 namespace BahmanM.Flow.Tests.Unit;
@@ -138,7 +137,7 @@ public class ChainTests
     {
         // Arrange
         var cts = new CancellationTokenSource();
-        var options = new FlowExecutionOptions { CancellationToken = cts.Token };
+        var options = new Execution.Options(CancellationToken: cts.Token);
 
         var chainedFlow = Flow.Succeed(10).Chain(async (value, token) =>
         {
