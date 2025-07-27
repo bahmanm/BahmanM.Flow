@@ -1,4 +1,3 @@
-using BahmanM.Flow.Execution;
 using static BahmanM.Flow.Outcome;
 
 namespace BahmanM.Flow.Tests.Unit;
@@ -93,7 +92,7 @@ public class DoOnFailureTests
     {
         // Arrange
         var cts = new CancellationTokenSource();
-        var options = new FlowExecutionOptions { CancellationToken = cts.Token };
+        var options = new Execution.Options(CancellationToken: cts.Token);
         var actionCalled = false;
         var capturedException = null as Exception;
 
