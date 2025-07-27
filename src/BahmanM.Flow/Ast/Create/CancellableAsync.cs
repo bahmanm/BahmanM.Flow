@@ -1,7 +1,7 @@
 namespace BahmanM.Flow.Ast.Create;
 
-internal sealed record CancellableAsync<T>(Operations.Create.CancellableAsync<T> Operation) : INode<T>
+internal sealed record CancellableAsync<T>(Func<CancellationToken, Task<T>> Operation) : INode<T>
 {
-    public Task<Outcome<T>> ExecuteWith(FlowEngine engine) => engine.Execute(this);
+    public Task<Outcome<T>> Accept(IInterpreter interpreter) => interpreter.Interpret(this);
     public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }
