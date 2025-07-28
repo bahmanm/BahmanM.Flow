@@ -1,7 +1,7 @@
 namespace BahmanM.Flow.Ast.Chain;
 
-internal sealed record Sync<TIn, TOut>(IFlow<TIn> Upstream, Operations.Chain.Sync<TIn, TOut> Operation) : INode<TOut>
+internal sealed record Sync<TIn, TValue>(IFlow<TIn> Upstream, Operations.Chain.Sync<TIn, TValue> Operation) : INode<TValue>
 {
-    public Task<Outcome<TOut>> Accept(IInterpreter interpreter) => interpreter.Interpret<TIn, TOut>(this);
-    public IFlow<TOut> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
+    public Task<Outcome<TValue>> Accept(Ast.IInterpreter<Task<Outcome<TValue>>> interpreter) => interpreter.Interpret<TIn, TValue>(this);
+    public IFlow<TValue> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }
