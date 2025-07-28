@@ -1,7 +1,7 @@
 namespace BahmanM.Flow.Ast.DoOnSuccess;
 
-internal sealed record Async<T>(IFlow<T> Upstream, Operations.DoOnSuccess.Async<T> AsyncAction) : INode<T>
+internal sealed record Async<TValue>(IFlow<TValue> Upstream, Operations.DoOnSuccess.Async<TValue> AsyncAction) : INode<TValue>
 {
-    public Task<Outcome<T>> Accept(IInterpreter interpreter) => interpreter.Interpret(this);
-    public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
+    public Task<Outcome<TValue>> Accept(Ast.IInterpreter<Task<Outcome<TValue>>> interpreter) => interpreter.Interpret(this);
+    public IFlow<TValue> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }

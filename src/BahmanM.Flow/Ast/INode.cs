@@ -1,7 +1,7 @@
 namespace BahmanM.Flow.Ast;
 
-internal interface INode<T> : IFlow<T>
+internal interface INode<TValue> : IFlow<TValue>
 {
-    Task<Outcome<T>> Accept(IInterpreter interpreter);
-    IFlow<T> Apply(IBehaviourStrategy strategy);
+    Task<Outcome<TValue>> Accept(Ast.IInterpreter<Task<Outcome<TValue>>> interpreter);
+    IFlow<TValue> Apply(IBehaviourStrategy strategy);
 }
