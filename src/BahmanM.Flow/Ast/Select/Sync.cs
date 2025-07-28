@@ -1,7 +1,7 @@
 namespace BahmanM.Flow.Ast.Select;
 
-internal sealed record Sync<TIn, TOut>(IFlow<TIn> Upstream, Operations.Select.Sync<TIn, TOut> Operation) : INode<TOut>
+internal sealed record Sync<TLastValue, TValue>(IFlow<TLastValue> Upstream, Operations.Select.Sync<TLastValue, TValue> Operation) : INode<TValue>
 {
-    public Task<Outcome<TOut>> Accept(IInterpreter<Task<Outcome<TOut>>> interpreter) => interpreter.Interpret(this);
-    public IFlow<TOut> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
+    public Task<Outcome<TValue>> Accept(IInterpreter<TValue, Task<Outcome<TValue>>> interpreter) => interpreter.Interpret(this);
+    public IFlow<TValue> Apply(IBehaviourStrategy<TValue> strategy) => strategy.ApplyTo(this);
 }
