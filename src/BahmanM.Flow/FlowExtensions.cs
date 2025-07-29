@@ -1,4 +1,5 @@
 using BahmanM.Flow.Behaviour;
+using BahmanM.Flow.Execution;
 
 namespace BahmanM.Flow;
 
@@ -43,7 +44,7 @@ public static class FlowExtensions
     public static IFlow<T> WithRetry<T>(this IFlow<T> flow, int maxAttempts, params Type[] nonRetryableExceptions)
     {
         var strategy = new RetryStrategy(maxAttempts, nonRetryableExceptions);
-        return ((Ast.INode<T>)flow).Apply(strategy);
+        return flow.AsNode().Apply(strategy);
     }
 
     public static IFlow<T> WithRetry<T>(this IFlow<T> flow, int maxAttempts)
@@ -54,12 +55,12 @@ public static class FlowExtensions
     public static IFlow<T> WithTimeout<T>(this IFlow<T> flow, TimeSpan duration)
     {
         var strategy = new TimeoutStrategy(duration);
-        return ((Ast.INode<T>)flow).Apply(strategy);
+        return flow.AsNode().Apply(strategy);
     }
 
     public static IFlow<T> WithBehaviour<T>(this IFlow<T> flow, IBehaviour behaviour)
     {
         var strategy = new CustomBehaviourStrategy(behaviour);
-        return ((Ast.INode<T>)flow).Apply(strategy);
+        return flow.AsNode().Apply(strategy);
     }
 }
