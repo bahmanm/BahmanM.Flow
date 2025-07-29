@@ -1,7 +1,7 @@
 namespace BahmanM.Flow.Ast.Primitive;
 
-internal sealed record All<TValue>(IReadOnlyList<IFlow<TValue>> Flows)
+internal sealed record All<T>(IReadOnlyList<IFlow<T>> Flows) : INode<T[]>
 {
-    public Task<Outcome<IList<TValue>>> Accept(Ast.IInterpreter<TValue, Task<Outcome<IList<TValue>>>> interpreter) => interpreter.Interpret(this);
-    public IFlow<IList<TValue>> Apply(IBehaviourStrategy<TValue> strategy) => strategy.ApplyTo(this);
+    public Task<Outcome<T[]>> Accept(IInterpreter<T[]> interpreter) => interpreter.Interpret(this);
+    public IFlow<T[]> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }

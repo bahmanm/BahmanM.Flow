@@ -1,7 +1,7 @@
 namespace BahmanM.Flow.Ast.Create;
 
-internal sealed record Sync<TValue>(Operations.Create.Sync<TValue> Operation) : INode<TValue>
+internal sealed record Sync<T>(Operations.Create.Sync<T> Operation) : Execution.IExecutionNode<T>
 {
-    public Task<Outcome<TValue>> Accept(Ast.IInterpreter<TValue, Task<Outcome<TValue>>> interpreter) => interpreter.Interpret(this);
-    public IFlow<TValue> Apply(IBehaviourStrategy<TValue> strategy) => strategy.ApplyTo(this);
+    public Task<Outcome<T>> Accept(Execution.IInterpreter<T> interpreter) => interpreter.Interpret(this);
+    public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }
