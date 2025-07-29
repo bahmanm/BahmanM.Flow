@@ -9,13 +9,13 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<T> ApplyTo<T>(Ast.Create.Sync<T> node)
     {
-        Operations.Create.Async<T> newOperation = () => Task.Run(() => node.Operation()).WaitAsync(duration);
+        Flow.Operations.Create.Async<T> newOperation = () => Task.Run(() => node.Operation()).WaitAsync(duration);
         return new Ast.Create.Async<T>(newOperation);
     }
 
     public IFlow<T> ApplyTo<T>(Ast.Create.Async<T> node)
     {
-        Operations.Create.Async<T> newOperation = () => node.Operation().WaitAsync(duration);
+        Flow.Operations.Create.Async<T> newOperation = () => node.Operation().WaitAsync(duration);
         return new Ast.Create.Async<T>(newOperation);
     }
 
@@ -55,7 +55,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Sync<TIn, TOut> node)
     {
-        Operations.Chain.Async<TIn, TOut> newOperation = async (value) =>
+        Flow.Operations.Chain.Async<TIn, TOut> newOperation = async (value) =>
         {
             var nextFlow = await Task.Run(() => node.Operation(value)).WaitAsync(duration);
             return ((Ast.INode<TOut>)nextFlow).Apply(this);
@@ -65,7 +65,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Async<TIn, TOut> node)
     {
-        Operations.Chain.Async<TIn, TOut> newOperation = async (value) =>
+        Flow.Operations.Chain.Async<TIn, TOut> newOperation = async (value) =>
         {
             var nextFlow = await node.Operation(value).WaitAsync(duration);
             return ((Ast.INode<TOut>)nextFlow).Apply(this);
@@ -75,7 +75,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.CancellableAsync<TIn, TOut> node)
     {
-        Operations.Chain.CancellableAsync<TIn, TOut> newOperation = async (value, cancellationToken) =>
+        Flow.Operations.Chain.CancellableAsync<TIn, TOut> newOperation = async (value, cancellationToken) =>
         {
             var nextFlow = await node.Operation(value, cancellationToken).WaitAsync(duration, cancellationToken);
             return ((Ast.INode<TOut>)nextFlow).Apply(this);
@@ -85,13 +85,13 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<T[]> ApplyTo<T>(Ast.Primitive.All<T> node)
     {
-        Operations.Create.Async<T[]> newOperation = () => FlowEngine.ExecuteAsync(node).WaitAsync(duration).Unwrap();
+        Flow.Operations.Create.Async<T[]> newOperation = () => FlowEngine.ExecuteAsync(node).WaitAsync(duration).Unwrap();
         return new Ast.Create.Async<T[]>(newOperation);
     }
 
     public IFlow<T> ApplyTo<T>(Ast.Primitive.Any<T> node)
     {
-        Operations.Create.Async<T> newOperation = () => FlowEngine.ExecuteAsync(node).WaitAsync(duration).Unwrap();
+        Flow.Operations.Create.Async<T> newOperation = () => FlowEngine.ExecuteAsync(node).WaitAsync(duration).Unwrap();
         return new Ast.Create.Async<T>(newOperation);
     }
 
