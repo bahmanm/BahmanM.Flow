@@ -1,5 +1,9 @@
 namespace BahmanM.Flow;
 
+public interface IFlow<T>
+{
+}
+
 public static class Flow
 {
     public static IFlow<T> Succeed<T>(T value) => new Ast.Primitive.Succeed<T>(value);
@@ -58,7 +62,6 @@ public static class Flow
             public delegate T Sync<out T>(Exception error);
             public delegate Task<T> Async<T>(Exception error);
             public delegate Task<T> CancellableAsync<T>(Exception error, CancellationToken cancellationToken);
-
             public delegate IFlow<T> SyncWithFlow<T>(Exception error);
             public delegate Task<IFlow<T>> AsyncWithFlow<T>(Exception error);
             public delegate Task<IFlow<T>> CancellableAsyncWithFlow<T>(Exception error, CancellationToken cancellationToken);
