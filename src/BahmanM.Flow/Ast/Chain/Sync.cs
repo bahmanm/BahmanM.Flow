@@ -1,3 +1,5 @@
+using BahmanM.Flow.Behaviour;
+
 namespace BahmanM.Flow.Ast.Chain;
 
 internal sealed record Sync<TIn, TOut>(IFlow<TIn> Upstream, Flow.Operations.Chain.Sync<TIn, TOut> Operation) : INode<TOut>

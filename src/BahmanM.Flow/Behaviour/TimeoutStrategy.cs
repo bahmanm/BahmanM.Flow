@@ -1,6 +1,6 @@
 using BahmanM.Flow.Ast.Primitive;
 
-namespace BahmanM.Flow;
+namespace BahmanM.Flow.Behaviour;
 
 internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 {

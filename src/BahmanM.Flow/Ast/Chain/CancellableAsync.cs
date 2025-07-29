@@ -1,3 +1,5 @@
+using BahmanM.Flow.Behaviour;
+
 namespace BahmanM.Flow.Ast.Chain;
 
 internal sealed record CancellableAsync<TIn, TOut>(

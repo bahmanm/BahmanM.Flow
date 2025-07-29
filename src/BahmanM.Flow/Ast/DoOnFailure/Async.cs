@@ -1,3 +1,5 @@
+using BahmanM.Flow.Behaviour;
+
 namespace BahmanM.Flow.Ast.DoOnFailure;
 
 internal sealed record Async<T>(IFlow<T> Upstream, Flow.Operations.DoOnFailure.Async AsyncAction) : INode<T>

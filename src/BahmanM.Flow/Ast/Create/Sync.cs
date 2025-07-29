@@ -1,3 +1,5 @@
+using BahmanM.Flow.Behaviour;
+
 namespace BahmanM.Flow.Ast.Create;
 
 internal sealed record Sync<T>(Flow.Operations.Create.Sync<T> Operation) : INode<T>
