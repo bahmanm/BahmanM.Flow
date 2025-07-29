@@ -1,36 +1,36 @@
 namespace BahmanM.Flow.Ast;
 
-internal interface IInterpreter<T, out TResult> :
-    ICreateInterpreter<T, TResult>,
-        IDoOnSuccessInterpreter<T>,
-        IDoOnFailureInterpreter<T>,
-        ISelectInterpreter,
-        IChainInterpreter,
-        IPrimitiveInterpreter<T>,
-        IApplicativeInterpreter,
-        IAlternativeInterpreter<T>
+internal interface IInterpreter :
+    ICreateInterpreter,
+    IDoOnSuccessInterpreter,
+    IDoOnFailureInterpreter,
+    ISelectInterpreter,
+    IChainInterpreter,
+    IPrimitiveInterpreter,
+    IApplicativeInterpreter,
+    IAlternativeInterpreter
 {
 }
 
-internal interface ICreateInterpreter<T, out TResult>
+internal interface ICreateInterpreter
 {
-    internal TResult Interpret(Create.Sync<T> node);
-    internal TResult Interpret(Create.Async<T> node);
-    internal TResult Interpret(Create.CancellableAsync<T> node);
+    internal Task<Outcome<T>> Interpret<T>(Create.Sync<T> node);
+    internal Task<Outcome<T>> Interpret<T>(Create.Async<T> node);
+    internal Task<Outcome<T>> Interpret<T>(Create.CancellableAsync<T> node);
 }
 
-internal interface IDoOnSuccessInterpreter<T>
+internal interface IDoOnSuccessInterpreter
 {
-    internal Task<Outcome<T>> Interpret(DoOnSuccess.Sync<T> node);
-    internal Task<Outcome<T>> Interpret(DoOnSuccess.Async<T> node);
-    internal Task<Outcome<T>> Interpret(DoOnSuccess.CancellableAsync<T> node);
+    internal Task<Outcome<T>> Interpret<T>(DoOnSuccess.Sync<T> node);
+    internal Task<Outcome<T>> Interpret<T>(DoOnSuccess.Async<T> node);
+    internal Task<Outcome<T>> Interpret<T>(DoOnSuccess.CancellableAsync<T> node);
 }
 
-internal interface IDoOnFailureInterpreter<T>
+internal interface IDoOnFailureInterpreter
 {
-    internal Task<Outcome<T>> Interpret(DoOnFailure.Sync<T> node);
-    internal Task<Outcome<T>> Interpret(DoOnFailure.Async<T> node);
-    internal Task<Outcome<T>> Interpret(DoOnFailure.CancellableAsync<T> node);
+    internal Task<Outcome<T>> Interpret<T>(DoOnFailure.Sync<T> node);
+    internal Task<Outcome<T>> Interpret<T>(DoOnFailure.Async<T> node);
+    internal Task<Outcome<T>> Interpret<T>(DoOnFailure.CancellableAsync<T> node);
 }
 
 internal interface ISelectInterpreter
@@ -47,10 +47,10 @@ internal interface IChainInterpreter
     internal Task<Outcome<TOut>> Interpret<TIn, TOut>(Chain.CancellableAsync<TIn, TOut> node);
 }
 
-internal interface IPrimitiveInterpreter<T>
+internal interface IPrimitiveInterpreter
 {
-    internal Task<Outcome<T>> Interpret(Primitive.Succeed<T> node);
-    internal Task<Outcome<T>> Interpret(Primitive.Fail<T> node);
+    internal Task<Outcome<T>> Interpret<T>(Primitive.Succeed<T> node);
+    internal Task<Outcome<T>> Interpret<T>(Primitive.Fail<T> node);
 }
 
 internal interface IApplicativeInterpreter
@@ -58,7 +58,7 @@ internal interface IApplicativeInterpreter
     Task<Outcome<T[]>> Interpret<T>(Primitive.All<T> node);
 }
 
-internal interface IAlternativeInterpreter<T>
+internal interface IAlternativeInterpreter
 {
-    Task<Outcome<T>> Interpret(Primitive.Any<T> node);
+    Task<Outcome<T>> Interpret<T>(Primitive.Any<T> node);
 }
