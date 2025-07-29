@@ -1,24 +1,26 @@
+using BahmanM.Flow.Ast.Primitive;
+
 namespace BahmanM.Flow;
 
-internal interface IBehaviourStrategy<TValue>
+internal interface IBehaviourStrategy
 {
-    IFlow<TValue> ApplyTo(Ast.Primitive.Succeed<TValue> node);
-    IFlow<TValue> ApplyTo(Ast.Primitive.Fail<TValue> node);
-    IFlow<TValue> ApplyTo(Ast.Create.Sync<TValue> node);
-    IFlow<TValue> ApplyTo(Ast.Create.Async<TValue> node);
-    IFlow<TValue> ApplyTo(Ast.Create.CancellableAsync<TValue> node);
-    IFlow<TValue> ApplyTo(Ast.DoOnSuccess.Sync<TValue> node);
-    IFlow<TValue> ApplyTo(Ast.DoOnSuccess.Async<TValue> node);
-    IFlow<TValue> ApplyTo(Ast.DoOnSuccess.CancellableAsync<TValue> node);
-    IFlow<TValue> ApplyTo(Ast.DoOnFailure.Sync<TValue> node);
-    IFlow<TValue> ApplyTo(Ast.DoOnFailure.Async<TValue> node);
-    IFlow<TValue> ApplyTo(Ast.DoOnFailure.CancellableAsync<TValue> node);
-    IFlow<TValue> ApplyTo<TIn>(Ast.Select.Sync<TIn, TValue> node);
-    IFlow<TValue> ApplyTo<TIn>(Ast.Select.Async<TIn, TValue> node);
-    IFlow<TValue> ApplyTo<TIn>(Ast.Select.CancellableAsync<TIn, TValue> node);
-    IFlow<TValue> ApplyTo<TIn>(Ast.Chain.Sync<TIn, TValue> node);
-    IFlow<TValue> ApplyTo<TIn>(Ast.Chain.Async<TIn, TValue> node);
-    IFlow<TValue> ApplyTo<TIn>(Ast.Chain.CancellableAsync<TIn, TValue> node);
-    IFlow<IList<TValue>> ApplyTo(Ast.Primitive.All<TValue> node);
-    IFlow<TValue> ApplyTo(Ast.Primitive.Any<TValue> node);
+    IFlow<T> ApplyTo<T>(Succeed<T> node);
+    IFlow<T> ApplyTo<T>(Fail<T> node);
+    IFlow<T> ApplyTo<T>(Ast.Create.Sync<T> node);
+    IFlow<T> ApplyTo<T>(Ast.Create.Async<T> node);
+    IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node);
+    IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.Sync<T> node);
+    IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.Async<T> node);
+    IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.CancellableAsync<T> node);
+    IFlow<T> ApplyTo<T>(Ast.DoOnFailure.Sync<T> node);
+    IFlow<T> ApplyTo<T>(Ast.DoOnFailure.Async<T> node);
+    IFlow<T> ApplyTo<T>(Ast.DoOnFailure.CancellableAsync<T> node);
+    IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Select.Sync<TIn, TOut> node);
+    IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Select.Async<TIn, TOut> node);
+    IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Select.CancellableAsync<TIn, TOut> node);
+    IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Sync<TIn, TOut> node);
+    IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Async<TIn, TOut> node);
+    IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.CancellableAsync<TIn, TOut> node);
+    IFlow<T[]> ApplyTo<T>(Ast.Primitive.All<T> node);
+    IFlow<T> ApplyTo<T>(Ast.Primitive.Any<T> node);
 }

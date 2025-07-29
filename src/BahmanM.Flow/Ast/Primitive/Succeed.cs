@@ -1,7 +1,7 @@
 namespace BahmanM.Flow.Ast.Primitive;
 
-internal sealed record Succeed<TValue>(TValue Value) : INode<TValue>
+internal sealed record Succeed<T>(T Value) : INode<T>
 {
-    public Task<Outcome<TValue>> Accept(Ast.IInterpreter<TValue, Task<Outcome<TValue>>> interpreter) => interpreter.Interpret(this);
-    public IFlow<TValue> Apply(IBehaviourStrategy<TValue> strategy) => strategy.ApplyTo(this);
+    public Task<Outcome<T>> Accept(IInterpreter<T> interpreter) => interpreter.Interpret(this);
+    public IFlow<T> Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
 }
