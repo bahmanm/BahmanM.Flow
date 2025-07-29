@@ -105,3 +105,8 @@ internal class NodeInterpreters
         internal Execution.DoOnFailure.CancellableAsync CancellableAsync { get; }
     }
 }
+
+internal static class FlowExtensions
+{
+    internal static Ast.INode<T> AsNode<T>(this IFlow<T> flow) => (Ast.INode<T>)flow;
+}
