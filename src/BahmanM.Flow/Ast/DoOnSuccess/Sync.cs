@@ -1,3 +1,5 @@
+using BahmanM.Flow.Behaviour;
+
 namespace BahmanM.Flow.Ast.DoOnSuccess;
 
 internal sealed record Sync<T>(IFlow<T> Upstream, Flow.Operations.DoOnSuccess.Sync<T> Action) : INode<T>

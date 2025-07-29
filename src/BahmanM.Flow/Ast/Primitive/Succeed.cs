@@ -1,3 +1,5 @@
+using BahmanM.Flow.Behaviour;
+
 namespace BahmanM.Flow.Ast.Primitive;
 
 internal sealed record Succeed<T>(T Value) : INode<T>

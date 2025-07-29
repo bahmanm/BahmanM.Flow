@@ -1,3 +1,5 @@
+using BahmanM.Flow.Behaviour;
+
 namespace BahmanM.Flow.Ast.DoOnSuccess;
 
 internal sealed record CancellableAsync<T>(IFlow<T> Upstream, Flow.Operations.DoOnSuccess.CancellableAsync<T> AsyncAction) : INode<T>

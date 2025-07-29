@@ -1,3 +1,4 @@
+using BahmanM.Flow.Behaviour;
 using static BahmanM.Flow.Outcome;
 
 namespace BahmanM.Flow.Tests.Unit;

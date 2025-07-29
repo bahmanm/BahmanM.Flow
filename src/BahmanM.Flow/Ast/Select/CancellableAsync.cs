@@ -1,3 +1,5 @@
+using BahmanM.Flow.Behaviour;
+
 namespace BahmanM.Flow.Ast.Select;
 
 internal sealed record CancellableAsync<TIn, TOut>(IFlow<TIn> Upstream, Flow.Operations.Select.CancellableAsync<TIn, TOut> Operation) : INode<TOut>

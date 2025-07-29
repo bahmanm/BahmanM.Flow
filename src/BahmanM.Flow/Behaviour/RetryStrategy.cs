@@ -1,4 +1,4 @@
-namespace BahmanM.Flow;
+namespace BahmanM.Flow.Behaviour;
 
 internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptions) : IBehaviourStrategy
 {
