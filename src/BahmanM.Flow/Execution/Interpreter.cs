@@ -4,12 +4,8 @@ namespace BahmanM.Flow.Execution;
 
 internal class Interpreter : Ast.IInterpreter
 {
-    private Options Options { get; init; }
+    private Execution.Options Options { get; init; }
     private NodeInterpreters NodeInterpreters { get; init; }
-
-    public Interpreter() : this(new(CancellationToken: CancellationToken.None))
-    {
-    }
 
     public Interpreter(Options options)
     {
