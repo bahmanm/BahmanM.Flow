@@ -10,7 +10,7 @@ public class DoOnSuccessTests
         // Arrange
         var successValue = 123;
         var actionCalled = false;
-        Operations.DoOnSuccess.Sync<int> onSuccess = val =>
+        Flow.Operations.DoOnSuccess.Sync<int> onSuccess = val =>
         {
             Assert.Equal(successValue, val);
             actionCalled = true;
@@ -32,7 +32,7 @@ public class DoOnSuccessTests
         // Arrange
         var exception = new InvalidOperationException("Test Failure");
         var actionCalled = false;
-        Operations.DoOnSuccess.Sync<int> onSuccess = _ => actionCalled = true;
+        Flow.Operations.DoOnSuccess.Sync<int> onSuccess = _ => actionCalled = true;
 
         var flow = Flow.Fail<int>(exception).DoOnSuccess(onSuccess);
 
@@ -50,7 +50,7 @@ public class DoOnSuccessTests
         // Arrange
         var successValue = 123;
         var exception = new InvalidOperationException("Action failed!");
-        Operations.DoOnSuccess.Sync<int> onSuccess = _ => throw exception;
+        Flow.Operations.DoOnSuccess.Sync<int> onSuccess = _ => throw exception;
 
         var flow = Flow.Succeed(successValue).DoOnSuccess(onSuccess);
 
@@ -67,7 +67,7 @@ public class DoOnSuccessTests
         // Arrange
         var successValue = 123;
         var actionCalled = false;
-        Operations.DoOnSuccess.Async<int> onSuccess = async val =>
+        Flow.Operations.DoOnSuccess.Async<int> onSuccess = async val =>
         {
             Assert.Equal(successValue, val);
             await Task.Delay(10);
@@ -90,7 +90,7 @@ public class DoOnSuccessTests
         // Arrange
         var exception = new InvalidOperationException("Test Failure");
         var actionCalled = false;
-        Operations.DoOnSuccess.Async<int> onSuccess = async _ =>
+        Flow.Operations.DoOnSuccess.Async<int> onSuccess = async _ =>
         {
             await Task.Delay(10);
             actionCalled = true;
@@ -112,7 +112,7 @@ public class DoOnSuccessTests
         // Arrange
         var successValue = 123;
         var exception = new InvalidOperationException("Action failed!");
-        Operations.DoOnSuccess.Async<int> onSuccess = _ => throw exception;
+        Flow.Operations.DoOnSuccess.Async<int> onSuccess = _ => throw exception;
 
         var flow = Flow.Succeed(successValue).DoOnSuccess(onSuccess);
 
@@ -129,7 +129,7 @@ public class DoOnSuccessTests
         // Arrange
         var successValue = 123;
         var actionCalled = false;
-        Operations.DoOnSuccess.CancellableAsync<int> onSuccess = async (val, token) =>
+        Flow.Operations.DoOnSuccess.CancellableAsync<int> onSuccess = async (val, token) =>
         {
             Assert.Equal(successValue, val);
             await Task.Delay(10, token);
@@ -152,7 +152,7 @@ public class DoOnSuccessTests
         // Arrange
         var exception = new InvalidOperationException("Test Failure");
         var actionCalled = false;
-        Operations.DoOnSuccess.CancellableAsync<int> onSuccess = async (_, _) =>
+        Flow.Operations.DoOnSuccess.CancellableAsync<int> onSuccess = async (_, _) =>
         {
             await Task.Delay(10);
             actionCalled = true;
@@ -175,7 +175,7 @@ public class DoOnSuccessTests
         var cts = new CancellationTokenSource();
         var options = new Execution.Options(CancellationToken: cts.Token);
 
-        Operations.DoOnSuccess.CancellableAsync<int> onSuccess = async (val, token) =>
+        Flow.Operations.DoOnSuccess.CancellableAsync<int> onSuccess = async (val, token) =>
         {
             await Task.Delay(100, token);
         };

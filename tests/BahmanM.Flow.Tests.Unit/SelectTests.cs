@@ -37,7 +37,7 @@ public class SelectTests
     {
         // Arrange
         var exception = new InvalidOperationException("Selector failed!");
-        var flow = Flow.Succeed(123).Select((Operations.Select.Sync<int, int>)((_) => throw exception));
+        var flow = Flow.Succeed(123).Select((Flow.Operations.Select.Sync<int, int>)((_) => throw exception));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(flow);
@@ -51,7 +51,7 @@ public class SelectTests
     {
         // Arrange
         var successValue = 123;
-        var flow = Flow.Succeed(successValue).Select((Operations.Select.Async<int, int>)(async x =>
+        var flow = Flow.Succeed(successValue).Select((Flow.Operations.Select.Async<int, int>)(async x =>
         {
             await Task.Delay(10);
             return x * 2;

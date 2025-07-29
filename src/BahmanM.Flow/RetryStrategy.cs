@@ -47,7 +47,7 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
 
     public IFlow<T> ApplyTo<T>(Ast.Create.Sync<T> node)
     {
-        Operations.Create.Sync<T> newOperation = () =>
+        Flow.Operations.Create.Sync<T> newOperation = () =>
         {
             Exception lastException = null!;
             for (var i = 0; i < _maxAttempts; i++)
@@ -70,14 +70,14 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Sync<TIn, TOut> node)
     {
-        Operations.Chain.Sync<TIn,TOut> newOperation = (value) =>
+        Flow.Operations.Chain.Sync<TIn,TOut> newOperation = (value) =>
             ((Ast.INode<TOut>)node.Operation(value)).Apply(this);
         return node with { Operation = newOperation };
     }
 
     public IFlow<T> ApplyTo<T>(Ast.Create.Async<T> node)
     {
-        Operations.Create.Async<T> newOperation = async () =>
+        Flow.Operations.Create.Async<T> newOperation = async () =>
         {
             Exception lastException = null!;
             for (var i = 0; i < _maxAttempts; i++)
@@ -100,14 +100,14 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Async<TIn, TOut> node)
     {
-        Operations.Chain.Async<TIn, TOut> newOperation = async (value) =>
+        Flow.Operations.Chain.Async<TIn, TOut> newOperation = async (value) =>
             ((Ast.INode<TOut>)await node.Operation(value)).Apply(this);
         return node with { Operation = newOperation };
     }
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.CancellableAsync<TIn, TOut> node)
     {
-        Operations.Chain.CancellableAsync<TIn, TOut> newOperation = async (value, cancellationToken) =>
+        Flow.Operations.Chain.CancellableAsync<TIn, TOut> newOperation = async (value, cancellationToken) =>
             ((Ast.INode<TOut>)await node.Operation(value, cancellationToken)).Apply(this);
         return node with { Operation = newOperation };
     }
