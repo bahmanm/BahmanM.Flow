@@ -112,6 +112,10 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
         return node with { Operation = newOperation };
     }
 
+    public IFlow<T> ApplyTo<T>(Ast.Recover.Sync<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.Recover.Async<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.Recover.CancellableAsync<T> node) => node;
+
     public IFlow<T[]> ApplyTo<T>(Ast.Primitive.All<T> node) => node;
 
     public IFlow<T> ApplyTo<T>(Ast.Primitive.Any<T> node) => node;

@@ -6,6 +6,7 @@ internal interface IInterpreter :
     IDoOnFailureInterpreter,
     ISelectInterpreter,
     IChainInterpreter,
+    IRecoverInterpreter,
     IPrimitiveInterpreter,
     IApplicativeInterpreter,
     IAlternativeInterpreter
@@ -45,6 +46,13 @@ internal interface IChainInterpreter
     internal Task<Outcome<TOut>> Interpret<TIn, TOut>(Chain.Sync<TIn, TOut> node);
     internal Task<Outcome<TOut>> Interpret<TIn, TOut>(Chain.Async<TIn, TOut> node);
     internal Task<Outcome<TOut>> Interpret<TIn, TOut>(Chain.CancellableAsync<TIn, TOut> node);
+}
+
+internal interface IRecoverInterpreter
+{
+    internal Task<Outcome<T>> Interpret<T>(Recover.Sync<T> node);
+    internal Task<Outcome<T>> Interpret<T>(Recover.Async<T> node);
+    internal Task<Outcome<T>> Interpret<T>(Recover.CancellableAsync<T> node);
 }
 
 internal interface IPrimitiveInterpreter
