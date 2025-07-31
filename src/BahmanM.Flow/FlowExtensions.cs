@@ -41,6 +41,15 @@ public static class FlowExtensions
     public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Flow.Operations.Chain.CancellableAsync<TIn, TOut> asyncOperation) =>
         new Ast.Chain.CancellableAsync<TIn, TOut>(flow, asyncOperation);
 
+    public static IFlow<T> Recover<T>(this IFlow<T> flow, Flow.Operations.Recover.Sync<T> recover) =>
+        new Ast.Recover.Sync<T>(flow, recover);
+
+    public static IFlow<T> Recover<T>(this IFlow<T> flow, Flow.Operations.Recover.Async<T> recover) =>
+        new Ast.Recover.Async<T>(flow, recover);
+
+    public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, CancellationToken, Task<IFlow<T>>> recover) =>
+        new Ast.Recover.CancellableAsync<T>(flow, recover);
+
     public static IFlow<T> WithRetry<T>(this IFlow<T> flow, int maxAttempts, params Type[] nonRetryableExceptions)
     {
         var strategy = new RetryStrategy(maxAttempts, nonRetryableExceptions);

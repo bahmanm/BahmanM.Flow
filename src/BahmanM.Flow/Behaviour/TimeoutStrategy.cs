@@ -81,6 +81,15 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         return node with { Operation = newOperation };
     }
 
+    public IFlow<T> ApplyTo<T>(Ast.Recover.Sync<T> node) => 
+        node with { Source = ((Ast.INode<T>)node.Source).Apply(this) };
+
+    public IFlow<T> ApplyTo<T>(Ast.Recover.Async<T> node) => 
+        node with { Source = ((Ast.INode<T>)node.Source).Apply(this) };
+
+    public IFlow<T> ApplyTo<T>(Ast.Recover.CancellableAsync<T> node) => 
+        node with { Source = ((Ast.INode<T>)node.Source).Apply(this) };
+
     public IFlow<T[]> ApplyTo<T>(Ast.Primitive.All<T> node)
     {
         Flow.Operations.Create.Async<T[]> newOperation = () => FlowEngine.ExecuteAsync(node).WaitAsync(duration).Unwrap();

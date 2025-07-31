@@ -19,6 +19,9 @@ internal interface IBehaviourStrategy
     IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Sync<TIn, TOut> node);
     IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Async<TIn, TOut> node);
     IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.CancellableAsync<TIn, TOut> node);
+    IFlow<T> ApplyTo<T>(Ast.Recover.Sync<T> node);
+    IFlow<T> ApplyTo<T>(Ast.Recover.Async<T> node);
+    IFlow<T> ApplyTo<T>(Ast.Recover.CancellableAsync<T> node);
     IFlow<T[]> ApplyTo<T>(Ast.Primitive.All<T> node);
     IFlow<T> ApplyTo<T>(Ast.Primitive.Any<T> node);
 }
