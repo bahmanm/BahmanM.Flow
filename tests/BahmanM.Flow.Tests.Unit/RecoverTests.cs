@@ -10,11 +10,11 @@ public class RecoverTests
         // Arrange
         var initialFlow = Flow.Succeed(10);
         var recoverExecuted = false;
-        var recoveredFlow = initialFlow.Recover(ex =>
+        var recoveredFlow = initialFlow.Recover((Flow.Operations.Recover.Sync<int>)(ex =>
         {
             recoverExecuted = true;
             return Flow.Succeed(0);
-        });
+        }));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(recoveredFlow);
@@ -30,7 +30,7 @@ public class RecoverTests
         // Arrange
         var exception = new Exception("Initial failure");
         var initialFlow = Flow.Fail<int>(exception);
-        var recoveredFlow = initialFlow.Recover(ex => Flow.Succeed(20));
+        var recoveredFlow = initialFlow.Recover((Flow.Operations.Recover.Sync<int>) (ex => Flow.Succeed(20)));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(recoveredFlow);
@@ -61,12 +61,12 @@ public class RecoverTests
         // Arrange
         var initialFlow = Flow.Succeed(10);
         var recoverExecuted = false;
-        var recoveredFlow = initialFlow.Recover(async _ =>
+        var recoveredFlow = initialFlow.Recover((Flow.Operations.Recover.Async<int>)(async _ =>
         {
             recoverExecuted = true;
             await Task.Delay(10);
             return Flow.Succeed(0);
-        });
+        }));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(recoveredFlow);
@@ -82,11 +82,11 @@ public class RecoverTests
         // Arrange
         var exception = new Exception("Initial failure");
         var initialFlow = Flow.Fail<int>(exception);
-        var recoveredFlow = initialFlow.Recover(async ex =>
+        var recoveredFlow = initialFlow.Recover((Flow.Operations.Recover.Async<int>)(async ex =>
         {
             await Task.Delay(10);
             return Flow.Succeed(20);
-        });
+        }));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(recoveredFlow);
@@ -156,5 +156,169 @@ public class RecoverTests
 
         // Clean up
         cts.Dispose();
+    }
+
+    // New test cases
+
+    [Fact]
+    public async Task Recover_AfterRetryExhausted_ExecutesAndReturnsNewFlow()
+    {
+        // Arrange
+        var initialFlow = Flow.Create((Func<int>)(() => throw new InvalidOperationException("Always fails")))
+                                .WithRetry(1); // Only one attempt, so it will fail
+        var recoveredFlow = initialFlow.Recover((Flow.Operations.Recover.Sync<int>)(ex => Flow.Succeed(99)));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(recoveredFlow);
+
+        // Assert
+        Assert.Equal(Success(99), outcome);
+    }
+
+    [Fact]
+    public async Task Recover_AfterTimeout_ExecutesAndReturnsNewFlow()
+    {
+        // Arrange
+        var initialFlow = Flow.Create(async () =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(2)); // Will timeout
+            return 10;
+        }).WithTimeout(TimeSpan.FromSeconds(0.1));
+        var recoveredFlow = initialFlow.Recover(_ => Task.FromResult(Flow.Succeed(88)));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(recoveredFlow);
+
+        // Assert
+        Assert.Equal(Success(88), outcome);
+    }
+
+    [Fact]
+    public async Task NestedRecover_InnerRecovers_OuterDoesNotExecute()
+    {
+        // Arrange
+        var innerRecoverExecuted = false;
+        var outerRecoverExecuted = false;
+
+        var flow = Flow.Fail<int>(new Exception("Initial failure"))
+                       .Recover((Flow.Operations.Recover.Sync<int>)(ex =>
+                       {
+                           innerRecoverExecuted = true;
+                           return Flow.Succeed(100);
+                       }))
+                       .Recover((Flow.Operations.Recover.Sync<int>)(ex =>
+                       {
+                           outerRecoverExecuted = true;
+                           return Flow.Succeed(200);
+                       }));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(flow);
+
+        // Assert
+        Assert.True(innerRecoverExecuted);
+        Assert.False(outerRecoverExecuted);
+        Assert.Equal(Success(100), outcome);
+    }
+
+    [Fact]
+    public async Task NestedRecover_InnerFailsToRecover_OuterExecutes()
+    {
+        // Arrange
+        var innerRecoverExecuted = false;
+        var outerRecoverExecuted = false;
+
+        var flow = Flow.Fail<int>(new Exception("Initial failure"))
+                       .Recover((Flow.Operations.Recover.Sync<int>)(ex =>
+                       {
+                           innerRecoverExecuted = true;
+                           throw new InvalidOperationException("Inner recover failed");
+                       }))
+                       .Recover((Flow.Operations.Recover.Sync<int>)(ex =>
+                       {
+                           outerRecoverExecuted = true;
+                           return Flow.Succeed(200);
+                       }));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(flow);
+
+        // Assert
+        Assert.True(innerRecoverExecuted);
+        Assert.True(outerRecoverExecuted);
+        Assert.Equal(Success(200), outcome);
+    }
+
+    [Fact]
+    public async Task Recover_WithSpecificExceptionType_OnlyHandlesMatchingException()
+    {
+        // Arrange
+        var customExceptionHandled = false;
+        var flow = Flow.Fail<int>(new CustomTestException("Custom failure"))
+                       .Recover((Flow.Operations.Recover.Sync<int>)(ex =>
+                       {
+                           if (ex is CustomTestException)
+                           {
+                               customExceptionHandled = true;
+                               return Flow.Succeed(10);
+                           }
+                           throw ex; // Re-throw other exceptions
+                       }));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(flow);
+
+        // Assert
+        Assert.True(customExceptionHandled);
+        Assert.Equal(Success(10), outcome);
+    }
+
+    [Fact]
+    public async Task Recover_WithSpecificExceptionType_PropagatesNonMatchingException()
+    {
+        // Arrange
+        var customExceptionHandled = false;
+        var nonMatchingException = new InvalidOperationException("Non-matching failure");
+        var flow = Flow.Fail<int>(nonMatchingException)
+                       .Recover((Flow.Operations.Recover.Sync<int>)(ex =>
+                       {
+                           if (ex is CustomTestException)
+                           {
+                               customExceptionHandled = true;
+                               return Flow.Succeed(10);
+                           }
+                           throw ex; // Re-throw other exceptions
+                       }));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(flow);
+
+        // Assert
+        Assert.False(customExceptionHandled);
+        var failure = Assert.IsType<Failure<int>>(outcome);
+        Assert.Same(nonMatchingException, failure.Exception);
+    }
+
+    [Fact]
+    public async Task Recover_ReturnsFailFlow_PropagatesFailure()
+    {
+        // Arrange
+        var originalException = new Exception("Original failure");
+        var recoveredException = new InvalidOperationException("Recovered failure");
+        var flow = Flow.Fail<int>(originalException)
+                       .Recover((Flow.Operations.Recover.Sync<int>)(ex => Flow.Fail<int>(recoveredException)));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(flow);
+
+        // Assert
+        var failure = Assert.IsType<Failure<int>>(outcome);
+        Assert.Same(recoveredException, failure.Exception);
+    }
+
+    // Helper exception for testing specific exception types
+    public class CustomTestException : Exception
+    {
+        public CustomTestException(string message) : base(message) { }
     }
 }
