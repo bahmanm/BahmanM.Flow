@@ -39,11 +39,12 @@ namespace BahmanM.Flow
         public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, IFlow<TOut>> func, OperationId operationId = null);
         public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, Task<IFlow<TOut>>> asyncFunc, OperationId operationId = null);
 
-        public static IFlow<T> Recover<T>(this IFlow<T> flow, T fallbackValue, OperationId operationId = null);
         public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, T> recoveryFunc, OperationId operationId = null);
-        public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, IFlow<T>> recoveryFlowFunc, OperationId operationId = null);
         public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, Task<T>> asyncRecoveryFunc, OperationId operationId = null);
+        public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, CancellationToken, Task<T>> cancellableAsyncRecoveryFunc, OperationId operationId = null);
+        public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, IFlow<T>> recoveryFlowFunc, OperationId operationId = null);
         public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, Task<IFlow<T>>> asyncRecoveryFlowFunc, OperationId operationId = null);
+        public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, CancellationToken, Task<IFlow<T>>> cancellableAsyncRecoveryFlowFunc, OperationId operationId = null);
 
         // Side-effect Operators
         public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Action<T> action, OperationId operationId = null);

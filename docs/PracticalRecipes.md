@@ -62,6 +62,48 @@ var timelyFlow = CreateLongRunningFlow()
     .WithTimeout(TimeSpan.FromSeconds(5)); // Gives up if it takes too long
 ```
 
+### Combining Resiliency with Recovery
+
+**Problem:**
+
+You want to build a truly robust Flow.
+
+It should handle transient failures and unexpected hangs.
+
+But it must still provide a fallback value if all else fails.
+
+**Solution:**
+
+Combine `.WithRetry()` and `.WithTimeout()` with `.Recover()`.
+
+This creates a powerful, multi-layered resiliency strategy.
+
+Flow will first attempt the operation.
+
+Then, it will retry on failure.
+
+Finally, it will recover if all retries fail or a timeout occurs.
+
+```csharp
+var superResilientFlow = CreateFlakyAndSlowFlow()
+    .WithTimeout(TimeSpan.FromSeconds(10)) // 1. Enforce a 10-second deadline.
+    .WithRetry(3)                         // 2. Retry up to 3 times on failure.
+    .DoOnFailure(ex => _logger.LogError(ex, "The operation ultimately failed."))
+    .Recover(ex => GetDefaultValue());    // 3. If all else fails, recover.
+```
+
+> [!NOTE]
+> 
+> **Execution Order Matters:**
+>
+> The order in which you apply these behaviours is crucial.
+>
+> In the example above, the timeout wraps the entire retry logic.
+>
+> This means the 10-second limit applies to the total time for all attempts.
+>
+> If you applied `.WithRetry()` first, each attempt would get its own timeout.
+
 # Resource Management
 
 ### Working With `IDisposable`s

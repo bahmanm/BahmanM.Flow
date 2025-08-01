@@ -45,15 +45,21 @@ var userFlow = userIdFlow.Chain(id => GetUserFromApiFlow(id));
 
 ### `.Recover()`
 
-This is the **Safety Net**. 
+This is the **Safety Net**.
 
 It's your contingency plan for when things go wrong.
 
-It attaches to a Flow and specifies what to do if any preceding step fails. You can use it to provide a default value or run a backup operation.
+It ensures a `Flow` can continue even after a failure.
+
+*   **Use `.Recover(fallbackValue)` when** you have a simple, static default.
+*   **Use `.Recover(recoveryFunc)` when** you need to compute a new value from the exception details.
+*   **Use `.Recover(recoveryFlowFunc)` when** your recovery logic is itself a failable operation, like trying a cache.
 
 ```csharp
-// If the API call fails, return a default user instead of blowing up.
-var safeUserFlow = userFlow.Recover(exception => GetDefaultUser());
+// If fetching the user fails, create a temporary guest user to continue the flow.
+var safeUserFlow = userFlow
+    .DoOnFailure(ex => _logger.LogWarning(ex, "Could not fetch primary user."))
+    .Recover(ex => new User(isGuest: true, error: ex.Message));
 ```
 
 ### `.DoOn...()`
