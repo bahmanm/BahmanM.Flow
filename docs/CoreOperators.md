@@ -79,6 +79,26 @@ var safeUserFlow = userFlow
     .Recover(ex => new User(isGuest: true, error: ex.Message));
 ```
 
+> **Connecting the Gatekeeper and the Safety Net**
+>
+> While `.Validate()` is powerful for stopping a flow, its true potential is unlocked when paired with `.Recover()`. This combination allows you to create sophisticated conditional logic. You can `Validate` a condition and, if it fails, `Recover` into an alternative, successful workflow.
+>
+> This creates a declarative `if/else` for your entire pipeline.
+>
+> ```csharp
+> var processedFlow = dataFlow
+>     // If the data is "special", continue the main flow...
+>     .Validate(
+>         data => data.IsSpecial,
+>         data => new NormalDataException($"Data {data.Id} is not special.")
+>     )
+>     .Chain(specialData => ProcessSpecialDataFlow(specialData))
+>     // ...otherwise, recover from the validation failure and process it normally.
+>     .Recover(ex => ex is NormalDataException,
+>         () => ProcessNormalDataFlow(originalData)
+>     );
+> ```
+
 ### `.DoOn...()`
 
 This is the **Bystander**.
