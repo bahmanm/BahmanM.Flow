@@ -34,7 +34,7 @@ var commandFlow = Flow.Succeed(request)
 
 This is the **Sequencer**.
 
-It is your specialist for connecting to the next Flow.
+It is the primary link for connecting one Flow to the next.
 
 You use `.Chain()` when your next operation returns another Flow. It takes the result of one step and sequences it to the next, keeping the pipeline clean and flat.
 
@@ -43,13 +43,30 @@ You use `.Chain()` when your next operation returns another Flow. It takes the r
 var userFlow = userIdFlow.Chain(id => GetUserFromApiFlow(id));
 ```
 
+### `.Validate()`
+
+This is the **Gatekeeper**.
+
+It is your steadfast ally in enforcing business rules and invariants on the value inside a successful Flow.
+
+You use `.Validate()` to check if the data is in a valid state to continue. It takes a predicate that returns `true` if the data is valid. If the predicate returns `false`, the Gatekeeper stops the "happy path" and transitions the pipeline to a `Failure` state, using the exception you provide.
+
+```csharp
+// Ensure the user is an administrator before allowing them to delete a resource.
+var validatedAdminFlow = userFlow
+    .Validate(
+        user => user.IsAdmin,
+        user => new AuthorizationException($"User '{user.Name}' is not an administrator.")
+    );
+```
+
 ### `.Recover()`
 
 This is the **Safety Net**.
 
 It's your contingency plan for when things go wrong.
 
-It ensures a `Flow` can continue even after a failure.
+It ensures a Flow can continue even after a failure.
 
 *   **Use `.Recover(fallbackValue)` when** you have a simple, static default.
 *   **Use `.Recover(recoveryFunc)` when** you need to compute a new value from the exception details.
