@@ -27,4 +27,5 @@ internal class CustomBehaviourStrategy(IBehaviour behaviour) : IBehaviourStrateg
     public IFlow<T> ApplyTo<T>(Ast.Validate.Sync<T> node) => behaviour.Apply(node);
     public IFlow<T> ApplyTo<T>(Ast.Validate.Async<T> node) => behaviour.Apply(node);
     public IFlow<T> ApplyTo<T>(Ast.Validate.CancellableAsync<T> node) => behaviour.Apply(node);
+    public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResource<TResource, T> node) where TResource : IDisposable => behaviour.Apply(node);
 }
