@@ -25,4 +25,5 @@ internal interface IBehaviourStrategy
     IFlow<T[]> ApplyTo<T>(Ast.Primitive.All<T> node);
     IFlow<T> ApplyTo<T>(Ast.Primitive.Any<T> node);
     IFlow<T> ApplyTo<T>(Ast.Validate.Sync<T> node);
+    IFlow<T> ApplyTo<T>(Ast.Validate.Async<T> node);
 }

@@ -112,9 +112,11 @@ internal class NodeInterpreters
         internal ValidateNodes(Ast.IInterpreter interpreter, Options options)
         {
             Sync = new Execution.Validate.Sync(interpreter, options);
+            Async = new Execution.Validate.Async(interpreter, options);
         }
 
         internal Execution.Validate.Sync Sync { get; }
+        internal Execution.Validate.Async Async { get; }
     }
 }
 

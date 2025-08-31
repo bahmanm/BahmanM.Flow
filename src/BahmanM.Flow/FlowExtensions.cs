@@ -44,6 +44,9 @@ public static class FlowExtensions
     public static IFlow<T> Validate<T>(this IFlow<T> flow, Func<T, bool> predicate, Func<T, Exception> exceptionFactory) =>
         new Ast.Validate.Sync<T>(flow, predicate, exceptionFactory);
 
+    public static IFlow<T> Validate<T>(this IFlow<T> flow, Func<T, Task<bool>> predicateAsync, Func<T, Exception> exceptionFactory) =>
+        new Ast.Validate.Async<T>(flow, predicateAsync, exceptionFactory);
+
     public static IFlow<T> Recover<T>(this IFlow<T> flow, Flow.Operations.Recover.Sync<T> recover) =>
         new Ast.Recover.Sync<T>(flow, recover);
 
