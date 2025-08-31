@@ -111,4 +111,6 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
     public IFlow<T> ApplyTo<T>(Ast.Validate.CancellableAsync<T> node) =>
         node with { Upstream = ((Ast.INode<T>)node.Upstream).Apply(this) };
 
+    public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResource<TResource, T> node) where TResource : IDisposable => node;
+
 }
