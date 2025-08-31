@@ -102,4 +102,13 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         return new Ast.Create.Async<T>(newOperation);
     }
 
+    public IFlow<T> ApplyTo<T>(Ast.Validate.Sync<T> node) =>
+        node with { Upstream = ((Ast.INode<T>)node.Upstream).Apply(this) };
+
+    public IFlow<T> ApplyTo<T>(Ast.Validate.Async<T> node) =>
+        node with { Upstream = ((Ast.INode<T>)node.Upstream).Apply(this) };
+
+    public IFlow<T> ApplyTo<T>(Ast.Validate.CancellableAsync<T> node) =>
+        node with { Upstream = ((Ast.INode<T>)node.Upstream).Apply(this) };
+
 }

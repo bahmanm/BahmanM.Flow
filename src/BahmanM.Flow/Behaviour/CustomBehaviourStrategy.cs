@@ -24,4 +24,7 @@ internal class CustomBehaviourStrategy(IBehaviour behaviour) : IBehaviourStrateg
     public IFlow<T> ApplyTo<T>(Ast.Recover.CancellableAsync<T> node) => behaviour.Apply(node);
     public IFlow<T[]> ApplyTo<T>(Ast.Primitive.All<T> node) => behaviour.Apply(node);
     public IFlow<T> ApplyTo<T>(Ast.Primitive.Any<T> node) => behaviour.Apply(node);
+    public IFlow<T> ApplyTo<T>(Ast.Validate.Sync<T> node) => behaviour.Apply(node);
+    public IFlow<T> ApplyTo<T>(Ast.Validate.Async<T> node) => behaviour.Apply(node);
+    public IFlow<T> ApplyTo<T>(Ast.Validate.CancellableAsync<T> node) => behaviour.Apply(node);
 }
