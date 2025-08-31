@@ -3,7 +3,7 @@ using static BahmanM.Flow.Outcome;
 
 namespace BahmanM.Flow.Tests.Unit;
 
-[Collection("WithResourceDisposal")] // isolate if we add shared state later
+[Collection("WithResourceDisposal")]
 public class WithResourceDisposalTests : IDisposable
 {
     public WithResourceDisposalTests() => DisposableProbe.Reset();
@@ -51,7 +51,7 @@ public class WithResourceDisposalTests : IDisposable
     {
         // Arrange
         var ex = new InvalidOperationException("acquire failed");
-        var flow = Flow.WithResource(
+        var flow = Flow.WithResource<DisposableProbe, int>(
             acquire: () => throw ex,
             use: _ => Flow.Succeed(1)
         );
@@ -70,7 +70,7 @@ public class WithResourceDisposalTests : IDisposable
     {
         // Arrange
         var ex = new InvalidOperationException("use ctor failed");
-        var flow = Flow.WithResource(
+        var flow = Flow.WithResource<DisposableProbe, int>(
             acquire: () => new DisposableProbe(),
             use: _ => throw ex
         );
@@ -228,4 +228,3 @@ internal sealed class DisposableProbe : IDisposable
         FinalizedWithoutDisposeCount = 0;
     }
 }
-

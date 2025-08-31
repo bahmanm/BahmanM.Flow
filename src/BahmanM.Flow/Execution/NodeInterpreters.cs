@@ -9,6 +9,7 @@ internal class NodeInterpreters
     internal DoOnSuccessNodes DoOnSuccess { get; }
     internal DoOnFailureNodes DoOnFailure { get; }
     internal ValidateNodes Validate { get; }
+    internal ResourceNodes Resource { get; }
 
     public NodeInterpreters(Ast.IInterpreter interpreter, Options options)
     {
@@ -19,6 +20,7 @@ internal class NodeInterpreters
         DoOnSuccess = new(interpreter, options);
         DoOnFailure = new(interpreter, options);
         Validate = new(interpreter, options);
+        Resource = new(interpreter, options);
     }
 
     internal record SelectNodes
@@ -119,6 +121,16 @@ internal class NodeInterpreters
         internal Execution.Validate.Sync Sync { get; }
         internal Execution.Validate.Async Async { get; }
         internal Execution.Validate.CancellableAsync CancellableAsync { get; }
+    }
+
+    internal record ResourceNodes
+    {
+        internal ResourceNodes(Ast.IInterpreter interpreter, Options options)
+        {
+            WithResource = new Execution.Resource.WithResource(interpreter, options);
+        }
+
+        internal Execution.Resource.WithResource WithResource { get; }
     }
 }
 

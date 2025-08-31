@@ -7,6 +7,7 @@ internal interface IInterpreter :
     ISelectInterpreter,
     IChainInterpreter,
     IRecoverInterpreter,
+    IResourceInterpreter,
     IValidateInterpreter,
     IPrimitiveInterpreter,
     IApplicativeInterpreter,
@@ -77,4 +78,9 @@ internal interface IValidateInterpreter
     internal Task<Outcome<T>> Interpret<T>(Validate.Sync<T> node);
     internal Task<Outcome<T>> Interpret<T>(Validate.Async<T> node);
     internal Task<Outcome<T>> Interpret<T>(Validate.CancellableAsync<T> node);
+}
+
+internal interface IResourceInterpreter
+{
+    internal Task<Outcome<T>> Interpret<TResource, T>(Resource.WithResource<TResource, T> node) where TResource : IDisposable;
 }

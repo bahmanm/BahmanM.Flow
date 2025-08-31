@@ -20,6 +20,9 @@ public static class Flow
     public static IFlow<T> Any<T>(IFlow<T> flow, params IFlow<T>[] moreFlows) =>
         new Ast.Primitive.Any<T>([flow, ..moreFlows]);
 
+    public static IFlow<T> WithResource<TResource, T>(Func<TResource> acquire, Func<TResource, IFlow<T>> use)
+        where TResource : IDisposable => new Ast.Resource.WithResource<TResource, T>(acquire, use);
+
     public static class Operations
     {
         public static class Create
