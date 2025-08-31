@@ -21,17 +21,11 @@ internal class RetryStrategy : IBehaviourStrategy
 
     public IFlow<T> ApplyTo<T>(Ast.Primitive.Succeed<T> node) => node;
     public IFlow<T> ApplyTo<T>(Ast.Primitive.Fail<T> node) => node;
-    public IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node)
-    {
-        throw new NotImplementedException();
-    }
+    public IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node) => node;
 
     public IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.Sync<T> node) => node;
     public IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.Async<T> node) => node;
-    public IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.CancellableAsync<T> node)
-    {
-        throw new NotImplementedException();
-    }
+    public IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.CancellableAsync<T> node) => node;
 
     public IFlow<T> ApplyTo<T>(Ast.DoOnFailure.Sync<T> node) => node;
     public IFlow<T> ApplyTo<T>(Ast.DoOnFailure.Async<T> node) => node;

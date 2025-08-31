@@ -17,10 +17,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         return new Ast.Create.Async<T>(newOperation);
     }
 
-    public IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node)
-    {
-        throw new NotImplementedException();
-    }
+    public IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node) => node;
 
 
     public IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.Sync<T> node) =>
@@ -29,10 +26,8 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
     public IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.Async<T> node) =>
         node with { Upstream = ((Ast.INode<T>)node.Upstream).Apply(this) };
 
-    public IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.CancellableAsync<T> node)
-    {
-        throw new NotImplementedException();
-    }
+    public IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.CancellableAsync<T> node) =>
+        node with { Upstream = ((Ast.INode<T>)node.Upstream).Apply(this) };
 
     public IFlow<T> ApplyTo<T>(Ast.DoOnFailure.Sync<T> node) =>
         node with { Upstream = ((Ast.INode<T>)node.Upstream).Apply(this) };
