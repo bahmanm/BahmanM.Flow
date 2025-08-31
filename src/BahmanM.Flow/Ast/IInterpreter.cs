@@ -76,4 +76,5 @@ internal interface IValidateInterpreter
 {
     internal Task<Outcome<T>> Interpret<T>(Validate.Sync<T> node);
     internal Task<Outcome<T>> Interpret<T>(Validate.Async<T> node);
+    internal Task<Outcome<T>> Interpret<T>(Validate.CancellableAsync<T> node);
 }

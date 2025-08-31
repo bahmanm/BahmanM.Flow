@@ -122,6 +122,7 @@ internal class RetryStrategy : IBehaviourStrategy
 
     public IFlow<T> ApplyTo<T>(Ast.Validate.Sync<T> node) => node;
     public IFlow<T> ApplyTo<T>(Ast.Validate.Async<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.Validate.CancellableAsync<T> node) => node;
 
     #endregion
 }

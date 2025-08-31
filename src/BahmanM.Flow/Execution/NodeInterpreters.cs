@@ -113,10 +113,12 @@ internal class NodeInterpreters
         {
             Sync = new Execution.Validate.Sync(interpreter, options);
             Async = new Execution.Validate.Async(interpreter, options);
+            CancellableAsync = new Execution.Validate.CancellableAsync(interpreter, options);
         }
 
         internal Execution.Validate.Sync Sync { get; }
         internal Execution.Validate.Async Async { get; }
+        internal Execution.Validate.CancellableAsync CancellableAsync { get; }
     }
 }
 

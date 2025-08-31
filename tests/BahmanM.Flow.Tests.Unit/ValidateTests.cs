@@ -214,4 +214,102 @@ public class ValidateTests
         // Assert
         Assert.Equal(original, withTimeout);
     }
+
+    // Cancellable async Validate
+
+    [Fact]
+    public async Task ValidateCancellable_WhenSuccessAndPredicateTrue_PassesThroughSuccess()
+    {
+        // Arrange
+        var flow = Flow.Succeed(42)
+            .Validate(async (x, token) => { await Task.Delay(1, token); return x > 0; }, _ => new Exception("should not be called"));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(flow);
+
+        // Assert
+        Assert.Equal(Success(42), outcome);
+    }
+
+    [Fact]
+    public async Task ValidateCancellable_WhenCancelled_ReturnsTaskCanceledFailure()
+    {
+        // Arrange
+        var cts = new CancellationTokenSource();
+        var options = new Execution.Options(CancellationToken: cts.Token);
+        var flow = Flow.Succeed(42)
+            .Validate(async (x, token) => { await Task.Delay(100, token); return x > 0; }, _ => new Exception("unused"));
+
+        // Act
+        await cts.CancelAsync();
+        var outcome = await FlowEngine.ExecuteAsync(flow, options);
+
+        // Assert
+        var failure = Assert.IsType<Failure<int>>(outcome);
+        Assert.IsType<TaskCanceledException>(failure.Exception);
+
+        // Clean up
+        cts.Dispose();
+    }
+
+    [Fact]
+    public async Task ValidateCancellable_WhenSuccessAndPredicateFalse_FailsWithFactoryException()
+    {
+        // Arrange
+        var expected = new InvalidOperationException("invalid value");
+        var flow = Flow.Succeed(5)
+            .Validate(async (x, token) => { await Task.Delay(1, token); return x % 2 == 0; }, _ => expected);
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(flow);
+
+        // Assert
+        Assert.Equal(Failure<int>(expected), outcome);
+    }
+
+    [Fact]
+    public async Task ValidateCancellable_WhenUpstreamIsFailure_PassesThroughFailure()
+    {
+        // Arrange
+        var upstreamEx = new Exception("upstream failure");
+        var flow = Flow.Fail<int>(upstreamEx)
+            .Validate(async (_, token) => { await Task.Delay(1, token); return true; }, _ => new Exception("unused"));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(flow);
+
+        // Assert
+        Assert.Equal(Failure<int>(upstreamEx), outcome);
+    }
+
+    [Fact]
+    public async Task ValidateCancellable_WhenPredicateThrows_ReturnsFailure()
+    {
+        // Arrange
+        var predicateEx = new InvalidOperationException("predicate crashed");
+        var flow = Flow.Succeed(1)
+            .Validate<int>(async (x, token) => { await Task.Delay(1, token); throw predicateEx; }, _ => new Exception("unused"));
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(flow);
+
+        // Assert
+        Assert.Equal(Failure<int>(predicateEx), outcome);
+    }
+
+    [Fact]
+    public void ValidateCancellable_BehavioursNoOp_ReturnsSameInstance()
+    {
+        // Arrange
+        var original = Flow.Succeed(10)
+            .Validate(async (x, token) => { await Task.Delay(1, token); return x > 0; }, _ => new Exception("bad"));
+
+        // Act
+        var withRetry = original.WithRetry(3);
+        var withTimeout = original.WithTimeout(TimeSpan.FromMilliseconds(50));
+
+        // Assert
+        Assert.Equal(original, withRetry);
+        Assert.Equal(original, withTimeout);
+    }
 }
