@@ -144,3 +144,40 @@ A key design decision was how to handle the application of a behaviour to differ
     It does not perform a no-op on pure transformations, allowing developers to build powerful, universal behaviours that can observe or interact with the entire pipeline.
 
 This two-pronged approach provides both safety and predictability for the built-in execution modifiers and maximum power and flexibility for user-defined custom behaviours.
+
+# 9. The `Validate` Operator and Value-Introspection
+
+### 9a. Introduction: A New Class of Operator
+
+The introduction of `.Validate()` marks a new category of operator in the library. While most operators are "State-Reactive," `.Validate()` is "Value-Introspective."
+
+### 9b. State-Reactive vs. Value-Introspective Operators
+
+*   **State-Reactive:** These operators react to the *state* of the flow (`Success` or `Failure`) without needing to inspect the value. `Chain`, `Recover`, and `DoOn...` are the primary examples.
+*   **Value-Introspective:** These operators "look inside" a `Success<T>` outcome to make decisions based on the value `T` itself. `.Validate()` is the first and most important operator in this category.
+
+### 9c. Parallels in Functional Programming
+
+This concept is not unique to `Flow`. In functional libraries like Cats Effect or ZIO, this capability is typically composed from the fundamental `flatMap` primitive or exposed via methods like `.ensure` or `.filterOrFail`. `Flow` makes a deliberate design choice to elevate this common pattern to a named, first-class operator to improve ergonomics, discoverability, and readability for a broader audience.
+
+### 9d. Design Deep Dive: The `Validate` Signature
+
+*   **The Name (`Validate`):** The name `Validate` was chosen because it best describes the developer's *intent* (asserting that the data is in a valid state for the happy path) and encourages positive, declarative predicates (`user.IsAdmin`).
+*   **The Exception Factory (`Func<T, Exception>`):** This is a crucial part of the signature. It avoids the performance overhead of creating an exception on every call and, more importantly, allows for rich, **contextual error messages** by giving the factory access to the value that failed validation.
+
+    ```csharp
+    // Good: The error message can include the specific, problematic value.
+    .Validate(
+        name => name.Length > 3,
+        name => new ArgumentException($"Username '{name}' is too short.")
+    )
+    ```
+
+In addition to the synchronous signature above, Flow also exposes asynchronous and cancellable variants to mirror the rest of the API surface. These variants preserve the exact same outcome semantics; they differ only in how the predicate is evaluated:
+
+```
+IFlow<T> Validate<T>(Func<T, Task<bool>> predicateAsync, Func<T, Exception> exceptionFactory)
+IFlow<T> Validate<T>(Func<T, CancellationToken, Task<bool>> predicateCancellableAsync, Func<T, Exception> exceptionFactory)
+```
+
+Use the cancellable overload when you want the predicate’s evaluation to respect the execution token provided to the engine.

@@ -7,6 +7,7 @@ internal interface IInterpreter :
     ISelectInterpreter,
     IChainInterpreter,
     IRecoverInterpreter,
+    IValidateInterpreter,
     IPrimitiveInterpreter,
     IApplicativeInterpreter,
     IAlternativeInterpreter
@@ -69,4 +70,11 @@ internal interface IApplicativeInterpreter
 internal interface IAlternativeInterpreter
 {
     Task<Outcome<T>> Interpret<T>(Primitive.Any<T> node);
+}
+
+internal interface IValidateInterpreter
+{
+    internal Task<Outcome<T>> Interpret<T>(Validate.Sync<T> node);
+    internal Task<Outcome<T>> Interpret<T>(Validate.Async<T> node);
+    internal Task<Outcome<T>> Interpret<T>(Validate.CancellableAsync<T> node);
 }

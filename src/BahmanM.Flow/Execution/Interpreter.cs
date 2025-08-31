@@ -35,6 +35,10 @@ internal class Interpreter : Ast.IInterpreter
     public Task<Outcome<T>> Interpret<T>(Ast.Recover.Async<T> node) => Execution.Recover.Async.Execute(node, this, Options);
     public Task<Outcome<T>> Interpret<T>(Ast.Recover.CancellableAsync<T> node) => Execution.Recover.CancellableAsync.Execute(node, this, Options);
 
+    public Task<Outcome<T>> Interpret<T>(Ast.Validate.Sync<T> node) => NodeInterpreters.Validate.Sync.Interpret(node);
+    public Task<Outcome<T>> Interpret<T>(Ast.Validate.Async<T> node) => NodeInterpreters.Validate.Async.Interpret(node);
+    public Task<Outcome<T>> Interpret<T>(Ast.Validate.CancellableAsync<T> node) => NodeInterpreters.Validate.CancellableAsync.Interpret(node);
+
     public Task<Outcome<T[]>> Interpret<T>(Ast.Primitive.All<T> node) => NodeInterpreters.Primitives.All.Interpret(node);
     public Task<Outcome<T>> Interpret<T>(Ast.Primitive.Any<T> node) => NodeInterpreters.Primitives.Any.Interpret(node);
     public Task<Outcome<T>> Interpret<T>(Ast.Primitive.Succeed<T> node) => NodeInterpreters.Primitives.Succeed.Interpret(node);

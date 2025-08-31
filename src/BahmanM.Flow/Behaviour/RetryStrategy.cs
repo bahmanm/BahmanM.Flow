@@ -120,5 +120,9 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
 
     public IFlow<T> ApplyTo<T>(Ast.Primitive.Any<T> node) => node;
 
+    public IFlow<T> ApplyTo<T>(Ast.Validate.Sync<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.Validate.Async<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.Validate.CancellableAsync<T> node) => node;
+
     #endregion
 }

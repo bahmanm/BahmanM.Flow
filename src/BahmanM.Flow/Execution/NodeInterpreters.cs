@@ -8,6 +8,7 @@ internal class NodeInterpreters
     internal CreateNodes Create { get; }
     internal DoOnSuccessNodes DoOnSuccess { get; }
     internal DoOnFailureNodes DoOnFailure { get; }
+    internal ValidateNodes Validate { get; }
 
     public NodeInterpreters(Ast.IInterpreter interpreter, Options options)
     {
@@ -17,6 +18,7 @@ internal class NodeInterpreters
         Create = new(interpreter, options);
         DoOnSuccess = new(interpreter, options);
         DoOnFailure = new(interpreter, options);
+        Validate = new(interpreter, options);
     }
 
     internal record SelectNodes
@@ -103,6 +105,20 @@ internal class NodeInterpreters
         internal Execution.DoOnFailure.Sync Sync { get; }
         internal Execution.DoOnFailure.Async Async { get; }
         internal Execution.DoOnFailure.CancellableAsync CancellableAsync { get; }
+    }
+
+    internal record ValidateNodes
+    {
+        internal ValidateNodes(Ast.IInterpreter interpreter, Options options)
+        {
+            Sync = new Execution.Validate.Sync(interpreter, options);
+            Async = new Execution.Validate.Async(interpreter, options);
+            CancellableAsync = new Execution.Validate.CancellableAsync(interpreter, options);
+        }
+
+        internal Execution.Validate.Sync Sync { get; }
+        internal Execution.Validate.Async Async { get; }
+        internal Execution.Validate.CancellableAsync CancellableAsync { get; }
     }
 }
 
