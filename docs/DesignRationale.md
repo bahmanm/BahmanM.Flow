@@ -172,3 +172,12 @@ This concept is not unique to `Flow`. In functional libraries like Cats Effect o
         name => new ArgumentException($"Username '{name}' is too short.")
     )
     ```
+
+In addition to the synchronous signature above, Flow also exposes asynchronous and cancellable variants to mirror the rest of the API surface. These variants preserve the exact same outcome semantics; they differ only in how the predicate is evaluated:
+
+```
+IFlow<T> Validate<T>(Func<T, Task<bool>> predicateAsync, Func<T, Exception> exceptionFactory)
+IFlow<T> Validate<T>(Func<T, CancellationToken, Task<bool>> predicateCancellableAsync, Func<T, Exception> exceptionFactory)
+```
+
+Use the cancellable overload when you want the predicate’s evaluation to respect the execution token provided to the engine.

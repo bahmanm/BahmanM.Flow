@@ -40,6 +40,8 @@ namespace BahmanM.Flow
         public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, Task<IFlow<TOut>>> asyncFunc, OperationId operationId = null);
 
         public static IFlow<T> Validate<T>(this IFlow<T> flow, Func<T, bool> predicate, Func<T, Exception> exceptionFactory, OperationId operationId = null);
+        public static IFlow<T> Validate<T>(this IFlow<T> flow, Func<T, Task<bool>> predicateAsync, Func<T, Exception> exceptionFactory, OperationId operationId = null);
+        public static IFlow<T> Validate<T>(this IFlow<T> flow, Func<T, CancellationToken, Task<bool>> predicateCancellableAsync, Func<T, Exception> exceptionFactory, OperationId operationId = null);
 
         public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, T> recoveryFunc, OperationId operationId = null);
         public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, Task<T>> asyncRecoveryFunc, OperationId operationId = null);
