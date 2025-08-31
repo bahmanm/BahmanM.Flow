@@ -120,5 +120,7 @@ internal class RetryStrategy : IBehaviourStrategy
 
     public IFlow<T> ApplyTo<T>(Ast.Primitive.Any<T> node) => node;
 
+    public IFlow<T> ApplyTo<T>(Ast.Validate.Sync<T> node) => node;
+
     #endregion
 }
