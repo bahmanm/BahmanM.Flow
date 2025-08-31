@@ -128,6 +128,45 @@ public class WithResourceDisposalTests : IDisposable
     }
 
     [Fact]
+    public async Task WithResource_Nested_DisposesInnerThenOuter()
+    {
+        // Arrange
+        DisposableProbe.Reset();
+        var flow = Flow.WithResource<DisposableProbe, int>(
+            acquire: () => new DisposableProbe(),
+            use: outer =>
+                Flow.WithResource<DisposableProbe, int>(
+                    acquire: () => new DisposableProbe(),
+                    use: inner => Flow.Succeed(99)
+                )
+        );
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(flow);
+
+        // Assert: two allocations, two disposals
+        Assert.Equal(Success(99), outcome);
+        Assert.Equal(2, DisposableProbe.AllocatedCount);
+        Assert.Equal(2, DisposableProbe.DisposedCount);
+    }
+
+    [Fact]
+    public async Task WithResource_Burst_Serial_100_DisposesAll()
+    {
+        await RunSerial(100, async () =>
+        {
+            DisposableProbe.Reset();
+            var flow = Flow.WithResource<DisposableProbe, int>(
+                acquire: () => new DisposableProbe(),
+                use: _ => Flow.Succeed(5)
+            );
+            var outcome = await FlowEngine.ExecuteAsync(flow);
+            Assert.Equal(Success(5), outcome);
+            Assert.Equal(DisposableProbe.AllocatedCount, DisposableProbe.DisposedCount);
+        });
+    }
+
+    [Fact]
     public async Task WithResource_Repeat_Success_10x_DisposesAll()
     {
         await RunSerial(10, async () =>
