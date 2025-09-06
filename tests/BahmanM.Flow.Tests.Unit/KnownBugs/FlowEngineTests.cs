@@ -1,9 +1,9 @@
-namespace BahmanM.Flow.Tests.Unit;
+namespace BahmanM.Flow.Tests.Unit.KnownBugs;
 
 public class FlowEngineTests
 {
     [Fact(Skip = "Recursive implementation is not stack-safe for long chains.")]
-    [Trait("Category", "NonFunctional")]
+    [Trait("Category", "KnownBugs")]
     public async Task ExecuteAsync_WithLongChain_DoesNotCauseStackOverflow()
     {
         // Arrange
