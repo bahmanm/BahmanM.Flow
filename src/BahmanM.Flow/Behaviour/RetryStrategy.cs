@@ -1,23 +1,10 @@
 namespace BahmanM.Flow.Behaviour;
 
-internal class RetryStrategy : IBehaviourStrategy
+internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptions) : IBehaviourStrategy
 {
-    private readonly Type[] _nonRetryableExceptions;
-    private readonly int _maxAttempts;
-
-    public RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptions)
-    {
-        _nonRetryableExceptions = nonRetryableExceptions;
-        _maxAttempts = maxAttempts > 0
-            ? maxAttempts
-            : throw new ArgumentOutOfRangeException(nameof(maxAttempts), "Max attempts must be a positive integer.");
-    }
-
-    public RetryStrategy(int maxAttempts) : this(maxAttempts, [typeof(TimeoutException)])
-    {
-    }
-
-    #region Pass-through Implementations
+    private readonly int _maxAttempts = maxAttempts > 0
+        ? maxAttempts
+        : throw new ArgumentOutOfRangeException(nameof(maxAttempts), "Max attempts must be a positive integer.");
 
     public IFlow<T> ApplyTo<T>(Ast.Primitive.Succeed<T> node) => node;
     public IFlow<T> ApplyTo<T>(Ast.Primitive.Fail<T> node) => node;
@@ -34,9 +21,19 @@ internal class RetryStrategy : IBehaviourStrategy
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Select.Async<TIn, TOut> node) => node;
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Select.CancellableAsync<TIn, TOut> node) => node;
 
-    #endregion
+    public IFlow<T> ApplyTo<T>(Ast.Recover.Sync<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.Recover.Async<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.Recover.CancellableAsync<T> node) => node;
 
-    #region Rewriting Implementations
+    public IFlow<T[]> ApplyTo<T>(Ast.Primitive.All<T> node) => node;
+
+    public IFlow<T> ApplyTo<T>(Ast.Primitive.Any<T> node) => node;
+
+    public IFlow<T> ApplyTo<T>(Ast.Validate.Sync<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.Validate.Async<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.Validate.CancellableAsync<T> node) => node;
+
+    public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResource<TResource, T> node) where TResource : IDisposable => node;
 
     public IFlow<T> ApplyTo<T>(Ast.Create.Sync<T> node)
     {
@@ -51,7 +48,7 @@ internal class RetryStrategy : IBehaviourStrategy
                 }
                 catch (Exception ex)
                 {
-                    if (_nonRetryableExceptions.Contains(ex.GetType()))
+                    if (nonRetryableExceptions.Contains(ex.GetType()))
                         throw;
                     lastException = ex;
                 }
@@ -74,7 +71,7 @@ internal class RetryStrategy : IBehaviourStrategy
                 }
                 catch (Exception ex)
                 {
-                    if (_nonRetryableExceptions.Contains(ex.GetType()))
+                    if (nonRetryableExceptions.Contains(ex.GetType()))
                         throw;
                     lastException = ex;
                 }
@@ -98,7 +95,7 @@ internal class RetryStrategy : IBehaviourStrategy
                 }
                 catch (Exception ex)
                 {
-                    if (_nonRetryableExceptions.Contains(ex.GetType()))
+                    if (nonRetryableExceptions.Contains(ex.GetType()))
                         throw;
                     lastException = ex;
                 }
@@ -128,20 +125,4 @@ internal class RetryStrategy : IBehaviourStrategy
             ((Ast.INode<TOut>)await node.Operation(value, cancellationToken)).Apply(this);
         return node with { Operation = newOperation };
     }
-
-    public IFlow<T> ApplyTo<T>(Ast.Recover.Sync<T> node) => node;
-    public IFlow<T> ApplyTo<T>(Ast.Recover.Async<T> node) => node;
-    public IFlow<T> ApplyTo<T>(Ast.Recover.CancellableAsync<T> node) => node;
-
-    public IFlow<T[]> ApplyTo<T>(Ast.Primitive.All<T> node) => node;
-
-    public IFlow<T> ApplyTo<T>(Ast.Primitive.Any<T> node) => node;
-
-    public IFlow<T> ApplyTo<T>(Ast.Validate.Sync<T> node) => node;
-    public IFlow<T> ApplyTo<T>(Ast.Validate.Async<T> node) => node;
-    public IFlow<T> ApplyTo<T>(Ast.Validate.CancellableAsync<T> node) => node;
-
-    public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResource<TResource, T> node) where TResource : IDisposable => node;
-
-    #endregion
 }
