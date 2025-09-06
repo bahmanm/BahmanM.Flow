@@ -4,33 +4,41 @@ namespace BahmanM.Flow.Tests.Unit;
 
 public class AnyCancellationTests
 {
-    [Fact(Skip = "Awaiting robust CancellationToken support throughout the FlowEngine (see issue #56)")]
+    [Fact]
     public async Task Any_WhenOneFlowSucceeds_CancelsOtherFlows()
     {
         // Arrange
         var sideEffects = new ConcurrentBag<string>();
 
-        var fastFlow = Flow.Create<string>(async () =>
+        var fastFlow = Flow.Create<string>(async ct =>
         {
-            await Task.Delay(10);
+            await Task.Delay(10, ct);
             return "fast";
         });
 
-        var slowFlow = Flow.Create<string>(async () =>
+        var slowFlow = Flow.Create<string>(async ct =>
         {
-            await Task.Delay(100);
-            sideEffects.Add("slow flow ran to completion");
-            return "slow";
+            try
+            {
+                await Task.Delay(100, ct);
+                sideEffects.Add("slow flow ran to completion");
+                return "slow";
+            }
+            catch (TaskCanceledException)
+            {
+                // expected cancellation
+                return "cancelled";
+            }
         });
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(Flow.Any(fastFlow, slowFlow));
 
-        // Allow time for the slow flow to complete if it wasn't cancelled
+        // Allow time for the slow flow to observe cancellation if not already
         await Task.Delay(200);
 
         // Assert
         Assert.True(outcome.IsSuccess());
-        Assert.Empty(sideEffects); // This will fail with the current implementation
+        Assert.Empty(sideEffects);
     }
 }

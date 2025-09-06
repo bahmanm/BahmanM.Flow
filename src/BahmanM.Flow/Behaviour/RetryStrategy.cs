@@ -21,7 +21,6 @@ internal class RetryStrategy : IBehaviourStrategy
 
     public IFlow<T> ApplyTo<T>(Ast.Primitive.Succeed<T> node) => node;
     public IFlow<T> ApplyTo<T>(Ast.Primitive.Fail<T> node) => node;
-    public IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node) => node;
 
     public IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.Sync<T> node) => node;
     public IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.Async<T> node) => node;
@@ -62,13 +61,6 @@ internal class RetryStrategy : IBehaviourStrategy
         return new Ast.Create.Sync<T>(newOperation);
     }
 
-    public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Sync<TIn, TOut> node)
-    {
-        Flow.Operations.Chain.Sync<TIn,TOut> newOperation = (value) =>
-            ((Ast.INode<TOut>)node.Operation(value)).Apply(this);
-        return node with { Operation = newOperation };
-    }
-
     public IFlow<T> ApplyTo<T>(Ast.Create.Async<T> node)
     {
         Flow.Operations.Create.Async<T> newOperation = async () =>
@@ -90,6 +82,37 @@ internal class RetryStrategy : IBehaviourStrategy
             throw lastException!;
         };
         return new Ast.Create.Async<T>(newOperation);
+    }
+
+    public IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node)
+    {
+        Func<CancellationToken, Task<T>> newOperation = async ct =>
+        {
+            Exception lastException = null!;
+            for (var i = 0; i < _maxAttempts; i++)
+            {
+                ct.ThrowIfCancellationRequested();
+                try
+                {
+                    return await node.Operation(ct);
+                }
+                catch (Exception ex)
+                {
+                    if (_nonRetryableExceptions.Contains(ex.GetType()))
+                        throw;
+                    lastException = ex;
+                }
+            }
+            throw lastException!;
+        };
+        return new Ast.Create.CancellableAsync<T>(newOperation);
+    }
+
+    public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Sync<TIn, TOut> node)
+    {
+        Flow.Operations.Chain.Sync<TIn,TOut> newOperation = (value) =>
+            ((Ast.INode<TOut>)node.Operation(value)).Apply(this);
+        return node with { Operation = newOperation };
     }
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Async<TIn, TOut> node)
