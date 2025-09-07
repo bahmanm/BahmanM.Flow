@@ -15,6 +15,8 @@ Every Flow begins with one of these.
 *   `Flow.Succeed(value)`: Use this when you already have a value and want to bring it into the Flow world.
 *   `Flow.Fail(exception)`: Use this to explicitly start a pipeline in a failed state.
 *   `Flow.Create(operation)`: Use this when your starting point is an **operation** (a function) that might succeed or fail, like a database call.
+*   `Flow.Create(asyncOperation)`: Async variant that returns a `Task<T>`.
+*   `Flow.Create((CancellationToken ct) => asyncOperation)`: The cancellable async variant. Prefer this when you want your operation to honour pipeline cancellation (e.g. when racing with `Flow.Any` or when the engine token is cancelled).
 
 ### `.Select()`
 
@@ -121,6 +123,12 @@ This is an important distinction to remember:
 
 *   **Use `.Select()` when** your operation transforms a value and returns a **plain object** (`TIn -> TOut`).
 *   **Use `.Chain()` when** your operation kicks off a new process and returns **another Flow** (`TIn -> IFlow<TOut>`).
+
+---
+
+### Cancellation (Co‑operative)
+
+Flow supports co‑operative cancellation throughout the pipeline. `FlowEngine` provides a `CancellationToken` via execution options and operators that have cancellable overloads will observe that token.
 
 ---
 

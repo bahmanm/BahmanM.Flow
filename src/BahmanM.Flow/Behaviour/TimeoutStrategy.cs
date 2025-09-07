@@ -17,7 +17,11 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         return new Ast.Create.Async<T>(newOperation);
     }
 
-    public IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node) => node;
+    public IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node)
+    {
+        Func<CancellationToken, Task<T>> newOperation = ct => node.Operation(ct).WaitAsync(duration, ct);
+        return new Ast.Create.CancellableAsync<T>(newOperation);
+    }
 
 
     public IFlow<T> ApplyTo<T>(Ast.DoOnSuccess.Sync<T> node) =>
@@ -87,14 +91,20 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<T[]> ApplyTo<T>(Ast.Primitive.All<T> node)
     {
-        Flow.Operations.Create.Async<T[]> newOperation = () => FlowEngine.ExecuteAsync(node).WaitAsync(duration).Unwrap();
-        return new Ast.Create.Async<T[]>(newOperation);
+        Func<CancellationToken, Task<T[]>> newOperation = ct => FlowEngine
+            .ExecuteAsync(node, new Execution.Options(ct))
+            .WaitAsync(duration, ct)
+            .Unwrap();
+        return new Ast.Create.CancellableAsync<T[]>(newOperation);
     }
 
     public IFlow<T> ApplyTo<T>(Ast.Primitive.Any<T> node)
     {
-        Flow.Operations.Create.Async<T> newOperation = () => FlowEngine.ExecuteAsync(node).WaitAsync(duration).Unwrap();
-        return new Ast.Create.Async<T>(newOperation);
+        Func<CancellationToken, Task<T>> newOperation = ct => FlowEngine
+            .ExecuteAsync(node, new Execution.Options(ct))
+            .WaitAsync(duration, ct)
+            .Unwrap();
+        return new Ast.Create.CancellableAsync<T>(newOperation);
     }
 
     public IFlow<T> ApplyTo<T>(Ast.Validate.Sync<T> node) =>
