@@ -1,6 +1,6 @@
 using static BahmanM.Flow.Outcome;
 
-namespace BahmanM.Flow.Tests.Unit;
+namespace BahmanM.Flow.Tests.Integration;
 
 public class DoOnFailureTests
 {
@@ -16,7 +16,7 @@ public class DoOnFailureTests
         Exception? capturedException = null;
         Flow.Operations.DoOnFailure.CancellableAsync onFailure = async (ex, token) =>
         {
-            await Task.Delay(100, token);
+            await Task.Yield();
             actionCalled = true;
             capturedException = ex;
         };
@@ -56,7 +56,7 @@ public class DoOnFailureTests
         var capturedException = null as Exception;
         Flow.Operations.DoOnFailure.Async onFailure = async ex =>
         {
-            await Task.Delay(1000);
+            await Task.Yield();
             actionCalled = true;
             capturedException = ex;
         };
@@ -98,7 +98,7 @@ public class DoOnFailureTests
 
         Flow.Operations.DoOnFailure.CancellableAsync onFailure = async (ex, token) =>
         {
-            await Task.Delay(1000, token);
+            await Task.Delay(Timeout.InfiniteTimeSpan, token);
             actionCalled = true;
             capturedException = ex;  // Unreachable because of cancellation
         };

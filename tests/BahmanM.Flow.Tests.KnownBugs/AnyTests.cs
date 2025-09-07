@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace BahmanM.Flow.Tests.Unit.KnownBugs;
+namespace BahmanM.Flow.Tests.KnownBugs;
 
 public class AnyTests
 {

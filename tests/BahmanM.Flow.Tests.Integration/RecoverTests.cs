@@ -1,6 +1,6 @@
 using static BahmanM.Flow.Outcome;
 
-namespace BahmanM.Flow.Tests.Unit;
+namespace BahmanM.Flow.Tests.Integration;
 
 public class RecoverTests
 {
@@ -64,7 +64,7 @@ public class RecoverTests
         var recoveredFlow = initialFlow.Recover((Flow.Operations.Recover.Async<int>)(async _ =>
         {
             recoverExecuted = true;
-            await Task.Delay(10);
+            await Task.Yield();
             return Flow.Succeed(0);
         }));
 
@@ -84,7 +84,7 @@ public class RecoverTests
         var initialFlow = Flow.Fail<int>(exception);
         var recoveredFlow = initialFlow.Recover((Flow.Operations.Recover.Async<int>)(async ex =>
         {
-            await Task.Delay(10);
+            await Task.Yield();
             return Flow.Succeed(20);
         }));
 
@@ -120,7 +120,7 @@ public class RecoverTests
         var recoveredFlow = initialFlow.Recover(async (ex, token) =>
         {
             recoverExecuted = true;
-            await Task.Delay(10, token);
+            await Task.Yield();
             return Flow.Succeed(0);
         });
 
@@ -142,7 +142,7 @@ public class RecoverTests
 
         var recoveredFlow = Flow.Fail<int>(initialException).Recover(async (ex, token) =>
         {
-            await Task.Delay(100, token);
+            await Task.Delay(Timeout.InfiniteTimeSpan, token);
             return Flow.Succeed(20);
         });
 
@@ -183,7 +183,7 @@ public class RecoverTests
         {
             await Task.Delay(TimeSpan.FromSeconds(2)); // Will timeout
             return 10;
-        }).WithTimeout(TimeSpan.FromSeconds(0.1));
+        }).WithTimeout(TimeSpan.FromMilliseconds(20));
         var recoveredFlow = initialFlow.Recover(_ => Task.FromResult(Flow.Succeed(88)));
 
         // Act

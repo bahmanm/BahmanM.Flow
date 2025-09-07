@@ -1,6 +1,6 @@
 using static BahmanM.Flow.Outcome;
 
-namespace BahmanM.Flow.Tests.Unit;
+namespace BahmanM.Flow.Tests.Integration;
 
 public class ChainTests
 {
@@ -66,7 +66,7 @@ public class ChainTests
         var initialFlow = Flow.Succeed(10);
         var chainedFlow = initialFlow.Chain(async value =>
         {
-            await Task.Delay(10);
+            await Task.Yield();
             return Flow.Succeed(value * 2);
         });
 
@@ -87,7 +87,7 @@ public class ChainTests
         var chainedFlow = initialFlow.Chain(async value =>
         {
             chainExecuted = true;
-            await Task.Delay(10);
+            await Task.Yield();
             return Flow.Succeed(value * 2);
         });
 
@@ -121,7 +121,7 @@ public class ChainTests
         var initialFlow = Flow.Succeed(10);
         var chainedFlow = initialFlow.Chain(async (value, token) =>
         {
-            await Task.Delay(10, token);
+            await Task.Yield();
             return Flow.Succeed(value * 2);
         });
 
@@ -141,7 +141,7 @@ public class ChainTests
 
         var chainedFlow = Flow.Succeed(10).Chain(async (value, token) =>
         {
-            await Task.Delay(100, token);
+            await Task.Delay(Timeout.InfiniteTimeSpan, token);
             return Flow.Succeed(value * 2);
         });
 

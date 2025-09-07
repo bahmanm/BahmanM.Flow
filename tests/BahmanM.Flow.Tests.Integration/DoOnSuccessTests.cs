@@ -1,6 +1,6 @@
 using static BahmanM.Flow.Outcome;
 
-namespace BahmanM.Flow.Tests.Unit;
+namespace BahmanM.Flow.Tests.Integration;
 
 public class DoOnSuccessTests
 {
@@ -70,7 +70,7 @@ public class DoOnSuccessTests
         Flow.Operations.DoOnSuccess.Async<int> onSuccess = async val =>
         {
             Assert.Equal(successValue, val);
-            await Task.Delay(10);
+            await Task.Yield();
             actionCalled = true;
         };
 
@@ -92,7 +92,7 @@ public class DoOnSuccessTests
         var actionCalled = false;
         Flow.Operations.DoOnSuccess.Async<int> onSuccess = async _ =>
         {
-            await Task.Delay(10);
+            await Task.Yield();
             actionCalled = true;
         };
 
@@ -132,7 +132,7 @@ public class DoOnSuccessTests
         Flow.Operations.DoOnSuccess.CancellableAsync<int> onSuccess = async (val, token) =>
         {
             Assert.Equal(successValue, val);
-            await Task.Delay(10, token);
+            await Task.Yield();
             actionCalled = true;
         };
 
@@ -154,7 +154,7 @@ public class DoOnSuccessTests
         var actionCalled = false;
         Flow.Operations.DoOnSuccess.CancellableAsync<int> onSuccess = async (_, _) =>
         {
-            await Task.Delay(10);
+            await Task.Yield();
             actionCalled = true;
         };
 
@@ -177,7 +177,7 @@ public class DoOnSuccessTests
 
         Flow.Operations.DoOnSuccess.CancellableAsync<int> onSuccess = async (val, token) =>
         {
-            await Task.Delay(100, token);
+            await Task.Delay(Timeout.InfiniteTimeSpan, token);
         };
 
         var flow = Flow.Succeed(123).DoOnSuccess(onSuccess);
