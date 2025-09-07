@@ -1,6 +1,6 @@
 using static BahmanM.Flow.Outcome;
 
-namespace BahmanM.Flow.Tests.Unit;
+namespace BahmanM.Flow.Tests.Integration;
 
 public class FlowExecutionTests
 {
@@ -64,7 +64,7 @@ public class FlowExecutionTests
         // Arrange
         var createFlow = Flow.Create(async () =>
         {
-            await Task.Delay(10);
+            await Task.Yield();
             return 123;
         });
 

@@ -1,6 +1,6 @@
 using static BahmanM.Flow.Outcome;
 
-namespace BahmanM.Flow.Tests.Unit;
+namespace BahmanM.Flow.Tests.Integration;
 
 public class SelectTests
 {
@@ -53,7 +53,7 @@ public class SelectTests
         var successValue = 123;
         var flow = Flow.Succeed(successValue).Select((Flow.Operations.Select.Async<int, int>)(async x =>
         {
-            await Task.Delay(10);
+            await Task.Yield();
             return x * 2;
         }));
 
@@ -71,7 +71,7 @@ public class SelectTests
         var exception = new InvalidOperationException("Async selector failed!");
         var flow = Flow.Succeed(123).Select<int, int>(async _ =>
         {
-            await Task.Delay(10);
+            await Task.Yield();
             throw exception;
         });
 
@@ -89,7 +89,7 @@ public class SelectTests
         var successValue = 123;
         var flow = Flow.Succeed(successValue).Select(async (x, token) =>
         {
-            await Task.Delay(10, token);
+            await Task.Yield();
             return x * 2;
         });
 
@@ -109,7 +109,7 @@ public class SelectTests
 
         var flow = Flow.Succeed(123).Select(async (x, token) =>
         {
-            await Task.Delay(100, token);
+            await Task.Delay(Timeout.InfiniteTimeSpan, token);
             return x * 2;
         });
 

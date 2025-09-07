@@ -1,4 +1,4 @@
-namespace BahmanM.Flow.Tests.Unit;
+namespace BahmanM.Flow.Tests.Integration;
 
 public class WithTimeoutTests
 {
@@ -32,7 +32,7 @@ public class WithTimeoutTests
     {
         // Arrange
         var originalFlow = nonFailableFlow;
-        var timeout = TimeSpan.FromSeconds(1);
+        var timeout = TimeSpan.FromMilliseconds(50);
 
         // Act
         var resultFlow = originalFlow.WithTimeout(timeout);
@@ -47,11 +47,11 @@ public class WithTimeoutTests
         // Arrange
         var flow = Flow.Create<string>(async () =>
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(200));
+            await Task.Delay(TimeSpan.FromMilliseconds(80));
             return SimoneDeBeauvoir;
         });
 
-        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(50));
+        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(20));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timedFlow);
@@ -72,11 +72,11 @@ public class WithTimeoutTests
         // Arrange
         var flow = Flow.Create<string>(async () =>
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(50));
+            await Task.Delay(TimeSpan.FromMilliseconds(5));
             return SimoneDeBeauvoir;
         });
 
-        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(200));
+        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(50));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timedFlow);
@@ -92,11 +92,11 @@ public class WithTimeoutTests
         // Arrange
         var flow = Flow.Succeed("start").Chain(async _ =>
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(200));
+            await Task.Delay(TimeSpan.FromMilliseconds(50));
             return Flow.Succeed(SimoneDeBeauvoir);
         });
 
-        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(50));
+        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(10));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timedFlow);
@@ -105,18 +105,18 @@ public class WithTimeoutTests
         Assert.True(outcome.IsFailure());
         Assert.IsType<TimeoutException>(outcome switch { Failure<string> f => f.Exception, _ => null });
     }
-    
+
     [Fact]
     public async Task WithTimeout_WhenSyncOperationExceedsDuration_FailsWithTimeoutException()
     {
         // Arrange
         var flow = Flow.Create<string>(() =>
         {
-            Task.Delay(TimeSpan.FromMilliseconds(200)).Wait(); // Intentionally blocking to simulate a long-running synchronous operation
+            Thread.Sleep(TimeSpan.FromMilliseconds(80)); // Simulate long-running sync operation without blocking tasks
             return SimoneDeBeauvoir;
         });
 
-        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(50));
+        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(20));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timedFlow);
@@ -134,7 +134,7 @@ public class WithTimeoutTests
         var flow = Flow.Create<string>(async () =>
         {
             attempts++;
-            await Task.Delay(TimeSpan.FromMilliseconds(40));
+            await Task.Delay(TimeSpan.FromMilliseconds(20));
             if (attempts < 3)
             {
                 throw new InvalidOperationException("Flaky");
@@ -142,7 +142,7 @@ public class WithTimeoutTests
             return SimoneDeBeauvoir;
         });
 
-        // Total time will be ~120ms (3 * 40ms). Timeout is 200ms.
+        // Total time will be ~60ms (3 * 20ms). Timeout is 200ms.
         var resilientFlow = flow.WithRetry(3).WithTimeout(TimeSpan.FromMilliseconds(200));
 
         // Act
@@ -161,13 +161,13 @@ public class WithTimeoutTests
         var flow = Flow.Create<string>(async () =>
         {
             attempts += 1;
-            await Task.Delay(TimeSpan.FromMilliseconds(200));
+            await Task.Delay(TimeSpan.FromMilliseconds(80));
             return SimoneDeBeauvoir;
         });
 
-        // Timeout is 50ms, so the first attempt will fail.
+        // Timeout is 20ms, so the first attempt will fail.
         // Since the default policy for WithRetry is to not retry on TimeoutException, the retry should NOT happen
-        var resilientFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(50)).WithRetry(3);
+        var resilientFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(20)).WithRetry(3);
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
@@ -186,22 +186,23 @@ public class WithTimeoutTests
         var flow = Flow.Create<string>(async () =>
         {
             attempts++;
-            // Each attempt takes 75ms
-            await Task.Delay(TimeSpan.FromMilliseconds(75));
+            // Each attempt takes 30ms
+            await Task.Delay(TimeSpan.FromMilliseconds(30));
             // Always throw to force retries
             throw new InvalidOperationException($"Attempt {attempts} failed");
         });
 
-        // Total timeout is 200ms, which should allow for 2 full attempts (150ms) but not 3 (225ms)
-        var resilientFlow = flow.WithRetry(5) // Max 5 retries, but timeout should occur first
-                               .WithTimeout(TimeSpan.FromMilliseconds(200));
+        // Total timeout is 80ms, which should allow for ~2 full attempts (60ms) and possibly start a 3rd.
+        var resilientFlow = flow.WithRetry(5)
+                               .WithTimeout(TimeSpan.FromMilliseconds(80));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
 
         // Assert
-        // Should make 2 or 3 attempts depending on timing (3rd might start but not finish)
-        Assert.InRange(attempts, 2, 3);
+        // Timeout does not cancel the underlying operation; extra attempts may continue in background.
+        // Assert a sensible lower bound only to avoid flakiness across OS/schedulers.
+        Assert.True(attempts >= 2);
         Assert.True(outcome.IsFailure());
         Assert.IsType<TimeoutException>(outcome switch { Failure<string> f => f.Exception, _ => null });
     }

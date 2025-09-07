@@ -1,6 +1,6 @@
 using static BahmanM.Flow.Outcome;
 
-namespace BahmanM.Flow.Tests.Unit;
+namespace BahmanM.Flow.Tests.Integration;
 
 public class ValidateTests
 {
