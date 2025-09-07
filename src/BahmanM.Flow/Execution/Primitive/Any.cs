@@ -1,3 +1,5 @@
+using BahmanM.Flow.Support;
+
 namespace BahmanM.Flow.Execution.Primitive;
 
 internal class Any(Ast.IInterpreter interpreter, Options options)
@@ -25,7 +27,7 @@ internal class Any(Ast.IInterpreter interpreter, Options options)
 
         private static List<Task<Outcome<T>>> StartAll(Ast.Primitive.Any<T> node, Ast.IInterpreter child) =>
             node.Flows
-                .Select(f => ((Ast.INode<T>)f).Accept(child))
+                .Select(f => f.AsNode().Accept(child))
                 .ToList();
 
         private static async Task<(Success<T>? success, List<Exception> failures)> DrainUntilFirstSuccess(

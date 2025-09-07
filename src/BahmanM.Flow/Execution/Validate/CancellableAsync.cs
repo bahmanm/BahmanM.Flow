@@ -1,10 +1,12 @@
+using BahmanM.Flow.Support;
+
 namespace BahmanM.Flow.Execution.Validate;
 
 internal class CancellableAsync(Ast.IInterpreter interpreter, Options options)
 {
     internal async Task<Outcome<T>> Interpret<T>(Ast.Validate.CancellableAsync<T> node)
     {
-        var upstreamOutcome = await ((Ast.INode<T>)node.Upstream).Accept(interpreter);
+        var upstreamOutcome = await node.Upstream.AsNode().Accept(interpreter);
 
         return upstreamOutcome switch
         {
@@ -22,4 +24,3 @@ internal class CancellableAsync(Ast.IInterpreter interpreter, Options options)
         };
     }
 }
-
