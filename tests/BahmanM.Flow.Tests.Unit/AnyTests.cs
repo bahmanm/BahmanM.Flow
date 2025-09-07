@@ -14,20 +14,14 @@ public class AnyTests
     public async Task Any_WhenOneFlowSucceeds_ReturnsSucceededOutcomeWithFirstValue()
     {
         // Arrange
-        var flow1 = Flow
-            .Create<string>(async () =>
-            {
-                await Task.Delay(20);
-                return SophieGermain;
-            });
-        var flow2 = Flow
-            .Fail<string>(new Exception("This one fails"));
+        var winner = new FlowCompletionSource<string>();
+        var loser = Flow.Fail<string>(new Exception("This one fails"));
 
         // Act
-        var combinedFlow = Flow
-            .Any(flow1, flow2);
-        var outcome = await FlowEngine
-            .ExecuteAsync(combinedFlow);
+        var exec = FlowEngine.ExecuteAsync(Flow.Any(winner.Flow, loser));
+        await winner.Started;
+        winner.Succeed(SophieGermain);
+        var outcome = await exec;
 
         // Assert
         Assert.Equal(Success(SophieGermain), outcome);
@@ -72,7 +66,7 @@ public class AnyTests
         await Task.WhenAll(fast.Started, slow.Started);
         fast.Succeed("Fast");
         var outcome = await exec;
-        slow.Succeed("Slow"); // tidy up
+        slow.Succeed("Slow");
 
         // Assert
         Assert.Equal(Success("Fast"), outcome);
@@ -81,7 +75,7 @@ public class AnyTests
     [Fact]
     public async Task Any_FollowedByChain_ChainsTheFirstSuccessfulResult()
     {
-        // Arrange (deterministic, no timers)
+        // Arrange
         var slow = new FlowCompletionSource<string>();
         var fast = new FlowCompletionSource<string>();
         var failed = Flow.Fail<string>(new Exception("failure"));
@@ -92,11 +86,11 @@ public class AnyTests
 
         // Act
         var exec = FlowEngine.ExecuteAsync(flow);
-        await Task.WhenAll(fast.Started, slow.Started); // ensure both branches running
-        fast.Succeed("fast"); // deterministically pick winner
+        await Task.WhenAll(fast.Started, slow.Started);
+        fast.Succeed("fast");
 
         var outcome = await exec;
-        slow.Succeed("slow"); // tidy up loser (optional)
+        slow.Succeed("slow");
 
         // Assert
         Assert.Equal(Success("Chained from fast"), outcome);
@@ -106,33 +100,24 @@ public class AnyTests
     public async Task WithTimeout_OnAny_FailsIfNoFlowSucceedsWithinDuration()
     {
         // Arrange
-        var flow1 = Flow
-            .Create<string>(async () =>
-            {
-                await Task.Delay(100);
-                return "A";
-            });
-        var flow2 = Flow
-            .Create<string>(async () =>
-            {
-                await Task.Delay(120);
-                return "B";
-            });
+        var never1 = Flow.Create<string>(async ct =>
+        {
+            await Task.Delay(Timeout.InfiniteTimeSpan, ct);
+            return "A";
+        });
+        var never2 = Flow.Create<string>(async ct =>
+        {
+            await Task.Delay(Timeout.InfiniteTimeSpan, ct);
+            return "B";
+        });
 
         // Act
-        var timedAny = Flow
-            .Any(flow1, flow2)
-            .WithTimeout(TimeSpan.FromMilliseconds(50));
-        var outcome = await FlowEngine
-            .ExecuteAsync(timedAny);
+        var timedAny = Flow.Any(never1, never2).WithTimeout(TimeSpan.FromMilliseconds(50));
+        var outcome = await FlowEngine.ExecuteAsync(timedAny);
 
         // Assert
         Assert.True(outcome.IsFailure());
-        var exception = outcome switch
-        {
-            Failure<string> f => f.Exception,
-            _ => null
-        };
+        var exception = outcome switch { Failure<string> f => f.Exception, _ => null };
         Assert.IsType<TimeoutException>(exception);
     }
 
@@ -140,25 +125,17 @@ public class AnyTests
     public async Task Any_WithTimeoutOnLeaves_DoesNotDisturbWinner()
     {
         // Arrange
-        var fast = Flow
-            .Create<string>(async () =>
-            {
-                await Task.Delay(10);
-                return "fast";
-            })
-            .WithTimeout(TimeSpan.FromMilliseconds(200));
+        var fcs = new FlowCompletionSource<string>();
+        var fast = fcs.Flow.WithTimeout(TimeSpan.FromMilliseconds(200));
         var slowTimesOut = Flow
-            .Create<string>(async () =>
-            {
-                await Task.Delay(200);
-                return "slow";
-            })
+            .Create<string>(async ct => { await Task.Delay(Timeout.InfiniteTimeSpan, ct); return "slow"; })
             .WithTimeout(TimeSpan.FromMilliseconds(50));
 
         // Act
-        var outcome = await FlowEngine
-            .ExecuteAsync(
-                Flow.Any(fast, slowTimesOut));
+        var exec = FlowEngine.ExecuteAsync(Flow.Any(fast, slowTimesOut));
+        await fcs.Started;
+        fcs.Succeed("fast");
+        var outcome = await exec;
 
         // Assert
         Assert.Equal(Success("fast"), outcome);
@@ -171,20 +148,15 @@ public class AnyTests
         using var cts = new CancellationTokenSource();
         var options = new Execution.Options(cts.Token);
 
-        var canceled = Flow
-            .Create<string>(async ct =>
-            {
-                await Task.Delay(100, ct);
-                return "c";
-            });
-        var failed = Flow
-            .Fail<string>(new InvalidOperationException("boom"));
+        var canceled = Flow.Create<string>(async ct =>
+        {
+            await Task.Delay(Timeout.InfiniteTimeSpan, ct);
+            return "c";
+        });
+        var failed = Flow.Fail<string>(new InvalidOperationException("boom"));
 
         // Act
-        var task = FlowEngine
-            .ExecuteAsync(
-                Flow.Any(canceled, failed), options);
-        await Task.Delay(10);
+        var task = FlowEngine.ExecuteAsync(Flow.Any(canceled, failed), options);
         await cts.CancelAsync();
         var outcome = await task;
 
@@ -204,24 +176,19 @@ public class AnyTests
         var losing = Flow
             .Create<string>(async ct =>
             {
-                attempts++;
-                await Task.Delay(100, ct);
+                Interlocked.Increment(ref attempts);
+                await Task.Delay(Timeout.InfiniteTimeSpan, ct);
                 return "loser";
             })
             .WithRetry(5);
 
-        var winner = Flow
-            .Create<string>(async ct =>
-            {
-                await Task.Delay(10, ct);
-                return "winner";
-            });
+        var winner = new FlowCompletionSource<string>();
 
         // Act
-        var outcome = await FlowEngine
-            .ExecuteAsync(
-                Flow.Any(winner, losing));
-        await Task.Delay(200);
+        var exec = FlowEngine.ExecuteAsync(Flow.Any(winner.Flow, losing));
+        await winner.Started;
+        winner.Succeed("winner");
+        var outcome = await exec;
 
         // Assert
         Assert.Equal(Success("winner"), outcome);
