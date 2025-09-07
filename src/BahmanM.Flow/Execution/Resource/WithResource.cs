@@ -1,3 +1,5 @@
+using BahmanM.Flow.Support;
+
 namespace BahmanM.Flow.Execution.Resource;
 
 internal class WithResource(Ast.IInterpreter interpreter, Options options)
@@ -24,7 +26,7 @@ internal class WithResource(Ast.IInterpreter interpreter, Options options)
             Ast.INode<T>? inner = null;
             try
             {
-                inner = (Ast.INode<T>)node.Use(resource);
+                inner = node.Use(resource).AsNode();
             }
             catch (Exception useEx)
             {

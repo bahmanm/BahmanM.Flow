@@ -1,3 +1,5 @@
+using BahmanM.Flow.Support;
+
 namespace BahmanM.Flow.Behaviour;
 
 internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptions) : IBehaviourStrategy
@@ -108,21 +110,21 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Sync<TIn, TOut> node)
     {
         Flow.Operations.Chain.Sync<TIn,TOut> newOperation = (value) =>
-            ((Ast.INode<TOut>)node.Operation(value)).Apply(this);
+            node.Operation(value).AsNode().Apply(this);
         return node with { Operation = newOperation };
     }
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Async<TIn, TOut> node)
     {
         Flow.Operations.Chain.Async<TIn, TOut> newOperation = async (value) =>
-            ((Ast.INode<TOut>)await node.Operation(value)).Apply(this);
+            (await node.Operation(value)).AsNode().Apply(this);
         return node with { Operation = newOperation };
     }
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.CancellableAsync<TIn, TOut> node)
     {
         Flow.Operations.Chain.CancellableAsync<TIn, TOut> newOperation = async (value, cancellationToken) =>
-            ((Ast.INode<TOut>)await node.Operation(value, cancellationToken)).Apply(this);
+            (await node.Operation(value, cancellationToken)).AsNode().Apply(this);
         return node with { Operation = newOperation };
     }
 }
