@@ -1,7 +1,7 @@
 using BahmanM.Flow.Tests.Support;
 using static BahmanM.Flow.Outcome;
 
-namespace BahmanM.Flow.Tests.Unit;
+namespace BahmanM.Flow.Tests.Integration;
 
 public class AnyTests
 {

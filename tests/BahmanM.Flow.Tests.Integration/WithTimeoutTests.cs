@@ -1,4 +1,4 @@
-namespace BahmanM.Flow.Tests.Unit;
+namespace BahmanM.Flow.Tests.Integration;
 
 public class WithTimeoutTests
 {
