@@ -133,8 +133,3 @@ internal class NodeInterpreters
         internal Execution.Resource.WithResource WithResource { get; }
     }
 }
-
-internal static class FlowExtensions
-{
-    internal static Ast.INode<T> AsNode<T>(this IFlow<T> flow) => (Ast.INode<T>)flow;
-}

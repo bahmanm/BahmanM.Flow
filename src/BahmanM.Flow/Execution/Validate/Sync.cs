@@ -1,10 +1,12 @@
+using BahmanM.Flow.Support;
+
 namespace BahmanM.Flow.Execution.Validate;
 
 internal class Sync(Ast.IInterpreter interpreter, Options options)
 {
     internal async Task<Outcome<T>> Interpret<T>(Ast.Validate.Sync<T> node)
     {
-        var upstreamOutcome = await ((Ast.INode<T>)node.Upstream).Accept(interpreter);
+        var upstreamOutcome = await node.Upstream.AsNode().Accept(interpreter);
 
         return upstreamOutcome switch
         {
@@ -21,4 +23,3 @@ internal class Sync(Ast.IInterpreter interpreter, Options options)
         };
     }
 }
-

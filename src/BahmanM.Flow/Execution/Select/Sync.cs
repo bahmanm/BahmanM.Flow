@@ -1,10 +1,12 @@
+using BahmanM.Flow.Support;
+
 namespace BahmanM.Flow.Execution.Select;
 
 internal class Sync(Ast.IInterpreter interpreter, Options options)
 {
     internal async Task<Outcome<TOut>> Interpret<TIn, TOut>(Ast.Select.Sync<TIn, TOut> node)
     {
-        var upstreamOutcome = await ((Ast.INode<TIn>)node.Upstream).Accept(interpreter);
+        var upstreamOutcome = await node.Upstream.AsNode().Accept(interpreter);
 
         return upstreamOutcome switch
         {
