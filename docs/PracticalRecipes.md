@@ -25,15 +25,17 @@ var allUsersFlow = Flow.All(
 
 **Problem:** You have multiple sources for the same data (e.g., a cache and a database), and you want the result from whichever one finishes first.
 
-**Solution:** Use `Flow.Any`. 
-* It's like `Task.WhenAny`, but it specifically waits for the first `Flow` to succeed. 
-* This is perfect for building fast, resilient data retrieval.
+**Solution:** Use `Flow.Any`.
+* It's like `Task.WhenAny`, but it specifically waits for the first `Flow` to succeed.
+* `Flow.Any` will cancel all losing branches as soon as the first success arrives — provided those branches are built from cancellable operations.
+* Prefer the cancellable `Flow.Create((ct) => Task<T>)` and cancellable operator overloads to enable prompt co‑operative cancellation.
 
 ```csharp
+// Prefer cancellable flows so losing branches stop quickly.
 var fastestUserFlow = Flow.Any(
-    GetUserFromCacheAsync(1), // This one is probably faster
-    GetUserFromDbAsync(1)
-);
+    Flow.Create<User>(async ct => await GetUserFromCacheAsync(1, ct)),
+    Flow.Create<User>(async ct => await GetUserFromDbAsync(1, ct))
+); // losers observe cancellation as soon as the winner succeeds
 ```
 
 ## Resiliency Behaviours
@@ -103,6 +105,25 @@ var superResilientFlow = CreateFlakyAndSlowFlow()
 > This means the 10-second limit applies to the total time for all attempts.
 >
 > If you applied `.WithRetry()` first, each attempt would get its own timeout.
+
+### Racing With Cancellation (End‑to‑End)
+
+**Problem:** You want to race multiple sources, return the first success, and ensure the others stop immediately to save resources.
+
+**Solution:** Use `Flow.Any` with cancellable operations.
+
+```csharp
+var userId = 1;
+
+// Build cancellable flows so the race can cancel losers.
+var fromCache = Flow.Create<User>(async ct => await GetUserFromCacheAsync(userId, ct));
+var fromDb    = Flow.Create<User>(async ct => await GetUserFromDbAsync(userId, ct));
+
+var firstWins = Flow.Any(fromCache, fromDb)
+    .DoOnSuccess(u => _logger.LogInformation($"Winner: {u.Id}"));
+
+var outcome = await FlowEngine.ExecuteAsync(firstWins);
+```
 
 # Resource Management
 
