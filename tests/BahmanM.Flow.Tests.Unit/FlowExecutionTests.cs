@@ -64,7 +64,7 @@ public class FlowExecutionTests
         // Arrange
         var createFlow = Flow.Create(async () =>
         {
-            await Task.Delay(10);
+            await Task.Yield();
             return 123;
         });
 

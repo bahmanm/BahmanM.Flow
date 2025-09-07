@@ -95,7 +95,7 @@ public class WithResourceDisposalTests : IDisposable
             acquire: () => new DisposableProbe(),
             use: _ => Flow.Create<int>(async () =>
             {
-                await Task.Delay(100, cts.Token);
+                await Task.Delay(Timeout.InfiniteTimeSpan, cts.Token);
                 return 1;
             })
         );
