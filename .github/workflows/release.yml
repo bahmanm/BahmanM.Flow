@@ -1,0 +1,158 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit SHA, branch, or tag to release"
+        required: true
+        type: string
+      version:
+        description: "SemVer (required if ref is NOT a tag like v1.2.3)"
+        required: false
+        type: string
+      publish-nuget:
+        description: "Publish package to NuGet"
+        required: false
+        default: true
+        type: boolean
+      publish-github-packages:
+        description: "Publish package to GitHub Packages (NuGet feed)"
+        required: false
+        default: false
+        type: boolean
+      create-github-release:
+        description: "Create a GitHub Release"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+          cache: true
+          cache-dependency-path: |
+            **/*.csproj
+
+      - name: Compute version and tag
+        id: meta
+        shell: bash
+        run: |
+          INPUT_REF='${{ inputs.ref }}'
+          INPUT_VERSION='${{ inputs.version }}'
+
+          if [[ "$INPUT_REF" =~ ^refs/tags/v(.+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            TAG="v${VERSION}"
+            IS_TAG=1
+          elif [[ "$INPUT_REF" =~ ^v([0-9].+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            TAG="v${VERSION}"
+            IS_TAG=1
+          else
+            IS_TAG=0
+            if [[ -z "$INPUT_VERSION" ]]; then
+              echo "ERROR: version input is required when ref is not a tag" >&2
+              exit 1
+            fi
+            VERSION="$INPUT_VERSION"
+            TAG="v${VERSION}"
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "is_tag=$IS_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Create tag (if needed)
+        if: steps.meta.outputs.is_tag == '0'
+        run: |
+          git tag ${{ steps.meta.outputs.tag }} ${{ inputs.ref }}
+          git push origin ${{ steps.meta.outputs.tag }}
+
+      - name: Restore
+        run: dotnet restore BahmanM.Flow.sln
+
+      - name: Build
+        run: dotnet build BahmanM.Flow.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test BahmanM.Flow.sln --configuration Release --no-build --verbosity normal
+
+      - name: Pack
+        run: >
+          dotnet pack src/BahmanM.Flow/BahmanM.Flow.csproj
+          --configuration Release
+          -o ./artifacts
+          /p:ContinuousIntegrationBuild=true
+          /p:IncludeSymbols=true
+          /p:SymbolPackageFormat=snupkg
+          /p:Version=${{ steps.meta.outputs.version }}
+
+      - name: Publish to NuGet
+        if: inputs.publish-nuget == true
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "ERROR: NUGET_API_KEY secret is not set" >&2
+            exit 1
+          fi
+          dotnet nuget push './artifacts/*.nupkg' \
+            --api-key "$NUGET_API_KEY" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+          # Push symbols as well
+          if ls ./artifacts/*.snupkg 1> /dev/null 2>&1; then
+            dotnet nuget push './artifacts/*.snupkg' \
+              --api-key "$NUGET_API_KEY" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          fi
+
+      - name: Add GitHub Packages source
+        if: inputs.publish-github-packages == true
+        run: |
+          dotnet nuget remove source github || true
+          dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            --name github \
+            --username ${{ github.actor }} \
+            --password ${{ secrets.GITHUB_TOKEN }} \
+            --store-password-in-clear-text
+
+      - name: Publish to GitHub Packages
+        if: inputs.publish-github-packages == true
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          dotnet nuget push './artifacts/*.nupkg' --source github --skip-duplicate
+
+      - name: Create GitHub Release
+        if: inputs.create-github-release == true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: Release ${{ steps.meta.outputs.tag }}
+          prerelease: ${{ contains(steps.meta.outputs.version, '-') }}
+          files: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+
