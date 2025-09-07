@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RunSettings>
-  <RunConfiguration>
-    <!-- This filter runs all tests EXCEPT those in the 'Acceptance' category -->
-    <TestCaseFilter>TestCategory!=Acceptance</TestCaseFilter>
-  </RunConfiguration>
-</RunSettings>
