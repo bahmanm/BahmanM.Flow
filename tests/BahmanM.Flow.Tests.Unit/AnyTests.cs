@@ -1,3 +1,4 @@
+using BahmanM.Flow.Tests.Support;
 using static BahmanM.Flow.Outcome;
 
 namespace BahmanM.Flow.Tests.Unit;
@@ -61,24 +62,17 @@ public class AnyTests
     public async Task Any_WhenMultipleFlowsSucceed_ReturnsTheFirstOneToFinish()
     {
         // Arrange
-        var flow1 = Flow
-            .Create<string>(async () =>
-            {
-                await Task.Delay(50);
-                return "Slow";
-            });
-        var flow2 = Flow
-            .Create<string>(async () =>
-            {
-                await Task.Delay(10);
-                return "Fast";
-            });
+        var slow = new FlowCompletionSource<string>();
+        var fast = new FlowCompletionSource<string>();
+
+        var combinedFlow = Flow.Any(slow.Flow, fast.Flow);
 
         // Act
-        var combinedFlow = Flow
-            .Any(flow1, flow2);
-        var outcome = await FlowEngine
-            .ExecuteAsync(combinedFlow);
+        var exec = FlowEngine.ExecuteAsync(combinedFlow);
+        await Task.WhenAll(fast.Started, slow.Started);
+        fast.Succeed("Fast");
+        var outcome = await exec;
+        slow.Succeed("Slow"); // tidy up
 
         // Assert
         Assert.Equal(Success("Fast"), outcome);
@@ -87,30 +81,22 @@ public class AnyTests
     [Fact]
     public async Task Any_FollowedByChain_ChainsTheFirstSuccessfulResult()
     {
-        // Arrange
-        var slowSuccess = Flow
-            .Create<string>(async () =>
-            {
-                await Task.Delay(50);
-                return "slow";
-            });
-        var fastSuccess = Flow
-            .Create<string>(async () =>
-            {
-                await Task.Delay(10);
-                return "fast";
-            });
-        var failed = Flow
-            .Fail<string>(new Exception("failure"));
+        // Arrange (deterministic, no timers)
+        var slow = new FlowCompletionSource<string>();
+        var fast = new FlowCompletionSource<string>();
+        var failed = Flow.Fail<string>(new Exception("failure"));
+
+        var flow = Flow
+            .Any(slow.Flow, fast.Flow, failed)
+            .Chain(result => Flow.Succeed($"Chained from {result}"));
 
         // Act
-        var combinedAndChained = Flow
-            .Any(slowSuccess, fastSuccess, failed)
-            .Chain(result =>
-                Flow.Succeed($"Chained from {result}"));
+        var exec = FlowEngine.ExecuteAsync(flow);
+        await Task.WhenAll(fast.Started, slow.Started); // ensure both branches running
+        fast.Succeed("fast"); // deterministically pick winner
 
-        var outcome = await FlowEngine
-            .ExecuteAsync(combinedAndChained);
+        var outcome = await exec;
+        slow.Succeed("slow"); // tidy up loser (optional)
 
         // Assert
         Assert.Equal(Success("Chained from fast"), outcome);
