@@ -14,6 +14,9 @@ public static class Flow
 
     public static IFlow<T> Create<T>(Func<Task<T>> operation) => new Ast.Create.Async<T>(() => operation());
 
+    public static IFlow<T> Create<T>(Func<CancellationToken, Task<T>> operation) =>
+        new Ast.Create.CancellableAsync<T>(operation);
+
     public static IFlow<T[]> All<T>(IFlow<T> flow, params IFlow<T>[] moreFlows) =>
         new Ast.Primitive.All<T>([flow, ..moreFlows]);
 
