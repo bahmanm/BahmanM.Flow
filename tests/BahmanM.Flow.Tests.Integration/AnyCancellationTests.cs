@@ -203,13 +203,7 @@ public class AnyCancellationTests
         // Arrange
         var losers = Enumerable
             .Range(0, 50)
-            .Select(_ =>
-                Flow.Create<string>(async ct =>
-                {
-                    await Task.Delay(Timeout.InfiniteTimeSpan, ct);
-                    return "slow";
-                })
-            )
+            .Select(_ => FlowTestHelpers.NeverCompletesUntilCancelled<string>())
             .ToArray();
 
         var winner = new FlowCompletionSource<string>();
