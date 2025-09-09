@@ -206,22 +206,19 @@ public class AnyCancellationTests
             .Select(_ =>
                 Flow.Create<string>(async ct =>
                 {
-                    await Task.Delay(100, ct);
+                    await Task.Delay(Timeout.InfiniteTimeSpan, ct);
                     return "slow";
                 })
             )
             .ToArray();
 
-        var winner = Flow
-            .Create<string>(async ct =>
-            {
-                await Task.Delay(10, ct);
-                return "win";
-            });
+        var winner = new FlowCompletionSource<string>();
 
         // Act
-        var outcome = await FlowEngine
-            .ExecuteAsync(Flow.Any(winner, losers));
+        var exec = FlowEngine.ExecuteAsync(Flow.Any(winner.Flow, losers));
+        await winner.Started;
+        winner.Succeed("win");
+        var outcome = await exec;
 
         // Assert
         Assert.True(outcome.IsSuccess());
