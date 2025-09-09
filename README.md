@@ -1,4 +1,6 @@
 # Flow: Clean, Composable Business Logic for .NET
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow?ref=badge_shield)
+
 
 * ❌ Is your business logic a tangled, and potentially ugly, mess?
 * ❌ Are there `try-catch` blocks and `if-else` statements everywhere?
@@ -247,3 +249,7 @@ You then compose operational concerns around it **where they're needed, not wher
     This section explains the core architectural decisions that shape the library.
 
 2.  **[API Blueprint](./docs/ApiBlueprint.cs):** A high-level map of the entire public API surface.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow?ref=badge_large)
