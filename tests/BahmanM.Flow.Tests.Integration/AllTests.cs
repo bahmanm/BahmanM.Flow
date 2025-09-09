@@ -82,7 +82,7 @@ public class AllTests
         var flow2 = Flow.Create(() => Brahmagupta);
         var flow3 = Flow.Create<string>(async () =>
         {
-            await Task.Delay(1);
+            await Task.Yield();
             return liuHui;
         });
 

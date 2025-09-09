@@ -15,13 +15,13 @@ public class WithTimeoutTests
             Add(Flow.Succeed("s").Select(_ => "selected"));
             Add(Flow.Succeed("s").Select<string,string>(async _ =>
             {
-                await Task.Delay(1);
+                await Task.Yield();
                 return "async selected";
             }));
             Add(Flow.Succeed("s").DoOnSuccess(_ => { }));
-            Add(Flow.Succeed("s").DoOnSuccess(async _ => await Task.Delay(1)));
+            Add(Flow.Succeed("s").DoOnSuccess(async _ => await Task.Yield()));
             Add(Flow.Succeed("s").DoOnFailure(_ => { }));
-            Add(Flow.Succeed("s").DoOnFailure(async _ => await Task.Delay(1)));
+            Add(Flow.Succeed("s").DoOnFailure(async _ => await Task.Yield()));
         }
     }
 
@@ -47,11 +47,11 @@ public class WithTimeoutTests
         // Arrange
         var flow = Flow.Create<string>(async () =>
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(80));
+            await Task.Delay(Timeout.InfiniteTimeSpan);
             return SimoneDeBeauvoir;
         });
 
-        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(20));
+        var timedFlow = flow.WithTimeout(TimeSpan.Zero);
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timedFlow);
@@ -72,11 +72,11 @@ public class WithTimeoutTests
         // Arrange
         var flow = Flow.Create<string>(async () =>
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(5));
+            await Task.Yield();
             return SimoneDeBeauvoir;
         });
 
-        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(50));
+        var timedFlow = flow.WithTimeout(TimeSpan.FromSeconds(1));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timedFlow);
@@ -92,11 +92,11 @@ public class WithTimeoutTests
         // Arrange
         var flow = Flow.Succeed("start").Chain(async _ =>
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(50));
+            await Task.Delay(Timeout.InfiniteTimeSpan);
             return Flow.Succeed(SimoneDeBeauvoir);
         });
 
-        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(10));
+        var timedFlow = flow.WithTimeout(TimeSpan.Zero);
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timedFlow);
@@ -112,11 +112,11 @@ public class WithTimeoutTests
         // Arrange
         var flow = Flow.Create<string>(() =>
         {
-            Thread.Sleep(TimeSpan.FromMilliseconds(80)); // Simulate long-running sync operation without blocking tasks
+            Thread.Sleep(TimeSpan.FromMilliseconds(80));
             return SimoneDeBeauvoir;
         });
 
-        var timedFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(20));
+        var timedFlow = flow.WithTimeout(TimeSpan.Zero);
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timedFlow);
@@ -134,7 +134,7 @@ public class WithTimeoutTests
         var flow = Flow.Create<string>(async () =>
         {
             attempts++;
-            await Task.Delay(TimeSpan.FromMilliseconds(20));
+            await Task.Yield();
             if (attempts < 3)
             {
                 throw new InvalidOperationException("Flaky");
@@ -161,13 +161,13 @@ public class WithTimeoutTests
         var flow = Flow.Create<string>(async () =>
         {
             attempts += 1;
-            await Task.Delay(TimeSpan.FromMilliseconds(80));
+            await Task.Delay(Timeout.InfiniteTimeSpan);
             return SimoneDeBeauvoir;
         });
 
         // Timeout is 20ms, so the first attempt will fail.
         // Since the default policy for WithRetry is to not retry on TimeoutException, the retry should NOT happen
-        var resilientFlow = flow.WithTimeout(TimeSpan.FromMilliseconds(20)).WithRetry(3);
+        var resilientFlow = flow.WithTimeout(TimeSpan.Zero).WithRetry(3);
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
@@ -183,25 +183,34 @@ public class WithTimeoutTests
     {
         // Arrange
         var attempts = 0;
+        var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var flow = Flow.Create<string>(async () =>
         {
             attempts++;
-            // Each attempt takes 30ms
-            await Task.Delay(TimeSpan.FromMilliseconds(30));
-            // Always throw to force retries
+            if (attempts == 1)
+            {
+                await Task.Yield();
+                throw new InvalidOperationException("Attempt 1 failed");
+            }
+            if (attempts == 2)
+            {
+                secondStarted.TrySetResult();
+                await Task.Delay(Timeout.InfiniteTimeSpan);
+                throw new InvalidOperationException("unreachable");
+            }
+            await Task.Yield();
             throw new InvalidOperationException($"Attempt {attempts} failed");
         });
 
-        // Total timeout is 80ms, which should allow for ~2 full attempts (60ms) and possibly start a 3rd.
         var resilientFlow = flow.WithRetry(5)
-                               .WithTimeout(TimeSpan.FromMilliseconds(80));
+                               .WithTimeout(TimeSpan.FromMilliseconds(50));
 
         // Act
-        var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
+        var task = FlowEngine.ExecuteAsync(resilientFlow);
+        await secondStarted.Task;
+        var outcome = await task;
 
         // Assert
-        // Timeout does not cancel the underlying operation; extra attempts may continue in background.
-        // Assert a sensible lower bound only to avoid flakiness across OS/schedulers.
         Assert.True(attempts >= 2);
         Assert.True(outcome.IsFailure());
         Assert.IsType<TimeoutException>(outcome switch { Failure<string> f => f.Exception, _ => null });
