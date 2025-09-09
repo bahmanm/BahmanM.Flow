@@ -16,11 +16,11 @@ namespace BahmanM.Flow.Tests.Integration
                 Add(Flow.Succeed("succeeded"));
                 Add(Flow.Fail<string>(new Exception("dummy")));
                 Add(Flow.Succeed("s").Select(_ => "selected"));
-                Add(Flow.Succeed("s").Select<string,string>(async _ => { await Task.Delay(1); return "async selected"; }));
+                Add(Flow.Succeed("s").Select<string,string>(async _ => { await Task.Yield(); return "async selected"; }));
                 Add(Flow.Succeed("s").DoOnSuccess(_ => { }));
-                Add(Flow.Succeed("s").DoOnSuccess(async _ => await Task.Delay(1)));
+                Add(Flow.Succeed("s").DoOnSuccess(async _ => await Task.Yield()));
                 Add(Flow.Succeed("s").DoOnFailure(_ => { }));
-                Add(Flow.Succeed("s").DoOnFailure(async _ => await Task.Delay(1)));
+                Add(Flow.Succeed("s").DoOnFailure(async _ => await Task.Yield()));
             }
         }
 
@@ -124,7 +124,7 @@ namespace BahmanM.Flow.Tests.Integration
             var flakyFlow = Flow.Create<string>(async () =>
             {
                 attempts++;
-                await Task.Delay(1);
+                await Task.Yield();
                 if (attempts < 3)
                 {
                     throw new InvalidOperationException("Service is not ready yet.");

@@ -23,7 +23,7 @@ public class ValidateTests
     {
         // Arrange
         var flow = Flow.Succeed(42)
-            .Validate((Func<int, Task<bool>>)(async x => { await Task.Delay(1); return x > 0; }), _ => new Exception("should not be called"));
+            .Validate((Func<int, Task<bool>>)(async x => { await Task.Yield(); return x > 0; }), _ => new Exception("should not be called"));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(flow);
@@ -38,7 +38,7 @@ public class ValidateTests
         // Arrange
         var expected = new InvalidOperationException("invalid value");
         var flow = Flow.Succeed(5)
-            .Validate((Func<int, Task<bool>>)(async x => { await Task.Delay(1); return x % 2 == 0; }), _ => expected);
+            .Validate((Func<int, Task<bool>>)(async x => { await Task.Yield(); return x % 2 == 0; }), _ => expected);
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(flow);
@@ -53,7 +53,7 @@ public class ValidateTests
         // Arrange
         var upstreamEx = new Exception("upstream failure");
         var flow = Flow.Fail<int>(upstreamEx)
-            .Validate((Func<int, Task<bool>>)(async _ => { await Task.Delay(1); return true; }), _ => new Exception("unused"));
+            .Validate((Func<int, Task<bool>>)(async _ => { await Task.Yield(); return true; }), _ => new Exception("unused"));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(flow);
@@ -68,7 +68,7 @@ public class ValidateTests
         // Arrange
         var predicateEx = new InvalidOperationException("predicate crashed");
         var flow = Flow.Succeed(1)
-            .Validate((Func<int, Task<bool>>)(async x => { await Task.Delay(1); throw predicateEx; }), _ => new Exception("unused"));
+            .Validate((Func<int, Task<bool>>)(async x => { await Task.Yield(); throw predicateEx; }), _ => new Exception("unused"));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(flow);
@@ -82,10 +82,10 @@ public class ValidateTests
     {
         // Arrange
         var flow = Flow.Succeed(7)
-            .Validate((Func<int, Task<bool>>)(async x => { await Task.Delay(1); return x % 2 == 0; }), x => new Exception($"{x} is odd"))
+            .Validate((Func<int, Task<bool>>)(async x => { await Task.Yield(); return x % 2 == 0; }), x => new Exception($"{x} is odd"))
             .Recover((Flow.Operations.Recover.Async<int>)(async _ =>
             {
-                await Task.Delay(1);
+                await Task.Yield();
                 return Flow.Succeed(100);
             }));
 
@@ -101,7 +101,7 @@ public class ValidateTests
     {
         // Arrange
         var original = Flow.Succeed(10)
-            .Validate((Func<int, Task<bool>>)(async x => { await Task.Delay(1); return x > 0; }), _ => new Exception("bad"));
+            .Validate((Func<int, Task<bool>>)(async x => { await Task.Yield(); return x > 0; }), _ => new Exception("bad"));
 
         // Act
         var withRetry = original.WithRetry(3);
@@ -222,7 +222,7 @@ public class ValidateTests
     {
         // Arrange
         var flow = Flow.Succeed(42)
-            .Validate(async (x, token) => { await Task.Delay(1, token); return x > 0; }, _ => new Exception("should not be called"));
+            .Validate(async (x, token) => { await Task.Yield(); return x > 0; }, _ => new Exception("should not be called"));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(flow);
@@ -258,7 +258,7 @@ public class ValidateTests
         // Arrange
         var expected = new InvalidOperationException("invalid value");
         var flow = Flow.Succeed(5)
-            .Validate(async (x, token) => { await Task.Delay(1, token); return x % 2 == 0; }, _ => expected);
+            .Validate(async (x, token) => { await Task.Yield(); return x % 2 == 0; }, _ => expected);
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(flow);
@@ -273,7 +273,7 @@ public class ValidateTests
         // Arrange
         var upstreamEx = new Exception("upstream failure");
         var flow = Flow.Fail<int>(upstreamEx)
-            .Validate(async (_, token) => { await Task.Delay(1, token); return true; }, _ => new Exception("unused"));
+            .Validate(async (_, token) => { await Task.Yield(); return true; }, _ => new Exception("unused"));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(flow);
@@ -288,7 +288,7 @@ public class ValidateTests
         // Arrange
         var predicateEx = new InvalidOperationException("predicate crashed");
         var flow = Flow.Succeed(1)
-            .Validate<int>(async (x, token) => { await Task.Delay(1, token); throw predicateEx; }, _ => new Exception("unused"));
+            .Validate<int>(async (x, token) => { await Task.Yield(); throw predicateEx; }, _ => new Exception("unused"));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(flow);
@@ -302,7 +302,7 @@ public class ValidateTests
     {
         // Arrange
         var original = Flow.Succeed(10)
-            .Validate(async (x, token) => { await Task.Delay(1, token); return x > 0; }, _ => new Exception("bad"));
+            .Validate(async (x, token) => { await Task.Yield(); return x > 0; }, _ => new Exception("bad"));
 
         // Act
         var withRetry = original.WithRetry(3);
