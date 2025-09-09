@@ -58,23 +58,23 @@ public class WithBehaviourTests
             Add(Flow.Create(() => "created"));
             Add(Flow.Create<string>(async () =>
             {
-                await Task.Delay(1);
+                await Task.Yield();
                 return "async created";
             }));
             Add(Flow.Succeed("s").DoOnSuccess(_ => { }));
-            Add(Flow.Succeed("s").DoOnSuccess(async _ => await Task.Delay(1)));
+            Add(Flow.Succeed("s").DoOnSuccess(async _ => await Task.Yield()));
             Add(Flow.Succeed("s").DoOnFailure(_ => { }));
-            Add(Flow.Succeed("s").DoOnFailure(async _ => await Task.Delay(1)));
+            Add(Flow.Succeed("s").DoOnFailure(async _ => await Task.Yield()));
             Add(Flow.Succeed("s").Select(_ => "selected"));
             Add(Flow.Succeed("s").Select<string, string>(async _ =>
             {
-                await Task.Delay(1);
+                await Task.Yield();
                 return "async selected";
             }));
             Add(Flow.Succeed("s").Chain(_ => Flow.Succeed<string>("chained")));
             Add(Flow.Succeed("s").Chain(async _ =>
             {
-                await Task.Delay(1);
+                await Task.Yield();
                 return Flow.Succeed<string>("async chained");
             }));
         }
