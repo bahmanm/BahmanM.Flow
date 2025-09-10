@@ -1,4 +1,4 @@
-[![CI](https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml/badge.svg)](https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow?ref=badge_shield)
+![NuGet Version](https://img.shields.io/nuget/v/BahmanM.Flow?style=flat&logo=nuget&label=NuGet) [![CI](https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml/badge.svg)](https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow?ref=badge_shield)
 
 # Flow: Clean, Composable Business Logic for .NET
 
@@ -257,8 +257,3 @@ You then compose operational concerns around it **where they're needed, not wher
     This section explains the core architectural decisions that shape the library.
 
 2.  **[API Blueprint](./docs/ApiBlueprint.cs)**: A high-level map of the entire public API surface.
-
----
-
-# License
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow?ref=badge_large)
