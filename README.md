@@ -18,7 +18,7 @@ _Oh!?_ 🤔
 
 --- 
 
-THAT, my dear reader, is the problem **Flow** solves 🙌
+THAT, my fellow engineer, is the problem **Flow** solves 🙌
 
 -  Lightweight 
 -  Fluent API 
@@ -110,11 +110,19 @@ In short, with Flow you create components that are:
 
 ---
 
-# Flow in Action: A Real-World Scenario
+# 📦 Install
+
+-  .NET CLI: `dotnet add package BahmanM.Flow`
+-  PackageReference: `<PackageReference Include="BahmanM.Flow" Version="x.y.z" />`
+-  NuGet page: https://www.nuget.org/packages/BahmanM.Flow/
+
+---
+
+# ⚙️ Flow in Action: A Real-World Scenario
 
 Let's walk through a realistic example of building and using a Flow.
 
-### Step 1: 🏗️ Building the Core Business Logic
+### Step 1: Building the Core Business Logic
 
 Say, we are the authors of `PaymentCollectionService`: 
 -  We want to generate and send payment collection notices.
@@ -153,7 +161,7 @@ Let's break it down line by line:
 
 Our method returns a single, reusable `IFlow<PostalTrackingId>` that encapsulates our entire business process.
 
-### Step 2: ✨ The Payoff - Enrichment at the Call-Site
+### Step 2: The Payoff - Enrichment at the Call-Site
 
 Now, let's switch hats.
 
@@ -194,7 +202,7 @@ _We just saw the core principle of Flow in action:_
 -  _We, as the consumer, applied the operational logic on top._
 -  _The two are completely decoupled._
 
-### Step 3: 🏁 Executing the Final, Enriched Flow
+### Step 3: Executing the Final, Enriched Flow
 
 We've built our final recipe. We've **declared** our Flow/intention/plan of action. 
 
@@ -222,6 +230,7 @@ Flow allows you to build clean and focused business logic.
 
 You then compose operational concerns around it **where they're needed, not where they're defined**. 🎯
 
+---
 
 # 🧭 Intrigued!? Here's Your Learning Path!️
 
@@ -249,6 +258,7 @@ You then compose operational concerns around it **where they're needed, not wher
 
 2.  **[API Blueprint](./docs/ApiBlueprint.cs)**: A high-level map of the entire public API surface.
 
+---
 
-## License
+# License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow?ref=badge_large)
