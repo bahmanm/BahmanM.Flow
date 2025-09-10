@@ -1,18 +1,18 @@
+[![CI](https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml/badge.svg)](https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow?ref=badge_shield)
+
 # Flow: Clean, Composable Business Logic for .NET
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow?ref=badge_shield)
 
-
-* ❌ Is your business logic a tangled, and potentially ugly, mess?
-* ❌ Are there `try-catch` blocks and `if-else` statements everywhere?
-* ❌ Do you see side-effects, error handling, logging, retries, and more all over the place?
+-  ❌ Is your business logic a tangled, and potentially ugly, mess?
+-  ❌ Are there `try-catch` blocks and `if-else` statements everywhere?
+-  ❌ Do you see side effects, error handling, logging, retries, and more all over the place?
 
 _Ugh_ 😣
 
 ---
 
-* ✅ WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead? 
-* ✅ A pipeline that clearly separates the "happy path" from error handling, logging, retries, ...
-* ✅ A pipeline that is a pleasure to express, read, and maintain?
+-  ✅ WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead? 
+-  ✅ A pipeline which clearly separates the "happy path" from error handling, logging, retries, ...
+-  ✅ A pipeline which is a pleasure to express, read, and maintain?
 
 _Oh!?_ 🤔
 
@@ -20,13 +20,13 @@ _Oh!?_ 🤔
 
 THAT, my dear reader, is the problem **Flow** solves 🙌
 
-* Lightweight
-* Fluent API
-* To build pipelines that are:
-  * Declarative
-  * Resilient
-  * Composable
-  * Easy to test
+-  Lightweight 
+-  Fluent API 
+-  To build pipelines that are:
+   -  Declarative
+   -  Resilient
+   -  Composable
+   -  Easy to test
 
 ---
 
@@ -49,7 +49,7 @@ public User GetUserAndNotify(int userId)
 }
 ```
 
-Into this simple Flow:
+Into this Flow:
 
 ```csharp
 public Flow<User> GetUserAndNotifyFlow(int userId)
@@ -66,15 +66,15 @@ _Nice and neat, eh!?_ 👍
 ---
 
 But...the REAL win is in Flow's **plug-and-play design** 🔌
-* A Flow is just a **recipe** for your business logic.
-* Since it is nothing more than a definition, it can be enriched and reused: cheap and simple.
-* You can enhance any Flow with new behaviours without ever touching the original code -- no, seriously 😎
+-  A Flow is just a **recipe** for your business logic.
+-  Since it is nothing more than a definition, it can be enriched and reused: cheap and simple.
+-  You can enhance any Flow with new behaviours without ever touching the original code - no, seriously 😎
 
 ---
 
 Allow me to demonstrate:
 
-1. Say, next sprint, you realise you need retry logic? Easy -- you simply enrich your existing flow!
+1. Say, next sprint, you realise you need a retry logic? Easy - you simply enrich your existing flow!
 
 ```csharp
 var resilientGetUserFlow = 
@@ -103,10 +103,10 @@ var loggedGetUserFlow =
 ---
 
 In short, with Flow you create components that are:
-- Readable
-- Predictable
-- Reusable
-- Easy to test
+-  Readable
+-  Predictable
+-  Reusable
+-  Easy to test
 
 ---
 
@@ -117,8 +117,8 @@ Let's walk through a realistic example of building and using a Flow.
 ### Step 1: 🏗️ Building the Core Business Logic
 
 Say, we are the authors of `PaymentCollectionService`: 
-* We want to generate and send payment collection notices.
-* We've got to call several other services that we do not own.
+-  We want to generate and send payment collection notices.
+-  We've got to call several other services that we do not own.
 
 Here is the complete method from our `PaymentCollectionService`. It defines the entire business process as a series of steps which are composed together.
 
@@ -147,9 +147,9 @@ public IFlow<PostalTrackingId> CreateCollectionNoticeFlow(int userId)
 ```
 
 Let's break it down line by line:
-* **1️⃣:** It all starts by calling the billing service which returns a Flow to get a user's profile.
-* **2️⃣:** `.Select()` takes the `profile` and extracts just the `Fullname` and `BillingAddress`.
-* **3️⃣ & 4️⃣:** `.Chain()` is like saying "and then...". It links the next steps in the process, where each step can fail.
+-  1️⃣: It all starts by calling the billing service which returns a Flow to get a user's profile.
+-  2️⃣: `.Select()` takes the `profile` and extracts just the `Fullname` and `BillingAddress`.
+-  3️⃣ & 4️⃣: `.Chain()` is like saying 'and then...'. It links the next steps in the process, where each step can fail.
 
 Our method returns a single, reusable `IFlow<PostalTrackingId>` that encapsulates our entire business process.
 
@@ -190,9 +190,9 @@ var finalNoticeFlow = resilientNoticeFlow
 
 _We just saw the core principle of Flow in action:_
 
-* _The `PaymentCollectionService` defined the business logic._
-* _We, as the consumer, applied the operational logic on top._
-* _The two are completely decoupled._
+-  _The `PaymentCollectionService` defined the business logic._
+-  _We, as the consumer, applied the operational logic on top._
+-  _The two are completely decoupled._
 
 ### Step 3: 🏁 Executing the Final, Enriched Flow
 
@@ -202,7 +202,7 @@ But NO actions have been taken yet - NOTHING has been executed.
 
 Time to pass the recipe to the chef!
 
-Enter FlowEngine. 
+Enter `FlowEngine`. 
 
 ```csharp
 var result = await FlowEngine.ExecuteAsync(finalNoticeFlow);
@@ -241,14 +241,13 @@ You then compose operational concerns around it **where they're needed, not wher
 
     Ready to explore further? Learn how to extend your Flow with custom, reusable behaviours.
 
-
 ### Reference Material
 
 1.  **[The "Why" → Design Rationale](./docs/DesignRationale.md)**: Curious about the principles behind the design? 
 
     This section explains the core architectural decisions that shape the library.
 
-2.  **[API Blueprint](./docs/ApiBlueprint.cs):** A high-level map of the entire public API surface.
+2.  **[API Blueprint](./docs/ApiBlueprint.cs)**: A high-level map of the entire public API surface.
 
 
 ## License
