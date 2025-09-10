@@ -9,19 +9,31 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<T> ApplyTo<T>(Ast.Create.Sync<T> node)
     {
-        Flow.Operations.Create.Async<T> newOperation = () => Task.Run(() => node.Operation()).WaitAsync(duration);
-        return new Ast.Create.Async<T>(newOperation);
+        Func<CancellationToken, Task<T>> newOperation = parentScopeToken =>
+            TimedScope.ExecuteAsync(
+                duration,
+                parentScopeToken,
+                _ => Task.Run(() => node.Operation()));
+        return new Ast.Create.CancellableAsync<T>(newOperation);
     }
 
     public IFlow<T> ApplyTo<T>(Ast.Create.Async<T> node)
     {
-        Flow.Operations.Create.Async<T> newOperation = () => node.Operation().WaitAsync(duration);
-        return new Ast.Create.Async<T>(newOperation);
+        Func<CancellationToken, Task<T>> newOperation = parentScopeToken =>
+            TimedScope.ExecuteAsync(
+                duration,
+                parentScopeToken,
+                _ => node.Operation());
+        return new Ast.Create.CancellableAsync<T>(newOperation);
     }
 
     public IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node)
     {
-        Func<CancellationToken, Task<T>> newOperation = ct => node.Operation(ct).WaitAsync(duration, ct);
+        Func<CancellationToken, Task<T>> newOperation = parentScopeToken =>
+            TimedScope.ExecuteAsync(
+                duration,
+                parentScopeToken,
+                childScopeToken => node.Operation(childScopeToken));
         return new Ast.Create.CancellableAsync<T>(newOperation);
     }
 
@@ -54,29 +66,38 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Sync<TIn, TOut> node)
     {
-        Flow.Operations.Chain.Async<TIn, TOut> newOperation = async (value) =>
+        Flow.Operations.Chain.CancellableAsync<TIn, TOut> newOperation = async (value, parentScopeToken) =>
         {
-            var nextFlow = await Task.Run(() => node.Operation(value)).WaitAsync(duration);
+            var nextFlow = await TimedScope.ExecuteAsync(
+                duration,
+                parentScopeToken,
+                _ => Task.Run(() => node.Operation(value)));
             return nextFlow.AsNode().Apply(this);
         };
-        return new Ast.Chain.Async<TIn, TOut>(node.Upstream, newOperation);
+        return new Ast.Chain.CancellableAsync<TIn, TOut>(node.Upstream, newOperation);
     }
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Async<TIn, TOut> node)
     {
-        Flow.Operations.Chain.Async<TIn, TOut> newOperation = async (value) =>
+        Flow.Operations.Chain.CancellableAsync<TIn, TOut> newOperation = async (value, parentScopeToken) =>
         {
-            var nextFlow = await node.Operation(value).WaitAsync(duration);
+            var nextFlow = await TimedScope.ExecuteAsync(
+                duration,
+                parentScopeToken,
+                _ => node.Operation(value));
             return nextFlow.AsNode().Apply(this);
         };
-        return node with { Operation = newOperation };
+        return new Ast.Chain.CancellableAsync<TIn, TOut>(node.Upstream, newOperation);
     }
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.CancellableAsync<TIn, TOut> node)
     {
-        Flow.Operations.Chain.CancellableAsync<TIn, TOut> newOperation = async (value, cancellationToken) =>
+        Flow.Operations.Chain.CancellableAsync<TIn, TOut> newOperation = async (value, parentScopeToken) =>
         {
-            var nextFlow = await node.Operation(value, cancellationToken).WaitAsync(duration, cancellationToken);
+            var nextFlow = await TimedScope.ExecuteAsync(
+                duration,
+                parentScopeToken,
+                childScopeToken => node.Operation(value, childScopeToken));
             return nextFlow.AsNode().Apply(this);
         };
         return node with { Operation = newOperation };
