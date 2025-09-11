@@ -1,6 +1,8 @@
+![Khuzestan, Iran](docs/imgs/flow-1535x529.png)
+
 ![NuGet Version](https://img.shields.io/nuget/v/BahmanM.Flow?style=flat&logo=nuget&label=NuGet) [![CI](https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml/badge.svg)](https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow?ref=badge_shield)
 
-# Flow: Clean, Composable Business Logic for .NET
+# ![Flow Log](docs/imgs/flow-256x256.png) Flow: Clean, Composable Business Logic for .NET
 
 -  ❌ Is your business logic a tangled, and potentially ugly, mess?
 -  ❌ Are there `try-catch` blocks and `if-else` statements everywhere?
@@ -18,7 +20,7 @@ _Oh!?_ 🤔
 
 --- 
 
-THAT, my fellow engineer, is the problem **Flow** solves 🙌
+THAT, my fellow engineer, is the problem **Flow** solves ![Flow Log](docs/imgs/flow-32x32.png)
 
 -  Lightweight 
 -  Fluent API 
