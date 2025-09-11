@@ -8,7 +8,7 @@
     <PackageId>BahmanM.Flow</PackageId>
     <Description>Clean, Composable Business Logic for .NET</Description>
     <Authors>Bahman Movaqar &lt;Bahman@BahmanM.com&gt;</Authors>
-    <PackageTags>workflow;effects;resilience;timeout;structured-concurrency;composition;functional;composition</PackageTags>
+    <PackageTags>workflow;effects;resilience;timeout;structured-concurrency;composition;functional;composition;effect-oriented;fp</PackageTags>
     <PackageProjectUrl>https://github.com/bahmanm/BahmanM.Flow</PackageProjectUrl>
     <RepositoryUrl>https://github.com/bahmanm/BahmanM.Flow</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -22,6 +22,8 @@
     <DebugType>portable</DebugType>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Title>Flow</Title>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,6 +34,7 @@
 
   <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="" />
+    <None Include="../../docs/imgs/flow-256x256.png" Pack="true" PackagePath="icon.png" />
   </ItemGroup>
 
   <ItemGroup>

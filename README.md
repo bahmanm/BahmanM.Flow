@@ -1,13 +1,23 @@
-<figure>
-  <img src="docs/imgs/flow-1535x529.png" alt="Khuzestan, Iran - Hydraulic Systems">
-  <figcaption>Khuzestan, Iran - Hydraulic Systems</figcaption>
-</figure>
+<p align="center">
+  <img src="docs/imgs/flow-1535x529.png" alt="Khuzestan, Iran - Hydraulic Systems"/>
+  <small><i>Khuzestan, Iran - Hydraulic Systems</i></small>
+</p>
 
-![NuGet Version](https://img.shields.io/nuget/v/BahmanM.Flow?style=flat&logo=nuget&label=NuGet) [![CI](https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml/badge.svg)](https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow?ref=badge_shield)
+---
 
-![Flow Logo](docs/imgs/flow-256x256.png)
-
-# Flow: Clean, Composable Business Logic for .NET
+<table>
+  <tr>
+    <td>
+      <img src="docs/imgs/flow-256x256.png" alt="Flow Logo"/>
+    </td>
+    <td>
+        <h1>Flow: Clean, Composable Business Logic for .NET</h1>
+        <img src="https://img.shields.io/nuget/v/BahmanM.Flow?style=flat&logo=nuget&label=NuGet" alt="NuGet Version"/>  
+        <img src="https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml/badge.svg" alt="CI"/>  
+        <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=shield" alt="FOSSA"/>  
+    </td>
+  </tr>
+</table>
 
 -  ❌ Is your business logic a tangled, and potentially ugly, mess?
 -  ❌ Are there `try-catch` blocks and `if-else` statements everywhere?
@@ -17,7 +27,7 @@ _Ugh_ 😣
 
 ---
 
--  ✅ WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead? 
+-  ✅ WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead?
 -  ✅ A pipeline which clearly separates the "happy path" from error handling, logging, retries, ...
 -  ✅ A pipeline which is a pleasure to express, read, and maintain?
 
@@ -25,15 +35,15 @@ _Oh!?_ 🤔
 
 --- 
 
-THAT, my fellow engineer, is the problem **Flow** solves ![Flow Log](docs/imgs/flow-32x32.png)
+THAT, my fellow engineer, is the problem **Flow** solves!
 
--  Lightweight 
--  Fluent API 
+-  Lightweight
+-  Fluent API
 -  To build pipelines that are:
-   -  Declarative
-   -  Resilient
-   -  Composable
-   -  Easy to test
+    -  Declarative
+    -  Resilient
+    -  Composable
+    -  Easy to test
 
 ---
 
@@ -117,7 +127,7 @@ In short, with Flow you create components that are:
 
 ---
 
-# 📦 Install
+# ![Flow Logo](docs/imgs/flow-32x32.png) Install
 
 -  .NET CLI: `dotnet add package BahmanM.Flow`
 -  PackageReference: `<PackageReference Include="BahmanM.Flow" Version="x.y.z" />`
@@ -131,7 +141,7 @@ Let's walk through a realistic example of building and using a Flow.
 
 ### Step 1: Building the Core Business Logic
 
-Say, we are the authors of `PaymentCollectionService`: 
+Say, we are the authors of `PaymentCollectionService`:
 -  We want to generate and send payment collection notices.
 -  We've got to call several other services that we do not own.
 
@@ -211,13 +221,13 @@ _We just saw the core principle of Flow in action:_
 
 ### Step 3: Executing the Final, Enriched Flow
 
-We've built our final recipe. We've **declared** our Flow/intention/plan of action. 
+We've built our final recipe. We've **declared** our Flow/intention/plan of action.
 
 But NO actions have been taken yet - NOTHING has been executed.
 
 Time to pass the recipe to the chef!
 
-Enter `FlowEngine`. 
+Enter `FlowEngine`.
 
 ```csharp
 var result = await FlowEngine.ExecuteAsync(finalNoticeFlow);
@@ -231,7 +241,7 @@ var message = result switch
 Console.WriteLine(message);
 ```
 
-### 💡 Bottom Line 
+### 💡 Bottom Line
 
 Flow allows you to build clean and focused business logic.
 
@@ -259,16 +269,8 @@ You then compose operational concerns around it **where they're needed, not wher
 
 ### Reference Material
 
-1.  **[The "Why" → Design Rationale](./docs/DesignRationale.md)**: Curious about the principles behind the design? 
+1.  **[The "Why" → Design Rationale](./docs/DesignRationale.md)**: Curious about the principles behind the design?
 
     This section explains the core architectural decisions that shape the library.
 
 2.  **[API Blueprint](./docs/ApiBlueprint.cs)**: A high-level map of the entire public API surface.
-
-
-<style type="text/css">
-figcaption {
-  font-size: 0.8em;
-  font-style: italic;
-}
-</style>
