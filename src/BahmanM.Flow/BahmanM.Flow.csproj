@@ -4,12 +4,41 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <PackageId>BahmanM.Flow</PackageId>
+    <Description>Clean, Composable Business Logic for .NET</Description>
+    <Authors>Bahman Movaqar &lt;Bahman@BahmanM.com&gt;</Authors>
+    <PackageTags>workflow;effects;resilience;timeout;structured-concurrency;composition;functional;composition;effect-oriented;fp</PackageTags>
+    <PackageProjectUrl>https://github.com/bahmanm/BahmanM.Flow</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/bahmanm/BahmanM.Flow</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.NuGet.md</PackageReadmeFile>
+
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <DebugType>portable</DebugType>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Title>Flow</Title>
+    <PackageIcon>docs/imgs/flow-256x256.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="BahmanM.Flow.Tests.Unit" />
     <InternalsVisibleTo Include="BahmanM.Flow.Tests.UserAcceptance" />
     <InternalsVisibleTo Include="BahmanM.Flow.Tests.Support" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.NuGet.md" Pack="true" PackagePath="" />
+    <None Include="../../docs/imgs/**" Pack="true" PackagePath="docs/imgs/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
