@@ -11,7 +11,8 @@
       <img src="docs/imgs/flow-256x256.png" alt="Flow Logo"/>
     </td>
     <td>
-        <h1>Flow: Clean, Composable Business Logic for .NET</h1>
+        <h1 align="center">Flow</h1>
+        <h2  align="center">Clean and Composable Business Logic</h2>
         <img src="https://img.shields.io/nuget/v/BahmanM.Flow?style=flat&logo=nuget&label=NuGet" alt="NuGet Version"/>  
         <img src="https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml/badge.svg" alt="CI"/>  
         <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=shield" alt="FOSSA"/>  
@@ -19,35 +20,47 @@
   </tr>
 </table>
 
--  ❌ Is your business logic a tangled, and potentially ugly, mess?
--  ❌ Are there `try-catch` blocks and `if-else` statements everywhere?
--  ❌ Do you see side effects, error handling, logging, retries, and more all over the place?
-
-_Ugh_ 😣
+<table>
+  <tr>
+    <td><i>Ugh</i>😣</td>
+    <td>
+      ❌ Is your business logic a tangled, and potentially ugly, mess?<br/>
+      ❌ Are there `try-catch` blocks and `if-else` statements everywhere?<br/>
+      ❌ Do you see side effects, error handling, logging, retries, and more all over the place?
+    </td>
+  </tr>
+  <tr>
+    <td><i>Oh!?</i> 🤔</td>
+    <td>
+      ✅ WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead?<br/>
+      ✅ A pipeline which clearly separates the "happy path" from error handling, logging, retries, ...<br/>
+      ✅ A pipeline which is a pleasure to express, read, and maintain?
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      THAT, my fellow engineer, is the problem **Flow** solves!
+      <ul>
+        <li>Lightweight</li>
+        <li>Fluent API</li>
+        <li>To build pipelines that are:
+          <ul>
+            <li>Declarative</li>
+            <li>Resilient</li>
+            <li>Composable</li>
+            <li>Easy to test</li>
+          </ul>
+        </li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
 ---
 
--  ✅ WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead?
--  ✅ A pipeline which clearly separates the "happy path" from error handling, logging, retries, ...
--  ✅ A pipeline which is a pleasure to express, read, and maintain?
+# ⏳ Flow in 60 Seconds
 
-_Oh!?_ 🤔
-
---- 
-
-THAT, my fellow engineer, is the problem **Flow** solves!
-
--  Lightweight
--  Fluent API
--  To build pipelines that are:
-    -  Declarative
-    -  Resilient
-    -  Composable
-    -  Easy to test
-
----
-
-Allow me to demonstrate. Imagine turning this imperative code:
+Imagine turning this imperative code:
 
 ```csharp
 public async Task<Guid> SendWelcomeAsync(int userId)
@@ -107,12 +120,12 @@ var onboardingFlow =
     Flow.Succeed(userId)
         .Chain(Users.FindUserFlow)
         .Validate(
-            u => u is not null, 
+            user => user is not null, 
             _ => new NotFoundException($"{userId}"))
-        .Chain(u => 
-            switch (u.IsVip) {
-              true =>  Flow.Succeed(Templates.VipWelcomeEmailFor(u))
-              false => Flow.Succeed(Templates.StandardWelcomeEmailFor(u))
+        .Chain(user => 
+            switch (user.IsVip) {
+              true =>  Flow.Succeed(Templates.VipWelcomeEmailFor(user))
+              false => Flow.Succeed(Templates.StandardWelcomeEmailFor(user))
             })
         .Chain(Emails.SendWelcomeEmailFlow)
         .DoOnSuccess(_ => 
@@ -123,16 +136,30 @@ var onboardingFlow =
 await FlowEngine.ExecuteAsync(onboardingFlow);
 ```
 
-Where did the try‑catch go?
-- Exceptions become data: Create/Select/Chain can throw; Flow captures it and returns `Failure<T>` — no manual try‑catch needed.
-- Guards are declarative: `Validate(condition, exceptionFactory)` encodes preconditions; when false, the flow becomes `Failure<T>` with your exception.
-- Side‑effects don’t control flow: `DoOnFailure`/`DoOnSuccess` log/measure without changing outcomes — they replace logging in catch blocks.
-- Alternate paths are explicit (when you want them): `Recover(...)` can branch the whole workflow on specific errors.
-- Nothing is swallowed: `ExecuteAsync` returns `Failure<T>` with the original exception if you don’t recover.
+Here's a quick glance at what happend above:
 
-_Nice and neat, eh!?_ 👍
-
----
+<table>
+  <tr>
+    <td>🧠 Exceptions as Data</td>
+    <td>Operators (e.g. <code>Chain</code>) can throw. Flow captures them and returns <code>Failure</code> - no manual try‑catch anymore.</td>
+  </tr>
+  <tr>
+    <td>🧠 Guardes are Declaraitve</td>
+    <td><code>Validate</code> encodes the pre/post-conditions. When false, the flow turns into <code>Failure</code> with the exception you choose.</td>
+  </tr>
+  <tr>
+    <td>🧠 Side-Effects are Contained</td>
+    <td><code>DoOnFailure</code>/<code>DoOnSuccess</code> log/measure without changing outcomes - they cannot control the flow anymore.</td>
+  </tr>
+  <tr>
+    <td>🧠 Alternate Paths are Explicit</td>
+    <td><code>Recover</code> can branch the whole flow on specific errors.</td>
+  </tr>
+  <tr>
+    <td>🧠 Nothing is Swallowed</td>
+    <td>If you don't 'recover', <code>ExecuteAsync</code> returns <code>Failure</code> with the original exception.</td>
+  </tr>
+</table>
 
 But...the REAL win is in Flow's **plug-and-play design** 🔌
 -  A Flow is just a **recipe** for your business logic.
@@ -291,7 +318,7 @@ Compose operational concerns **where they’re needed, not where they’re defin
 
 ---
 
-# 🧭 Intrigued!? Here's Your Learning Path!️
+# 💡 Intrigued!?
 
 ### Get Started Now (The 5-Minute Guide)
 
