@@ -46,6 +46,18 @@
       ✅ Observable
     </td>
   </tr>
+  <tr>
+    <td>🧠 <i>Why!?</i></td>
+    <td> 
+      👉 Business Logic is<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➖ Not just a procedure or sequence of steps. No!<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➕ A reusable <b>recipe</b> (the Flow) executed by a <b>chef</b> (the FlowEngine).<br/> 
+      👉 Decoupling of <i>declaration</i> from <i>execution</i> makes your code<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➕ Testable<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➕ Maintainable<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➕ Extensible<br/>
+    </td>
+  </tr>
 </table>
 
 ---
@@ -152,6 +164,12 @@ await FlowEngine.ExecuteAsync(onboardingFlow);
     <td>If you don't 'recover', <code>ExecuteAsync</code> returns <code>Failure</code> with the original exception.</td>
   </tr>
 </table>
+
+---
+
+# Why Flow?
+
+
 
 ---
 
