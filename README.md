@@ -1,6 +1,6 @@
 <p align="center">
-  <img src="docs/imgs/flow-1535x529.png" alt="Khuzestan, Iran - Hydraulic Systems"/>
-  <small><i>Khuzestan, Iran - Hydraulic Systems</i></small>
+  <img src="docs/imgs/flow-1535x529.png" alt="Hydraulic Systems - Khuzestan, Iran"/>
+  <small><i>Hydraulic Systems - Khuzestan, Iran</i></small>
 </p>
 
 ---
@@ -10,88 +10,164 @@
     <td>
       <img src="docs/imgs/flow-256x256.png" alt="Flow Logo"/>
     </td>
-    <td>
-        <h1>Flow: Clean, Composable Business Logic for .NET</h1>
+    <td align="center">
+        <h1>Flow</h1>
+        <h2>Clean and Composable Business Logic</h2>
         <img src="https://img.shields.io/nuget/v/BahmanM.Flow?style=flat&logo=nuget&label=NuGet" alt="NuGet Version"/>  
         <img src="https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml/badge.svg" alt="CI"/>  
         <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=shield" alt="FOSSA"/>  
     </td>
   </tr>
+  <tr>
+    <td>😣 <i>Ugh.</i></td>
+    <td>
+      ❌ Is your business logic a tangled, and potentially ugly, mess?<br/>
+      ❌ Are there `try-catch` blocks and `if-else` statements everywhere?<br/>
+      ❌ Do you see side effects, error handling, logging, retries, and more all over the place?
+    </td>
+  </tr>
+  <tr>
+    <td>🤔 <i>Oh!?</i></td>
+    <td>
+      💡 WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead?<br/>
+      💡 A pipeline which clearly separates the "happy path" from error handling, logging, retries, ...<br/>
+      💡 A pipeline which is a pleasure to express, read, and maintain?
+    </td>
+  </tr>
+  <tr>
+    <td>😌 <i>Flow!</i></td>
+    <td> 
+      ✅ Lightweight<br/>
+      ✅ Fluent<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ Declarative<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ Composable<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ Testable<br/>
+      ✅ Resilient<br/>
+      ✅ Observable
+    </td>
+  </tr>
 </table>
 
--  ❌ Is your business logic a tangled, and potentially ugly, mess?
--  ❌ Are there `try-catch` blocks and `if-else` statements everywhere?
--  ❌ Do you see side effects, error handling, logging, retries, and more all over the place?
-
-_Ugh_ 😣
-
 ---
 
--  ✅ WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead?
--  ✅ A pipeline which clearly separates the "happy path" from error handling, logging, retries, ...
--  ✅ A pipeline which is a pleasure to express, read, and maintain?
+# ⏳ Flow in 60 Seconds
 
-_Oh!?_ 🤔
-
---- 
-
-THAT, my fellow engineer, is the problem **Flow** solves!
-
--  Lightweight
--  Fluent API
--  To build pipelines that are:
-    -  Declarative
-    -  Resilient
-    -  Composable
-    -  Easy to test
-
----
-
-Allow me to demonstrate. Imagine turning this imperative code:
+1️⃣ Imagine turning this imperative code:
 
 ```csharp
-public User GetUserAndNotify(int userId)
+async Task<Guid> SendWelcomeAsync(int userId)
 {
+    User? user;
     try
     {
-        var user = _database.GetUser(userId);
-        _auditor.LogSuccess(user.Id);
-        return user;
+        user = await _users.GetAsync(userId);
     }
     catch (Exception ex)
     {
-        _logger.LogError(ex, "Failed to get user");
-        return GetDefaultUser();
+        _logger.LogError(ex, "User lookup threw for {UserId}", userId);
+        _metrics.Increment("emails.lookup.exceptions");
+        throw;
+    }
+
+    if (user is null)
+    {
+        _logger.LogWarning("User not found: {UserId}", userId);
+        _metrics.Increment("emails.lookup.not_found");
+        throw new NotFoundException("User");
+    }
+
+    EmailMessage email;
+    try
+    {
+        email = user.IsVip
+            ? Templates.VipWelcomeEmailFor(user)
+            : Templates.StandardWelcomeEmailFor(user);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Templating failed for {UserId}", userId);
+        _metrics.Increment("emails.template.exceptions");
+        throw;
+    }
+
+    try
+    {
+        var messageId = await _emails.SendAsync(email);
+        _metrics.Increment("emails.sent");
+        return messageId;
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Send failed for {UserId}", userId);
+        _metrics.Increment("emails.send.failures");
+        throw;
     }
 }
 ```
 
-Into this Flow:
+2️⃣ Into this Flow:
 
 ```csharp
-public Flow<User> GetUserAndNotifyFlow(int userId)
-{
-    return Flow.Create(() => _database.GetUser(userId))
-               .DoOnSuccess(user => _auditor.LogSuccess(user.Id))
-               .DoOnFailure(ex => _logger.LogError(ex, "Failed to get user"))
-               .Recover(ex => GetDefaultUser());
-}
+var onboardingFlow =
+    Flow.Succeed(userId)
+        .Chain(Users.FindUserFlow)
+        .Validate(
+            user => user is not null, 
+            _ => new NotFoundException($"{userId}"))
+        .Chain(user => 
+            user.IsVip switch {
+              true =>  Flow.Succeed(Templates.VipWelcomeEmailFor(user)),
+              false => Flow.Succeed(Templates.StandardWelcomeEmailFor(user))
+            })
+        .Chain(Emails.SendWelcomeEmailFlow)
+        .DoOnSuccess(_ => 
+            _metrics.Increment("emails.sent"))
+        .DoOnFailure(ex => 
+            _logger.LogError(ex, "Send failed"));
+
+await FlowEngine.ExecuteAsync(onboardingFlow);
 ```
 
-_Nice and neat, eh!?_ 👍
+3️⃣ Here's a quick glance at what happened above:
+
+<table>
+  <tr>
+    <td>Exceptions</td><td>➡️</td><td>Data</td>
+    <td>Operators (e.g. <code>Chain</code>) can throw. Flow captures them and returns <code>Failure</code> - no manual try‑catch anymore.</td>
+  </tr>
+  <tr>
+    <td>Guards</td><td>➡️</td><td>Declarative</td>
+    <td><code>Validate</code> encodes the pre/post-conditions. When false, the flow turns into <code>Failure</code> with the exception you choose.</td>
+  </tr>
+  <tr>
+    <td>Side-Effects</td><td>➡️</td><td>Contained</td>
+    <td><code>DoOnFailure</code>/<code>DoOnSuccess</code> log/measure without changing outcomes - they cannot control the flow anymore.</td>
+  </tr>
+  <tr>
+    <td>Alternatives</td><td>➡️</td><td>Explicit</td>
+    <td><code>Recover</code> can branch the whole flow on specific errors.</td>
+  </tr>
+  <tr>
+    <td>Errors</td><td>➡️</td><td>Unswallowed</td>
+    <td>If you don't 'recover', <code>ExecuteAsync</code> returns <code>Failure</code> with the original exception.</td>
+  </tr>
+</table>
 
 ---
 
-But...the REAL win is in Flow's **plug-and-play design** 🔌
+# 🧩 Flow is Composable.  _Wait...What!?_
+
+The previous example was cool: clean and declarative. But the REAL win is in Flow's **plug-and-play design** 🔌
+
 -  A Flow is just a **recipe** for your business logic.
 -  Since it is nothing more than a definition, it can be enriched and reused: cheap and simple.
--  You can enhance any Flow with new behaviours without ever touching the original code - no, seriously 😎
+-  You can enhance any Flow with new behaviours and operators without ever touching the original code - no, seriously 😎
 
----
+### Let's Break it Down
 
-Allow me to demonstrate:
+Assume there's this flow which sends a notification to a user. Oh, and you do **not** own the code.
 
-1. Say, next sprint, you realise you need a retry logic? Easy - you simply enrich your existing flow!
+1️⃣ Say, you need a retry logic? Easy - you simply enrich your existing flow!
 
 ```csharp
 var resilientGetUserFlow = 
@@ -99,7 +175,7 @@ var resilientGetUserFlow =
       .WithRetry(3);
 ```
 
-2. Or maybe you want to add a timeout? No problem!
+2️⃣ Maybe you want to add a timeout, too? No problem!
 
 ```csharp
 var timeoutGetUserFlow = 
@@ -107,7 +183,7 @@ var timeoutGetUserFlow =
       .WithTimeout(TimeSpan.FromSeconds(5));
 ```
 
-3. Need to log the failure? Just do it!
+3️⃣ How about logging the failure? Just do it!
 
 ```csharp
 var loggedGetUserFlow = 
@@ -115,15 +191,14 @@ var loggedGetUserFlow =
       .DoOnFailure(ex => _logger.LogError(ex, "Failed to get user"));
 ```
 
-4. I could go on, but you get the idea 😉
+4️⃣ I could go on, but you get the idea 😉
 
----
+### The Gist
 
-In short, with Flow you create components that are:
--  Readable
--  Predictable
--  Reusable
--  Easy to test
+A Flow is a recipe which is:
+
+✅ **Reusable**: Mix and match from various services and libraries.<br/>
+✅ **Enrichable**: At the call-site/client-side.
 
 ---
 
@@ -135,141 +210,95 @@ In short, with Flow you create components that are:
 
 ---
 
-# ⚙️ Flow in Action: A Real-World Scenario
+# ⚙️ Flow in Action
 
-Let's walk through a realistic example of building and using a Flow.
+Let’s look at a more involved example.
 
-### Step 1: Building the Core Business Logic
+Say, we're writing a Kafka consumer which receives a `DispatchRequestedMessage`, looks up the order, fetches a shipping rate, recovers to a safe default on 404, transforms to a dispatch message, and publishes it to another topic.
 
-Say, we are the authors of `PaymentCollectionService`:
--  We want to generate and send payment collection notices.
--  We've got to call several other services that we do not own.
-
-Here is the complete method from our `PaymentCollectionService`. It defines the entire business process as a series of steps which are composed together.
+_Note: Admittedly, this is not a production-grade code. I've made quite a few assumptions to keep the snippet fit the README._
 
 ```csharp
-// This method lives in our PaymentCollectionService.
-public IFlow<PostalTrackingId> CreateCollectionNoticeFlow(int userId)
+class DispatchRequestedConsumer : IKafkaConsumer
 {
-    // 1️⃣
-    return _billingService.GetBillingProfileFlow(userId)
+    async Task Consume(DispatchRequestedMessage message)
+    {
+        var consumeFlow =
+            Flow.Succeed(message)
+                .Select(_adapters.AsOrderId)
+                .Chain(orderId => 
+                    _orders.FindOrderFlow(orderId))
+                .Validate(
+                    order => order is not null,
+                    _ => new NotFoundException("Order not found"))
+                .DoOnFailure(ex => 
+                    _logger.LogWarning($"Order lookup failed: {ex.Message}"))
+                .Chain(order => 
+                    _rates
+                        .GetShippingRateFlow(order.ShipTo)
+                        .WithTimeout(TimeSpan.FromSeconds(5))
+                        .WithRetry(3)
+                        .Recover(ex => 
+                            ex is HttpNotFoundException 
+                               ? Flow.Succeed(ShippingRate.StandardFallback)
+                               : Flow.Fail<ShippingRate>(ex))
+                        .Select(rate => 
+                            (order, rate)))
+                .Select(x => 
+                    _adapters.AsDispatchMessage(x.order, x.rate))
+                .Chain(dispatchMessage => 
+                    _producer.ProduceFlow(dispatchMessage))
+                .DoOnFailure(ex => 
+                    _logger.LogError(ex, "Produce failed"))
+                .DoOnSuccess(_ => 
+                    _otel.IncreaseCounter("shipping.dispatch.produced"));
 
-        // 2️⃣
-        .Select(profile => new { profile.Fullname, profile.BillingAddress })
-
-        // 3️⃣
-        .Chain(data =>
-            _templateService.GenerateDocumentFlow(
-                "CollectionNotice",
-                data.Fullname,
-                data.BillingAddress
-            )
-        )
-
-        // 4️⃣
-        .Chain(document => _dispatchService.SendByPostFlow(document));
+        await FlowEngine.ExecuteAsync(consumeFlow);
+    }
 }
 ```
 
-Let's break it down line by line:
--  1️⃣: It all starts by calling the billing service which returns a Flow to get a user's profile.
--  2️⃣: `.Select()` takes the `profile` and extracts just the `Fullname` and `BillingAddress`.
--  3️⃣ & 4️⃣: `.Chain()` is like saying 'and then...'. It links the next steps in the process, where each step can fail.
-
-Our method returns a single, reusable `IFlow<PostalTrackingId>` that encapsulates our entire business process.
-
-### Step 2: The Payoff - Enrichment at the Call-Site
-
-Now, let's switch hats.
-
-We are another team who is a consumer of the `PaymentCollectionService`.
-
-The product requirements for our application demand strong resiliency for this feature.
-
-And guess what!? 👉 We don't need to ask the `PaymentCollectionService` team to add retries or timeouts!
-
-We can apply these policies ourselves 😎
-
----
-
-First, we get the core Flow from `PaymentCollectionService`:
-```csharp
-var coreNoticeFlow = _paymentCollectionService.CreateCollectionNoticeFlow(userId: httpRequestParams.userId);
-```
-
-The external APIs can be flaky, so let's plug in the required resiliency policies:
-```csharp
-var resilientNoticeFlow = coreNoticeFlow
-    .WithRetry(3)
-    .WithTimeout(TimeSpan.FromSeconds(45));
-```
-
-And if it ultimately fails, we need to create a ticket for manual follow-up:
-
-```csharp
-var finalNoticeFlow = resilientNoticeFlow
-    .DoOnFailure(ex => _ticketService.CreateManualFollowUpTicket("Collections", ex));
-```
+<table>
+  <tr>
+    <td>🧠 Compose Behaviours and Operations</td>
+    <td>
+      Where they are need, not where they are defined.<br/>
+      Policies (timeout, retry) and whole‑flow branching are configured in our code and not in the upstream modules.
+    </td>
+  </tr>
+  <tr>
+    <td>🧠 Value Introspection</td>
+    <td><code>Validate(order is not null ...)</code> encodes a business invariant right in the Flow.</td>
+  </tr>
+  <tr>
+    <td>🧠 Branching</td>
+    <td><code>Recover</code> swaps the entire downstream when the carrier returns 404 (fallback to default rate).</td>
+  </tr>
+</table>
 
 ---
 
-_We just saw the core principle of Flow in action:_
-
--  _The `PaymentCollectionService` defined the business logic._
--  _We, as the consumer, applied the operational logic on top._
--  _The two are completely decoupled._
-
-### Step 3: Executing the Final, Enriched Flow
-
-We've built our final recipe. We've **declared** our Flow/intention/plan of action.
-
-But NO actions have been taken yet - NOTHING has been executed.
-
-Time to pass the recipe to the chef!
-
-Enter `FlowEngine`.
-
-```csharp
-var result = await FlowEngine.ExecuteAsync(finalNoticeFlow);
-
-var message = result switch
-{
-    Success<PostalTrackingId> s => $"Notice sent! Tracking ID: {s.Value.Id}",
-    Failure<PostalTrackingId> => "Failed to send collection notice after all retries.",
-};
-
-Console.WriteLine(message);
-```
-
-### 💡 Bottom Line
-
-Flow allows you to build clean and focused business logic.
-
-You then compose operational concerns around it **where they're needed, not where they're defined**. 🎯
-
----
-
-# 🧭 Intrigued!? Here's Your Learning Path!️
+# 💡 Intrigued!?
 
 ### Get Started Now (The 5-Minute Guide)
 
-1.  **Start Here → [The Core Operators](./docs/CoreOperators.md)**
+1.  **Start Here: [The Core Operators](./docs/CoreOperators.md)**
 
     A friendly introduction to the foundational primitives you'll be using to build your own Flows.
 
-2.  **See More → [Practical Recipes](./docs/PracticalRecipes.md)**
+2.  **See More: [Practical Recipes](./docs/PracticalRecipes.md)**
 
     Ready for more? This document contains a collection of snippets for more advanced scenarios.
 
 ### Deeper Dive (For the Curious)
 
-1.  **Go Pro → [Behaviours](./docs/Behaviours.md)**
+1.  **Go Pro: [Behaviours](./docs/Behaviours.md)**
 
     Ready to explore further? Learn how to extend your Flow with custom, reusable behaviours.
 
 ### Reference Material
 
-1.  **[The "Why" → Design Rationale](./docs/DesignRationale.md)**: Curious about the principles behind the design?
+1.  **[The "Why": Design Rationale](./docs/DesignRationale.md)**: Curious about the principles behind the design?
 
     This section explains the core architectural decisions that shape the library.
 
