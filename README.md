@@ -290,7 +290,11 @@ class DispatchRequestedConsumer : IKafkaConsumer
 
 ### Deeper Dive (For the Curious)
 
-1.  **Go Pro: [Behaviours](./docs/Behaviours.md)**
+1. **Family Tree: [Flow's Relatives](./docs/RelativesAndEcosystem.md)**
+
+    See how Flow fits in the .NET ecosystem alongside its cousins such as Polly.
+
+2. **Go Pro: [Behaviours](./docs/Behaviours.md)**
 
     Ready to explore further? Learn how to extend your Flow with custom, reusable behaviours.
 
