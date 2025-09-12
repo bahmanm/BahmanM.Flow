@@ -5,24 +5,21 @@
 
 ---
 
-<table>
+<table style="width:100%;">
   <tr>
     <td>
       <img src="docs/imgs/flow-256x256.png" alt="Flow Logo"/>
     </td>
-    <td>
-        <h1 align="center">Flow</h1>
-        <h2  align="center">Clean and Composable Business Logic</h2>
+    <td align="center">
+        <h1>Flow</h1>
+        <h2>Clean and Composable Business Logic</h2>
         <img src="https://img.shields.io/nuget/v/BahmanM.Flow?style=flat&logo=nuget&label=NuGet" alt="NuGet Version"/>  
         <img src="https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml/badge.svg" alt="CI"/>  
         <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=shield" alt="FOSSA"/>  
     </td>
   </tr>
-</table>
-
-<table>
   <tr>
-    <td><i>Ugh</i>😣</td>
+    <td>😣 <i>Ugh.</i></td>
     <td>
       ❌ Is your business logic a tangled, and potentially ugly, mess?<br/>
       ❌ Are there `try-catch` blocks and `if-else` statements everywhere?<br/>
@@ -30,28 +27,23 @@
     </td>
   </tr>
   <tr>
-    <td><i>Oh!?</i> 🤔</td>
+    <td>🤔 <i>Oh!?</i></td>
     <td>
-      ✅ WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead?<br/>
-      ✅ A pipeline which clearly separates the "happy path" from error handling, logging, retries, ...<br/>
-      ✅ A pipeline which is a pleasure to express, read, and maintain?
+      💡 WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead?<br/>
+      💡 A pipeline which clearly separates the "happy path" from error handling, logging, retries, ...<br/>
+      💡 A pipeline which is a pleasure to express, read, and maintain?
     </td>
   </tr>
   <tr>
-    <td colspan="2">
-      THAT, my fellow engineer, is the problem **Flow** solves!
-      <ul>
-        <li>Lightweight</li>
-        <li>Fluent API</li>
-        <li>To build pipelines that are:
-          <ul>
-            <li>Declarative</li>
-            <li>Resilient</li>
-            <li>Composable</li>
-            <li>Easy to test</li>
-          </ul>
-        </li>
-      </ul>
+    <td>😌 <i>Flow!</i></td>
+    <td> 
+      ✅ Lightweight<br/>
+      ✅ Fluent<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ Declarative<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ Composable<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✅ Testable<br/>
+      ✅ Resilient<br/>
+      ✅ Observable
     </td>
   </tr>
 </table>
@@ -140,23 +132,23 @@ Here's a quick glance at what happend above:
 
 <table>
   <tr>
-    <td>🧠 Exceptions as Data</td>
+    <td>Exceptions</td><td>➡️</td><td>Data</td>
     <td>Operators (e.g. <code>Chain</code>) can throw. Flow captures them and returns <code>Failure</code> - no manual try‑catch anymore.</td>
   </tr>
   <tr>
-    <td>🧠 Guardes are Declaraitve</td>
+    <td>Guards</td><td>➡️</td><td>Declaraitve</td>
     <td><code>Validate</code> encodes the pre/post-conditions. When false, the flow turns into <code>Failure</code> with the exception you choose.</td>
   </tr>
   <tr>
-    <td>🧠 Side-Effects are Contained</td>
+    <td>Side-Effects</td><td>➡️</td><td>Contained</td>
     <td><code>DoOnFailure</code>/<code>DoOnSuccess</code> log/measure without changing outcomes - they cannot control the flow anymore.</td>
   </tr>
   <tr>
-    <td>🧠 Alternate Paths are Explicit</td>
+    <td>Alternatives</td><td>➡️</td><td>Explicit</td>
     <td><code>Recover</code> can branch the whole flow on specific errors.</td>
   </tr>
   <tr>
-    <td>🧠 Nothing is Swallowed</td>
+    <td>Errors</td><td>➡️</td><td>Unswallowed</td>
     <td>If you don't 'recover', <code>ExecuteAsync</code> returns <code>Failure</code> with the original exception.</td>
   </tr>
 </table>
