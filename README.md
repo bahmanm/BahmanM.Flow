@@ -5,7 +5,7 @@
 
 ---
 
-<table style="width:100%;">
+<table>
   <tr>
     <td>
       <img src="docs/imgs/flow-256x256.png" alt="Flow Logo"/>
@@ -55,7 +55,7 @@
 1️⃣ Imagine turning this imperative code:
 
 ```csharp
-public async Task<Guid> SendWelcomeAsync(int userId)
+async Task<Guid> SendWelcomeAsync(int userId)
 {
     User? user;
     try
@@ -115,20 +115,20 @@ var onboardingFlow =
             user => user is not null, 
             _ => new NotFoundException($"{userId}"))
         .Chain(user => 
-            switch (user.IsVip) {
-              true =>  Flow.Succeed(Templates.VipWelcomeEmailFor(user))
+            user.IsVip switch {
+              true =>  Flow.Succeed(Templates.VipWelcomeEmailFor(user)),
               false => Flow.Succeed(Templates.StandardWelcomeEmailFor(user))
             })
         .Chain(Emails.SendWelcomeEmailFlow)
         .DoOnSuccess(_ => 
-            Metrics.Increment("emails.sent"))
+            _metrics.Increment("emails.sent"))
         .DoOnFailure(ex => 
-            Logger.LogError(ex, "Send failed"));
+            _logger.LogError(ex, "Send failed"));
 
 await FlowEngine.ExecuteAsync(onboardingFlow);
 ```
 
-3️⃣ Here's a quick glance at what happend above:
+3️⃣ Here's a quick glance at what happened above:
 
 <table>
   <tr>
@@ -136,7 +136,7 @@ await FlowEngine.ExecuteAsync(onboardingFlow);
     <td>Operators (e.g. <code>Chain</code>) can throw. Flow captures them and returns <code>Failure</code> - no manual try‑catch anymore.</td>
   </tr>
   <tr>
-    <td>Guards</td><td>➡️</td><td>Declaraitve</td>
+    <td>Guards</td><td>➡️</td><td>Declarative</td>
     <td><code>Validate</code> encodes the pre/post-conditions. When false, the flow turns into <code>Failure</code> with the exception you choose.</td>
   </tr>
   <tr>
@@ -183,7 +183,7 @@ var timeoutGetUserFlow =
       .WithTimeout(TimeSpan.FromSeconds(5));
 ```
 
-3️⃣ How about loggning the failure? Just do it!
+3️⃣ How about logging the failure? Just do it!
 
 ```csharp
 var loggedGetUserFlow = 
@@ -262,7 +262,7 @@ class DispatchRequestedConsumer : IKafkaConsumer
   <tr>
     <td>🧠 Compose Behaviours and Operations</td>
     <td>
-      Where they are need, not where they defined.<br/>
+      Where they are need, not where they are defined.<br/>
       Policies (timeout, retry) and whole‑flow branching are configured in our code and not in the upstream modules.
     </td>
   </tr>
