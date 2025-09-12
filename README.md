@@ -1,6 +1,6 @@
 <p align="center">
   <img src="docs/imgs/flow-1535x529.png" alt="Hydraulic Systems - Khuzestan, Iran"/>
-  <small><i>Hydraulic Systems - Khuzestan, Iran</i></small>
+  <small><i>Engineered Composable Flows (approx. 200 BCE) - Khuzestan, Iran</i></small>
 </p>
 
 ---
@@ -12,7 +12,7 @@
     </td>
     <td align="center">
         <h1>Flow</h1>
-        <h2>Clean and Composable Business Logic</h2>
+        <h3>Lightweight Library for Clean and Composable Business Logic</h3>
         <img src="https://img.shields.io/nuget/v/BahmanM.Flow?style=flat&logo=nuget&label=NuGet" alt="NuGet Version"/>  
         <img src="https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml/badge.svg" alt="CI"/>  
         <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=shield" alt="FOSSA"/>  
@@ -195,10 +195,10 @@ var loggedGetUserFlow =
 
 ### The Gist
 
-A Flow is a recipe which is:
+A Flow is a **recipe** which is:
 
-✅ **Reusable**: Mix and match from various services and libraries.<br/>
-✅ **Enrichable**: At the call-site/client-side.
+✅ **Composable**: Mix and match from various services and libraries.<br/>
+✅ **Enrichable**: At the call-site/client-side; add new behaviors at the last second, without ever touching the upstream code.
 
 ---
 
@@ -210,9 +210,9 @@ A Flow is a recipe which is:
 
 ---
 
-# ⚙️ Flow in Action
+# ⚙️ Flow in Action: A Real-World Composition
 
-Let’s look at a more involved example.
+Let’s look at a more involved example. The goal is to see how Flow allows us to **compose** complex opoerations from smaller, independent pieces.
 
 Say, we're writing a Kafka consumer which receives a `DispatchRequestedMessage`, looks up the order, fetches a shipping rate, recovers to a safe default on 404, transforms to a dispatch message, and publishes it to another topic.
 
@@ -236,8 +236,6 @@ class DispatchRequestedConsumer : IKafkaConsumer
                 .Chain(order => 
                     _rates
                         .GetShippingRateFlow(order.ShipTo)
-                        .WithTimeout(TimeSpan.FromSeconds(5))
-                        .WithRetry(3)
                         .Recover(ex => 
                             ex is HttpNotFoundException 
                                ? Flow.Succeed(ShippingRate.StandardFallback)
@@ -292,7 +290,11 @@ class DispatchRequestedConsumer : IKafkaConsumer
 
 ### Deeper Dive (For the Curious)
 
-1.  **Go Pro: [Behaviours](./docs/Behaviours.md)**
+1. **Family Tree: [Flow's Relatives](./docs/RelativesAndEcosystem.md)**
+
+    See how Flow fits in the .NET ecosystem alongside its cousins such as Polly.
+
+2. **Go Pro: [Behaviours](./docs/Behaviours.md)**
 
     Ready to explore further? Learn how to extend your Flow with custom, reusable behaviours.
 
