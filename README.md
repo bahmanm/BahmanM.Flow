@@ -52,7 +52,7 @@
 
 # ⏳ Flow in 60 Seconds
 
-Imagine turning this imperative code:
+1️⃣ Imagine turning this imperative code:
 
 ```csharp
 public async Task<Guid> SendWelcomeAsync(int userId)
@@ -105,7 +105,7 @@ public async Task<Guid> SendWelcomeAsync(int userId)
 }
 ```
 
-Into this Flow:
+2️⃣ Into this Flow:
 
 ```csharp
 var onboardingFlow =
@@ -128,7 +128,7 @@ var onboardingFlow =
 await FlowEngine.ExecuteAsync(onboardingFlow);
 ```
 
-Here's a quick glance at what happend above:
+3️⃣ Here's a quick glance at what happend above:
 
 <table>
   <tr>
@@ -153,16 +153,21 @@ Here's a quick glance at what happend above:
   </tr>
 </table>
 
-But...the REAL win is in Flow's **plug-and-play design** 🔌
--  A Flow is just a **recipe** for your business logic.
--  Since it is nothing more than a definition, it can be enriched and reused: cheap and simple.
--  You can enhance any Flow with new behaviours without ever touching the original code - no, seriously 😎
-
 ---
 
-Allow me to demonstrate:
+# 🧩 Flow is Composable.  _Wait...What!?_
 
-1. Say, next sprint, you realise you need a retry logic? Easy - you simply enrich your existing flow!
+The previous example was cool: clean and declarative. But the REAL win is in Flow's **plug-and-play design** 🔌
+
+-  A Flow is just a **recipe** for your business logic.
+-  Since it is nothing more than a definition, it can be enriched and reused: cheap and simple.
+-  You can enhance any Flow with new behaviours and operators without ever touching the original code - no, seriously 😎
+
+### Let's Break it Down
+
+Assume there's this flow which sends a notification to a user. Oh, and you do **not** own the code.
+
+1️⃣ Say, you need a retry logic? Easy - you simply enrich your existing flow!
 
 ```csharp
 var resilientGetUserFlow = 
@@ -170,7 +175,7 @@ var resilientGetUserFlow =
       .WithRetry(3);
 ```
 
-2. Or maybe you want to add a timeout? No problem!
+2️⃣ Maybe you want to add a timeout, too? No problem!
 
 ```csharp
 var timeoutGetUserFlow = 
@@ -178,7 +183,7 @@ var timeoutGetUserFlow =
       .WithTimeout(TimeSpan.FromSeconds(5));
 ```
 
-3. Need to log the failure? Just do it!
+3️⃣ How about loggning the failure? Just do it!
 
 ```csharp
 var loggedGetUserFlow = 
@@ -186,15 +191,14 @@ var loggedGetUserFlow =
       .DoOnFailure(ex => _logger.LogError(ex, "Failed to get user"));
 ```
 
-4. I could go on, but you get the idea 😉
+4️⃣ I could go on, but you get the idea 😉
 
----
+### The Gist
 
-In short, with Flow you create components that are:
--  Readable
--  Predictable
--  Reusable
--  Easy to test
+A Flow is a recipe which is:
+
+✅ **Reusable**: Mix and match from various services and libraries.<br/>
+✅ **Enrichable**: At the call-site/client-side.
 
 ---
 
@@ -206,15 +210,13 @@ In short, with Flow you create components that are:
 
 ---
 
-# ⚙️ Flow in Action: Order Dispatch Pipeline
+# ⚙️ Flow in Action
 
-Let’s walk through a realistic dispatcher. The upstream modules expose raw, policy‑free Flows; the consumer composes and adds tiny operational policy at the edge.
+Let’s look at a more involved example.
 
-### Step 1: Consumer orchestrates the recipe
+Say, we're writing a Kafka consumer which receives a `DispatchRequestedMessage`, looks up the order, fetches a shipping rate, recovers to a safe default on 404, transforms to a dispatch message, and publishes it to another topic.
 
-We receive a `DispatchRequestedMessage`, look up the order, fetch a shipping rate, recover to a safe default on 404, transform to a dispatch message, and publish.
-
-Here is the complete flow in the consumer. Note how policies (timeout, retry) and whole‑flow branching live here, not in upstream modules.
+_Note: Admittedly, this is not a production-grade code. I've made quite a few assumptions to keep the snippet fit the README._
 
 ```csharp
 class DispatchRequestedConsumer : IKafkaConsumer
@@ -233,7 +235,7 @@ class DispatchRequestedConsumer : IKafkaConsumer
                     _logger.LogWarning($"Order lookup failed: {ex.Message}"))
                 .Chain(order => 
                     _rates
-                        .GetShippingRateFlow(order!.ShipTo)
+                        .GetShippingRateFlow(order.ShipTo)
                         .WithTimeout(TimeSpan.FromSeconds(5))
                         .WithRetry(3)
                         .Recover(ex => 
@@ -256,57 +258,23 @@ class DispatchRequestedConsumer : IKafkaConsumer
 }
 ```
 
-Why this matters:
-- Value‑introspective gate: `Validate(order is not null, …)` encodes a business truth.
-- Flow‑level branching: `Recover` swaps the entire downstream when the carrier returns 404 (safe default rate).
-- Behaviour ordering is semantic: `WithTimeout` then `WithRetry` gives a single end‑to‑end budget for all attempts.
-
-### Step 2: Upstream modules expose raw, reusable Flows
-
-Keep these policy‑free so they compose cleanly at the call‑site.
-
-```csharp
-public sealed class OrdersRepository(DbContext _db)
-{
-    public IFlow<Order?> FindOrderFlow(OrderId orderId) =>
-        Flow.Create(() => _db.Orders.FindById(orderId));
-}
-
-public sealed class CarrierRatesClient(IHttpClient _http)
-{
-    public IFlow<ShippingRate> GetShippingRateFlow(Address shipTo) =>
-        Flow.Create<ShippingRate>(async ct =>
-        {
-            var url = Routes.Rates.ForDestination(shipTo);
-            return await _http.GetJsonAsync<ShippingRate>(url, ct); // throws HttpNotFoundException on 404
-        });
-}
-
-public sealed class DispatchTopicProducer(IMessageBus _bus)
-{
-    public IFlow<Guid> ProduceFlow(DispatchMessage message) =>
-        Flow.Create(async () => await _bus.PublishAsync("shipping.dispatch", message));
-}
-
-public sealed class Adapters
-{
-    public OrderId ToOrderId(DispatchRequestedMessage m) => new(m.OrderId);
-    public DispatchMessage ToDispatchMessage(Order order, ShippingRate rate) => new(order.Id, order.ShipTo, rate);
-}
-```
-
-### Step 3: Execute the final recipe
-
-We’ve declared our recipe; now pass it to the chef — the `FlowEngine`.
-
-```csharp
-await FlowEngine.ExecuteAsync(consumeFlow);
-```
-
-### 💡 Bottom line
-
-Write clean, focused business logic as an immutable recipe.
-Compose operational concerns **where they’re needed, not where they’re defined**. 🎯
+<table>
+  <tr>
+    <td>🧠 Compose Behaviours and Operations</td>
+    <td>
+      Where they are need, not where they defined.<br/>
+      Policies (timeout, retry) and whole‑flow branching are configured in our code and not in the upstream modules.
+    </td>
+  </tr>
+  <tr>
+    <td>🧠 Value Introspection</td>
+    <td><code>Validate(order is not null ...)</code> encodes a business invariant right in the Flow.</td>
+  </tr>
+  <tr>
+    <td>🧠 Branching</td>
+    <td><code>Recover</code> swaps the entire downstream when the carrier returns 404 (fallback to default rate).</td>
+  </tr>
+</table>
 
 ---
 
@@ -314,23 +282,23 @@ Compose operational concerns **where they’re needed, not where they’re defin
 
 ### Get Started Now (The 5-Minute Guide)
 
-1.  **Start Here → [The Core Operators](./docs/CoreOperators.md)**
+1.  **Start Here: [The Core Operators](./docs/CoreOperators.md)**
 
     A friendly introduction to the foundational primitives you'll be using to build your own Flows.
 
-2.  **See More → [Practical Recipes](./docs/PracticalRecipes.md)**
+2.  **See More: [Practical Recipes](./docs/PracticalRecipes.md)**
 
     Ready for more? This document contains a collection of snippets for more advanced scenarios.
 
 ### Deeper Dive (For the Curious)
 
-1.  **Go Pro → [Behaviours](./docs/Behaviours.md)**
+1.  **Go Pro: [Behaviours](./docs/Behaviours.md)**
 
     Ready to explore further? Learn how to extend your Flow with custom, reusable behaviours.
 
 ### Reference Material
 
-1.  **[The "Why" → Design Rationale](./docs/DesignRationale.md)**: Curious about the principles behind the design?
+1.  **[The "Why": Design Rationale](./docs/DesignRationale.md)**: Curious about the principles behind the design?
 
     This section explains the core architectural decisions that shape the library.
 
