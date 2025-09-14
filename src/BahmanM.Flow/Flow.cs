@@ -1,8 +1,8 @@
 namespace BahmanM.Flow;
 
 /// <summary>
-/// A declarative, asynchronous workflow that encapsulates a sequence of operations,
-/// resulting in a value of type <typeparamref name="T"/> or an <see cref="Exception"/>.
+/// A declarative recipe for a sequence of operations that results in a value of
+/// type <typeparamref name="T"/> or an <see cref="Exception"/>.
 /// </summary>
 /// <remarks>
 /// An <see cref="IFlow{T}"/> is an immutable data structure (an Abstract Syntax Tree) that represents the 'recipe' for a computation.

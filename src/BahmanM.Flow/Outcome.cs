@@ -74,7 +74,8 @@ public sealed record Success<T>(T Value) : Outcome<T>;
 /// be a <see cref="Success{T}"/> or a <see cref="Failure{T}"/>.
 /// </summary>
 /// <remarks>
-/// This is a discriminated union, designed to be handled via pattern matching.
+/// An Outcome can only be one of two things: a <see cref="Success{T}"/> or a <see cref="Failure{T}"/>;
+/// it can never be both. This exclusivity makes it ideal for safely handling results using a `switch` expression.
 /// </remarks>
 /// <typeparam name="T">The type of the value expected from a successful execution.</typeparam>
 public abstract record Outcome<T>;

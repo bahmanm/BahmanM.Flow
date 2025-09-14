@@ -4,8 +4,11 @@ using BahmanM.Flow.Support;
 namespace BahmanM.Flow;
 
 /// <summary>
-/// The engine responsible for executing an <see cref="IFlow{T}"/>.
-/// This class acts as the interpreter for the abstract syntax tree defined by a Flow.
+/// The "Chef" that executes a Flow "recipe".
+/// <para>
+/// An <see cref="IFlow{T}"/> is a purely declarative data structure that describes a sequence of operations.
+/// This engine is the interpreter that walks the description and performs the actual work.
+/// </para>
 /// </summary>
 public static class FlowEngine
 {
@@ -15,9 +18,22 @@ public static class FlowEngine
     /// </summary>
     /// <example>
     /// <code>
-    /// var myFlow = Flow.Succeed(42);
+    /// // 1. Define a Flow, starting with a failable operation.
+    /// var finalResultFlow = Flow
+    ///     .Create(() => GetIdFromRequest(request)) // Can fail
+    ///     .Chain(id => GetUserFromApiFlow(id))      // Can also fail
+    ///     .Select(user => user.Name);               // Transforms the result
     ///
-    /// Outcome&lt;int&gt; result = await FlowEngine.ExecuteAsync(myFlow);
+    /// // 2. Execute the entire Flow.
+    /// Outcome&lt;string&gt; outcome = await FlowEngine.ExecuteAsync(finalResultFlow);
+    ///
+    /// // 3. Handle the final outcome.
+    /// string result = outcome switch
+    /// {
+    ///     Success&lt;string&gt; s => $"User's name is {s.Value}",
+    ///     Failure&lt;string&gt; f => $"The process failed: {f.Exception.Message}",
+    ///     _ => "Unknown outcome"
+    /// };
     /// </code>
     /// </example>
     /// <typeparam name="T">The type of the value produced by the Flow.</typeparam>
