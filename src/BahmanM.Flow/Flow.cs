@@ -159,47 +159,86 @@ public static class Flow
     public static IFlow<T> WithResource<TResource, T>(Func<TResource> acquire, Func<TResource, IFlow<T>> use)
         where TResource : IDisposable => new Ast.Resource.WithResource<TResource, T>(acquire, use);
 
+    /// <summary>
+    /// Contains delegate definitions for the various operations that can be passed to Flow operators.
+    /// </summary>
     public static class Operations
     {
+        /// <summary>
+        /// Delegate definitions for the <see cref="Flow.Create{T}(Func{T})"/> family of methods.
+        /// </summary>
         public static class Create
         {
+            /// <summary>A synchronous, failable operation that produces a value of type <typeparamref name="T"/>.</summary>
             public delegate T Sync<out T>();
+            /// <summary>An asynchronous, failable operation that produces a value of type <typeparamref name="T"/>.</summary>
             public delegate Task<T> Async<T>();
+            /// <summary>A cancellable, asynchronous, failable operation that produces a value of type <typeparamref name="T"/>.</summary>
             public delegate Task<T> CancellableAsync<T>(CancellationToken cancellationToken);
         }
 
+        /// <summary>
+        /// Delegate definitions for the <see cref="FlowExtensions.Select{TIn, TOut}(IFlow{TIn}, Operations.Select.Sync{TIn, TOut})"/> family of methods.
+        /// </summary>
         public static class Select
         {
+            /// <summary>A synchronous, failable transformation from <typeparamref name="TIn"/> to <typeparamref name="TOut"/>.</summary>
             public delegate TOut Sync<in TIn, out TOut>(TIn input);
+            /// <summary>An asynchronous, failable transformation from <typeparamref name="TIn"/> to <typeparamref name="TOut"/>.</summary>
             public delegate Task<TOut> Async<in TIn, TOut>(TIn input);
+            /// <summary>A cancellable, asynchronous, failable transformation from <typeparamref name="TIn"/> to <typeparamref name="TOut"/>.</summary>
             public delegate Task<TOut> CancellableAsync<in TIn, TOut>(TIn input, CancellationToken cancellationToken);
         }
 
+        /// <summary>
+        /// Delegate definitions for the <see cref="FlowExtensions.Chain{TIn, TOut}(IFlow{TIn}, Operations.Chain.Sync{TIn, TOut})"/> family of methods.
+        /// </summary>
         public static class Chain
         {
+            /// <summary>A synchronous operation that takes a value of type <typeparamref name="TIn"/> and returns the next <see cref="IFlow{TOut}"/> in the sequence.</summary>
             public delegate IFlow<TOut> Sync<in TIn, TOut>(TIn input);
+            /// <summary>An asynchronous operation that takes a value of type <typeparamref name="TIn"/> and returns the next <see cref="IFlow{TOut}"/> in the sequence.</summary>
             public delegate Task<IFlow<TOut>> Async<in TIn, TOut>(TIn input);
+            /// <summary>A cancellable, asynchronous operation that takes a value of type <typeparamref name="TIn"/> and returns the next <see cref="IFlow{TOut}"/> in the sequence.</summary>
             public delegate Task<IFlow<TOut>> CancellableAsync<in TIn, TOut>(TIn input, CancellationToken cancellationToken);
         }
 
+        /// <summary>
+        /// Delegate definitions for the <see cref="FlowExtensions.DoOnSuccess{T}(IFlow{T}, Operations.DoOnSuccess.Sync{T})"/> family of methods.
+        /// </summary>
         public static class DoOnSuccess
         {
+            /// <summary>A synchronous side-effect to perform on a successful value.</summary>
             public delegate void Sync<in T>(T input);
+            /// <summary>An asynchronous side-effect to perform on a successful value.</summary>
             public delegate Task Async<in T>(T input);
+            /// <summary>A cancellable, asynchronous side-effect to perform on a successful value.</summary>
             public delegate Task CancellableAsync<in T>(T input, CancellationToken cancellationToken);
         }
 
+        /// <summary>
+        /// Delegate definitions for the <see cref="FlowExtensions.DoOnFailure{T}(IFlow{T}, Operations.DoOnFailure.Sync)"/> family of methods.
+        /// </summary>
         public static class DoOnFailure
         {
+            /// <summary>A synchronous side-effect to perform on a failure exception.</summary>
             public delegate void Sync(Exception error);
+            /// <summary>An asynchronous side-effect to perform on a failure exception.</summary>
             public delegate Task Async(Exception error);
+            /// <summary>A cancellable, asynchronous side-effect to perform on a failure exception.</summary>
             public delegate Task CancellableAsync(Exception error, CancellationToken cancellationToken);
         }
 
+        /// <summary>
+        /// Delegate definitions for the <see cref="FlowExtensions.Recover{T}(IFlow{T}, Operations.Recover.Sync{T})"/> family of methods.
+        /// </summary>
         public static class Recover
         {
+            /// <summary>A synchronous recovery operation that takes an exception and returns a new <see cref="IFlow{T}"/> to continue the workflow.</summary>
             public delegate IFlow<T> Sync<T>(Exception error);
+            /// <summary>An asynchronous recovery operation that takes an exception and returns a new <see cref="IFlow{T}"/> to continue the workflow.</summary>
             public delegate Task<IFlow<T>> Async<T>(Exception error);
+            /// <summary>A cancellable, asynchronous recovery operation that takes an exception and returns a new <see cref="IFlow{T}"/> to continue the workflow.</summary>
             public delegate Task<IFlow<T>> CancellableAsync<T>(Exception error, CancellationToken cancellationToken);
         }
     }
