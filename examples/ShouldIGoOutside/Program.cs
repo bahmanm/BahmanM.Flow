@@ -5,22 +5,28 @@ namespace ShouldIGoOutside;
 
 public static class Program
 {
-    public static async Task Main(string[] args)
+    public static async Task Main()
     {
         var services = new ServiceCollection();
         ConfigureServices(services);
 
-        var serviceProvider = services.BuildServiceProvider();
+        await using var serviceProvider = services.BuildServiceProvider();
 
         Console.WriteLine("Determining if you should go outside...");
 
+        // Support Ctrl+C cancellation
+        using var cts = new CancellationTokenSource();
+        Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
+
         var recommendationService = serviceProvider.GetRequiredService<RecommendationService>();
 
-        // Get the Flow recipe from the service
-        var recommendationFlow = recommendationService.GetRecommendation();
+        // Get the Flow recipe from the service and add an overall deadline
+        var recommendationFlow = recommendationService
+            .GetRecommendationFlow()
+            .WithTimeout(TimeSpan.FromSeconds(10));
 
-        // Execute the Flow
-        var outcome = await FlowEngine.ExecuteAsync(recommendationFlow);
+        // Execute the Flow with external cancellation
+        var outcome = await FlowEngine.ExecuteAsync(recommendationFlow, new(cts.Token));
 
         Console.WriteLine("\n----------------------------------------");
 

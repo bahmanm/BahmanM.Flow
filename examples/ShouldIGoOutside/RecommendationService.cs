@@ -1,72 +1,59 @@
-
 using BahmanM.Flow;
 
 namespace ShouldIGoOutside;
 
-public class RecommendationService
+public sealed class RecommendationService(IGeolocationClient geolocationClient, IWeatherClient weatherClient)
 {
-    private readonly IGeolocationClient _geolocationClient;
-    private readonly IWeatherClient _weatherClient;
-
-    public RecommendationService(IGeolocationClient geolocationClient, IWeatherClient weatherClient)
-    {
-        _geolocationClient = geolocationClient;
-        _weatherClient = weatherClient;
-    }
-
-    public IFlow<string> GetRecommendation()
-    {
-        return _geolocationClient.GetGeolocation()
-            .Chain(location =>
+    // Public recipe: end-to-end recommendation
+    public IFlow<string> GetRecommendationFlow() =>
+        DetermineLocationFlow()
+            .Chain(FetchConditionsFlow)
+            .DoOnSuccess(pair =>
             {
-                Console.WriteLine($"--> Determined location: {location.City}");
+                Console.WriteLine($"--> Fetched Weather: {pair.weather.Temperature}°C");
+                Console.WriteLine($"--> Fetched Air Quality (AQI): {pair.aqi.Aqi}");
+            })
+            .Select(pair => MakeRecommendation(pair.weather, pair.aqi));
 
-                // After getting the location, fetch weather and air quality in parallel.
-                var weatherFlow = _weatherClient.GetWeather(location).Select(w => (object)w);
-                var airQualityFlow = _weatherClient.GetAirQuality(location)
-                    .DoOnFailure(ex => Console.WriteLine($"--> Air Quality API failed: {ex.Message}. Recovering..."))
-                    .Recover(ex => Flow.Succeed(new AirQuality(0)))
-                    .Select(aq => (object)aq); // Recover with a default 'Good' value.
+    // 1) Determine location (composable operation)
+    private IFlow<Geolocation> DetermineLocationFlow() =>
+        geolocationClient
+            .GetGeolocationFlow()
+            .DoOnSuccess(loc => Console.WriteLine($"--> Determined location: {loc.City}"))
+            .DoOnFailure(ex => Console.WriteLine($"--> Failed to determine location: {ex.Message}"));
 
-                return Flow.All(weatherFlow, airQualityFlow)
-                    .Select(results =>
-                    {
-                        var weather = (Weather)results[0];
-                        var airQuality = (AirQuality)results[1];
+    // 2) Fetch current conditions (composable operation)
+    private IFlow<(Weather weather, AirQuality aqi)> FetchConditionsFlow(Geolocation loc) =>
+        FlowEx
+            .Zip(weatherClient.GetWeatherFlow(loc),
+                 weatherClient
+                     .GetAirQualityFlow(loc)
+                     .DoOnFailure(ex => Console.WriteLine($"--> Air Quality API failed: {ex.Message}. Recovering..."))
+                     .Recover(_ => Flow.Succeed(new AirQuality(0))))
+            .WithTimeout(TimeSpan.FromSeconds(4)); // shared budget across both calls
 
-                        Console.WriteLine($"--> Fetched Weather: {weather.Temperature}°C");
-                        Console.WriteLine($"--> Fetched Air Quality (AQI): {airQuality.Aqi}");
-
-                        // Apply business logic to the aggregated results.
-                        return MakeRecommendation(weather, airQuality);
-                    });
-            });
-    }
-
-    private static string MakeRecommendation(Weather weather, AirQuality airQuality)
-    {
-        if (weather.IsRaining())
+    private static string MakeRecommendation(in Weather weather, in AirQuality airQuality) =>
+        weather switch
         {
-            return "No, it's raining!";
-        }
+            _ when IsRaining(weather) => "No, it's raining!",
+            _ when weather.Temperature < 10 => "No, it's too cold!",
+            _ when airQuality.Aqi > 100 => "No, the air quality is poor.",
+            _ => "Yes, it's a great day to go outside!"
+        };
 
-        if (weather.Temperature < 10)
-        {
-            return "No, it's too cold!";
-        }
-
-        if (airQuality.Aqi > 100)
-        {
-            return "No, the air quality is poor.";
-        }
-
-        return "Yes, it's a great day to go outside!";
-    }
+    private static bool IsRaining(in Weather w) =>
+        // Open‑Meteo rain codes
+        w.WeatherCode is >= 51 and <= 67 or >= 80 and <= 82;
 }
 
-// Helper extension method for readability
-public static class WeatherExtensions
+// Minimal helper for strongly‑typed parallel composition over two different types
+public static class FlowEx
 {
-    // Weather codes from Open-Meteo documentation for rain
-    public static bool IsRaining(this Weather weather) => weather.WeatherCode is >= 51 and <= 67 or >= 80 and <= 82;
+    public static IFlow<(T1 weather, T2 aqi)> Zip<T1, T2>(IFlow<T1> a, IFlow<T2> b)
+        where T1 : notnull
+        where T2 : notnull
+        => Flow.All(
+                a.Select(x => (object)x),
+                b.Select(x => (object)x))
+            .Select(items => ((T1)items[0], (T2)items[1]));
 }
