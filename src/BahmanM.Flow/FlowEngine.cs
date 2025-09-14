@@ -20,8 +20,8 @@ public static class FlowEngine
     /// Outcome&lt;int&gt; result = await FlowEngine.ExecuteAsync(myFlow);
     /// </code>
     /// </example>
-    /// <typeparam name="T">The type of the value produced by the flow.</typeparam>
-    /// <param name="flow">The flow to execute.</param>
+    /// <typeparam name="T">The type of the value produced by the Flow.</typeparam>
+    /// <param name="flow">The Flow to execute.</param>
     /// <returns>An <see cref="Outcome{T}"/> representing the result of the execution.</returns>
     public static Task<Outcome<T>> ExecuteAsync<T>(IFlow<T> flow) =>
         ExecuteAsync(flow, new Execution.Options(CancellationToken.None));
