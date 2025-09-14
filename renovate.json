@@ -1,16 +1,29 @@
 {
-  "extends": ["config:base"],
-  "labels": ["renovate"],
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": [
+    "renovate"
+  ],
   "packageRules": [
     {
-      "matchPackagePatterns": ["*"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "all non-major dependencies"
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "all non-major dependencies",
+      "matchPackageNames": [
+        "*"
+      ]
     },
     {
-      "matchPackagePatterns": ["*"],
-      "matchUpdateTypes": ["major"],
-      "groupName": "all major dependencies"
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "groupName": "all major dependencies",
+      "matchPackageNames": [
+        "*"
+      ]
     }
   ]
 }
