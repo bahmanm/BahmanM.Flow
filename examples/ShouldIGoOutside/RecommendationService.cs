@@ -22,15 +22,15 @@ public sealed class RecommendationService(IGeolocationClient geolocationClient, 
             .DoOnSuccess(loc => Console.WriteLine($"--> Determined location: {loc.City}"))
             .DoOnFailure(ex => Console.WriteLine($"--> Failed to determine location: {ex.Message}"));
 
-    // 2) Fetch current conditions (composable operation)
+    // 2) Fetch current conditions (simple, sequential and readable)
     private IFlow<(Weather weather, AirQuality aqi)> FetchConditionsFlow(Geolocation loc) =>
-        FlowEx
-            .Zip(weatherClient.GetWeatherFlow(loc),
-                 weatherClient
-                     .GetAirQualityFlow(loc)
-                     .DoOnFailure(ex => Console.WriteLine($"--> Air Quality API failed: {ex.Message}. Recovering..."))
-                     .Recover(_ => Flow.Succeed(new AirQuality(0))))
-            .WithTimeout(TimeSpan.FromSeconds(4)); // shared budget across both calls
+        weatherClient
+            .GetWeatherFlow(loc)
+            .Chain(w => weatherClient
+                .GetAirQualityFlow(loc)
+                .DoOnFailure(ex => Console.WriteLine($"--> Air Quality API failed: {ex.Message}. Recovering..."))
+                .Recover(_ => Flow.Succeed(new AirQuality(0)))
+                .Select(a => (w, a)));
 
     private static string MakeRecommendation(in Weather weather, in AirQuality airQuality) =>
         weather switch
@@ -44,16 +44,4 @@ public sealed class RecommendationService(IGeolocationClient geolocationClient, 
     private static bool IsRaining(in Weather w) =>
         // Open‑Meteo rain codes
         w.WeatherCode is >= 51 and <= 67 or >= 80 and <= 82;
-}
-
-// Minimal helper for strongly‑typed parallel composition over two different types
-public static class FlowEx
-{
-    public static IFlow<(T1 weather, T2 aqi)> Zip<T1, T2>(IFlow<T1> a, IFlow<T2> b)
-        where T1 : notnull
-        where T2 : notnull
-        => Flow.All(
-                a.Select(x => (object)x),
-                b.Select(x => (object)x))
-            .Select(items => ((T1)items[0], (T2)items[1]));
 }
