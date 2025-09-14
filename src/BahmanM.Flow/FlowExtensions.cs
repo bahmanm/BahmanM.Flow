@@ -237,9 +237,11 @@ public static class FlowExtensions
         new Ast.Recover.Async<T>(flow, recover);
 
     /// <summary>
-    /// Rescues a failed flow by providing a new flow to execute, using a cancellable, asynchronous recovery function.
+    /// Rescues a failed Flow by providing a new Flow to execute, using a cancellable, asynchronous recovery function.
     /// </summary>
     /// <inheritdoc cref="Recover{T}(IFlow{T}, Flow.Operations.Recover.Sync{T})"/>
+    public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, CancellationToken, Task<IFlow<T>>> recover) =>
+        new Ast.Recover.CancellableAsync<T>(flow, recover);
 
     /// <summary>
     /// Applies a retry policy to the failable operations within a Flow.
