@@ -167,9 +167,57 @@ await FlowEngine.ExecuteAsync(onboardingFlow);
 
 ---
 
-# Why Flow?
+# 🍳 The Core Recipe in 30 Seconds
+
+If you'd rather just dive deep right in, this section is all you'd need!
+
+The main thing you need to remember is that Flow is built around a small, composable set of types and methods.
+
+Here are the core building blocks. Have fun!
+
+```csharp
+// --- 0️⃣ The Core Types ---
+public interface IFlow<T> { /* ... */ }
+public abstract record Outcome<T>;
+public sealed record Success<T>(T Value) : Outcome<T>;
+public sealed record Failure<T>(Exception Exception) : Outcome<T>;
 
 
+// --- 1️⃣ Starting a Flow ---
+var a = Flow.Succeed(42);
+var b = Flow.Fail<int>(new Exception("..."));
+var c = Flow.Create(() => GetValueFromDatabase());      // Synchronous, failable
+var d = Flow.Create(ct => GetValueFromApiAsync(ct));    // Asynchronous, cancellable
+
+
+// --- 2️⃣ Composing Flows and Operations ---
+var initialFlow = Flow.Succeed(123);
+
+var transformed = initialFlow.Select(i => i.ToString());       // T -> U
+var sequenced   = initialFlow.Chain(i => GetNextFlow(i));      // T -> IFlow<U>
+var validated   = initialFlow.Validate(i => i > 0,
+                                       _ => new Exception("..."));
+var recovered   = initialFlow.Recover(ex => GetFallbackFlow(ex));
+var logged      = initialFlow.DoOnSuccess(i => Log(i));
+
+
+// --- 3️⃣ Adding Resiliency ---
+var resilient = initialFlow
+    .WithRetry(3)
+    .WithTimeout(TimeSpan.FromSeconds(5));
+
+
+// --- 4️⃣ Executing the Flow ---
+Outcome<string> outcome = await FlowEngine.ExecuteAsync(sequenced);
+
+
+// --- 5️⃣ Handling the Result ---
+string result = outcome switch
+{
+    Success<string> s => $"Got {s.Value}",
+    Failure<string> f => $"Error: {f.Exception.Message}",
+};
+```
 
 ---
 
