@@ -40,7 +40,7 @@ var fastestUserFlow = Flow.Any(
 
 ## Resiliency Behaviours
 
-> **Note:** The following behaviours (`.With...`) are powered by `Flow`'s **Behaviour** system. You can learn more in **[Behaviours](./Behaviours.md)**.
+> **Note:** The following behaviours (`.With...`) are powered by `Flow`'s **Behaviour** system. You can learn more in **[Behaviours](./behaviours.md)**.
 
 ### Retrying a Failed Operation
 
@@ -158,6 +158,6 @@ var userProfileFlow = Flow.Succeed("user-123")
 
 Now that you've seen some practical recipes, you can dive deeper into the concepts that power them.
 
-*   Learn to build your own behaviours in **[Behaviours](./Behaviours.md)**.
-*   Read the **[Design Rationale](./DesignRationale.md)** to understand the "why" behind Flow.
+*   Learn to build your own behaviours in **[Behaviours](./behaviours.md)**.
+*   Read the **[Design Rationale](./design-rationale.md)** to understand the "why" behind Flow.
 *   Browse the **[API Blueprint](./ApiBlueprint.cs)** to see all available methods.

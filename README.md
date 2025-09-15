@@ -346,27 +346,27 @@ class DispatchRequestedConsumer : IKafkaConsumer
 
 ### Get Started Now (The 5-Minute Guide)
 
-1.  **Start Here: [The Core Operators](./docs/CoreOperators.md)**
+1.  **Start Here: [The Core Operators](./docs/core-operators.md)**
 
     A friendly introduction to the foundational primitives you'll be using to build your own Flows.
 
-2.  **See More: [Practical Recipes](./docs/PracticalRecipes.md)**
+2.  **See More: [Practical Recipes](./docs/practical-recipes.md)**
 
     Ready for more? This document contains a collection of snippets for more advanced scenarios.
 
 ### Deeper Dive (For the Curious)
 
-1. **Family Tree: [Flow's Relatives](./docs/RelativesAndEcosystem.md)**
+1. **Family Tree: [Flow's Relatives](./docs/relatives-and-ecosystem.md)**
 
     See how Flow fits in the .NET ecosystem alongside its cousins such as Polly.
 
-2. **Go Pro: [Behaviours](./docs/Behaviours.md)**
+2. **Go Pro: [Behaviours](./docs/behaviours.md)**
 
     Ready to explore further? Learn how to extend your Flow with custom, reusable behaviours.
 
 ### Reference Material
 
-1.  **[The "Why": Design Rationale](./docs/DesignRationale.md)**: Curious about the principles behind the design?
+1.  **[The "Why": Design Rationale](./docs/design-rationale.md)**: Curious about the principles behind the design?
 
     This section explains the core architectural decisions that shape the library.
 

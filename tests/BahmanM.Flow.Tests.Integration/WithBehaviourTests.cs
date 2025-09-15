@@ -3,7 +3,7 @@ using static BahmanM.Flow.Outcome;
 
 namespace BahmanM.Flow.Tests.Integration;
 
-// Test fixture implementing the IBehaviour interface, as described in docs/Behaviours.md
+// Test fixture implementing the IBehaviour interface, as described in docs/behaviours.md
 file class CircuitBreakerBehaviour(CircuitBreakerState state, int failureThreshold = 3) : IBehaviour
 {
     public string OperationType => "Test.CircuitBreaker";

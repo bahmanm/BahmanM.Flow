@@ -111,6 +111,6 @@ var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
 That's it! You now know how to extend `Flow` with your own powerful, reusable behaviours.
 
 From here, you have a few options:
-*   Dive into the **[Design Rationale](./DesignRationale.md)** to better understand the "why" behind Flow's architecture.
+*   Dive into the **[Design Rationale](./design-rationale.md)** to better understand the "why" behind Flow's architecture.
 *   Browse the **[API Blueprint](./ApiBlueprint.cs)** to see all available methods and operators.
 *   Head back to the **[Learning Path in the main README](../README.md#intrigued-heres-your-learning-path-🗺️)** to choose your next destination.
