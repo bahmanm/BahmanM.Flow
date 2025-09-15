@@ -1,0 +1,8 @@
+theme: jekyll-theme-minimal
+title: "BahmanM.Flow"
+description: "Lightweight Library for Clean and Composable Business Logic"
+logo: /assets/img/flow-256x256.png
+show_downloads: false
+google_analytics: G-F6X0X837RG
+favicon: /assets/img/flow-32x32.png
+repository: bahmanm/BahmanM.Flow

@@ -23,7 +23,7 @@
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Title>Flow</Title>
-    <PackageIcon>docs/imgs/flow-256x256.png</PackageIcon>
+    <PackageIcon>../../docs/assets/img/flow-256x256.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,7 +34,7 @@
 
   <ItemGroup>
     <None Include="README.NuGet.md" Pack="true" PackagePath="" />
-    <None Include="../../docs/imgs/**" Pack="true" PackagePath="docs/imgs/%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="../../docs/assets/img/**" Pack="true" PackagePath="docs/assets/img/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
