@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="/assets/img/flow-1535x529.png" alt="Hydraulic Systems - Khuzestan, Iran"/>
+  <br/>
+  <small><i>Engineered Composable Flows (approx. 200 BCE) - Khuzestan, Iran</i></small>
+</p>
+
 # Welcome to the Flow Documentation
 
 **Flow** is a lightweight, powerful framework for building robust, predictable, and testable business logic in .NET. It provides a simple, fluent API for composing complex operations, handling failures, and managing cross-cutting concerns in a declarative and immutable way.

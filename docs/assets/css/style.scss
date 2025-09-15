@@ -2,7 +2,53 @@
 ---
 
 @import "{{ site.theme }}";
+@import url('https://fonts.googleapis.com/css2?family=Cantarell:wght@400;700&family=Exo+2:wght@700&family=Fira+Mono&display=swap');
+
+body {
+  font-family: 'Cantarell', sans-serif;
+}
+
+code, pre {
+  font-family: 'Fira Mono', monospace;
+}
+
+.wrapper {
+  max-width: 1200px;
+  width: 90%;
+  margin: 0 auto;
+}
+
+section {
+  width: auto;
+  max-width: 70%;
+  padding: 2rem 0;
+}
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: serif;
+  font-family: 'Exo 2', sans-serif;
+  color: #745FB5;
+}
+
+h1 { font-size: 2.4em; }
+h2 { font-size: 2.0em; }
+h3 { font-size: 1.7em; }
+h4 { font-size: 1.45em; }
+
+
+:not(pre) > code {
+  background-color: #F9F7FE;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 90%;
+}
+
+pre {
+  background-color: #F9F7FE;
+  padding: 1em;
+  border-radius: 5px;
+  line-height: 1.4;
+}
+
+blockquote {
+  border-left: 6px solid #e5e5e5;
 }
