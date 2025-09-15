@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/imgs/flow-1535x529.png" alt="Hydraulic Systems - Khuzestan, Iran"/>
+  <img src="docs/assets/img/flow-1535x529.png" alt="Hydraulic Systems - Khuzestan, Iran"/>
   <small><i>Engineered Composable Flows (approx. 200 BCE) - Khuzestan, Iran</i></small>
 </p>
 
@@ -8,7 +8,7 @@
 <table>
   <tr>
     <td>
-      <img src="docs/imgs/flow-256x256.png" alt="Flow Logo"/>
+      <img src="docs/assets/img/flow-256x256.png" alt="Flow Logo"/>
     </td>
     <td align="center">
         <h1>Flow</h1>
@@ -270,7 +270,7 @@ A Flow is a **recipe** which is:
 
 ---
 
-# ![Flow Logo](docs/imgs/flow-32x32.png) Install
+# ![Flow Logo](docs/assets/img/flow-32x32.png) Install
 
 -  .NET CLI: `dotnet add package BahmanM.Flow`
 -  PackageReference: `<PackageReference Include="BahmanM.Flow" Version="x.y.z" />`
