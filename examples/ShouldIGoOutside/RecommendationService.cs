@@ -1,13 +1,19 @@
 using BahmanM.Flow;
 
+using Microsoft.Extensions.Logging;
+
 namespace ShouldIGoOutside;
 
 /// <summary>
 /// Orchestrates the entire process of fetching data and creating a recommendation
 /// by composing multiple smaller, reusable Flows.
 /// </summary>
-public sealed class RecommendationService(IGeolocationClient geolocationClient, IWeatherClient weatherClient)
+public sealed class RecommendationService(
+    IGeolocationClient geolocationClient,
+    IWeatherClient weatherClient,
+    ILogger<RecommendationService> logger)
 {
+    private readonly ILogger<RecommendationService> _logger = logger;
     /// <summary>
     /// The main recipe for the entire recommendation process.
     /// It composes the other private Flows to create the end-to-end sequence.
@@ -19,10 +25,7 @@ public sealed class RecommendationService(IGeolocationClient geolocationClient, 
             .Chain(FetchConditionsFlow)
             // Log the intermediate results for observability.
             .DoOnSuccess(pair =>
-            {
-                Console.WriteLine($"--> Fetched Weather: {pair.weather.Temperature}°C");
-                Console.WriteLine($"--> Fetched Air Quality (AQI): {pair.aqi.Aqi}");
-            })
+                _logger.LogInformation("Fetched Weather: {Temp}°C; AQI: {Aqi}", pair.weather.Temperature, pair.aqi.Aqi))
             // Finally, transform the aggregated data into a human-readable recommendation.
             .Select(pair =>
                 MakeRecommendation(pair.weather, pair.aqi));
@@ -35,29 +38,28 @@ public sealed class RecommendationService(IGeolocationClient geolocationClient, 
         geolocationClient
             .GetGeolocationFlow()
             .DoOnSuccess(loc =>
-                Console.WriteLine($"--> Determined location: {loc.City}"))
+                _logger.LogInformation("Determined location: {City}", loc.City))
             .DoOnFailure(ex =>
-                Console.WriteLine($"--> Failed to determine location: {ex.Message}"));
+                _logger.LogError(ex, "Failed to determine location"));
 
     /// <summary>
     /// A sub-recipe for fetching weather and air quality based on a given location.
     /// </summary>
-    private IFlow<(Weather weather, AirQuality aqi)> FetchConditionsFlow(Geolocation loc) =>
+    private IFlow<(Weather weather, AirQuality aqi)> FetchConditionsFlow(Geolocation location) =>
         // This Flow demonstrates a more complex composition.
         weatherClient
-            .GetWeatherFlow(loc)
+            .GetWeatherFlow(location)
             // After getting the weather, we chain to the next operation: getting the air quality.
-            .Chain(w => weatherClient
-                .GetAirQualityFlow(loc)
+            .Chain(weather => weatherClient
+                .GetAirQualityFlow(location)
                 // Safety Net: If the Air Quality API fails, we don't fail the whole process.
                 // Instead, we Recover to a default "Good" AQI value and continue.
-                .DoOnFailure(ex =>
-                    Console.WriteLine($"--> Air Quality API failed: {ex.Message}. Recovering..."))
+                .DoOnFailure(exception =>
+                    _logger.LogWarning(exception, "Air Quality API failed. Recovering with default AQI."))
                 .Recover(_ =>
                     Flow.Succeed(new AirQuality(0)))
                 // Finally, select both results into a tuple to pass to the next step.
-                .Select(a =>
-                    (w, a)));
+                .Select(airQuality => (weather, airQuality)));
 
     /// <summary>
     /// A pure function that applies business logic to make a final recommendation.
@@ -76,7 +78,7 @@ public sealed class RecommendationService(IGeolocationClient geolocationClient, 
         };
 
     // A simple helper to make the business logic more readable.
-    private static bool IsRaining(in Weather w) =>
+    private static bool IsRaining(in Weather weather) =>
         // Weather codes from Open-Meteo documentation for rain
-        w.WeatherCode is >= 51 and <= 67 or >= 80 and <= 82;
+        weather.WeatherCode is >= 51 and <= 67 or >= 80 and <= 82;
 }

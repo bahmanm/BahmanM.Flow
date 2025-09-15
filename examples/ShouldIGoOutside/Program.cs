@@ -1,5 +1,6 @@
 using BahmanM.Flow;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace ShouldIGoOutside;
 
@@ -59,6 +60,18 @@ public static class Program
     /// </summary>
     private static void ConfigureServices(IServiceCollection services)
     {
+        // Logging for internal diagnostics; Console is reserved for user-facing messages.
+        services.AddLogging(loggingBuilder =>
+        {
+            loggingBuilder.ClearProviders();
+            loggingBuilder.AddSimpleConsole(options =>
+            {
+                options.SingleLine = true;
+                options.TimestampFormat = "HH:mm:ss ";
+            });
+            loggingBuilder.SetMinimumLevel(LogLevel.Information);
+        });
+
         // Register our API clients with HttpClientFactory support.
         services.AddHttpClient<IGeolocationClient, GeolocationClient>();
         services.AddHttpClient<IWeatherClient, WeatherClient>();

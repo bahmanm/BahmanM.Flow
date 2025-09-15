@@ -39,26 +39,26 @@ public sealed class GeolocationClient(HttpClient httpClient) : IGeolocationClien
     public IFlow<Geolocation> GetGeolocationFlow() =>
         // Start by creating a Flow from an async, failable operation.
         Flow
-            .Create(ct =>
-                httpClient.GetAsync("http://ip-api.com/json", ct))
+            .Create(cancellationToken =>
+                httpClient.GetAsync("http://ip-api.com/json", cancellationToken))
             // Gatekeeper: Ensure the HTTP call was successful before trying to read the body.
             .Validate(
                 resp => resp.IsSuccessStatusCode,
                 resp => new HttpRequestException($"HTTP {(int)resp.StatusCode} from geolocation API"))
             // Sequencer: Safely read the response body. Using WithResource guarantees disposal.
-            .Chain(resp => Flow
+            .Chain(response => Flow
                 .WithResource(
-                    acquire: () => resp,
-                    use: r => Flow
-                        .Create(ct =>
-                            r.Content.ReadFromJsonAsync<IpApiGeolocation>(ct))
+                    acquire: () => response,
+                    use: httpResponse => Flow
+                        .Create(cancellationToken =>
+                            httpResponse.Content.ReadFromJsonAsync<IpApiGeolocation>(cancellationToken))
                         // Gatekeeper: Validate the deserialized object.
                         .Validate(
-                            dto => dto is not null,
+                            geoDto => geoDto is not null,
                             _ => new InvalidDataException("Failed to deserialize geolocation response."))
                         // Transformer: Map from the internal DTO to our domain record.
-                        .Select(dto =>
-                            new Geolocation(dto!.City, dto.Lat, dto.Lon))
+                        .Select(geoDto =>
+                            new Geolocation(geoDto!.City, geoDto.Lat, geoDto.Lon))
                 ))
             // Gatekeeper: Final validation on the result.
             .Validate(
@@ -79,26 +79,26 @@ public sealed class WeatherClient(HttpClient httpClient) : IWeatherClient
 {
     public IFlow<Weather> GetWeatherFlow(Geolocation location)
     {
-        var url =
+        var requestUrl =
             $"https://api.open-meteo.com/v1/forecast?latitude={location.Lat}&longitude={location.Lon}&current_weather=true";
 
         return Flow
-            .Create(ct =>
-                httpClient.GetAsync(url, ct))
+            .Create(cancellationToken =>
+                httpClient.GetAsync(requestUrl, cancellationToken))
             .Validate(
-                resp => resp.IsSuccessStatusCode,
-                resp => new HttpRequestException($"HTTP {(int)resp.StatusCode} from weather API"))
-            .Chain(resp => Flow
+                response => response.IsSuccessStatusCode,
+                response => new HttpRequestException($"HTTP {(int)response.StatusCode} from weather API"))
+            .Chain(response => Flow
                 .WithResource(
-                    acquire: () => resp,
-                    use: r => Flow
-                        .Create(ct =>
-                            r.Content.ReadFromJsonAsync<OpenMeteoWeatherResponse>(ct))
+                    acquire: () => response,
+                    use: httpResponse => Flow
+                        .Create(cancellationToken =>
+                            httpResponse.Content.ReadFromJsonAsync<OpenMeteoWeatherResponse>(cancellationToken))
                         .Validate(
-                            dto => dto is not null,
+                            weatherDto => weatherDto is not null,
                             _ => new InvalidDataException("Failed to deserialize weather response."))
-                        .Select(dto =>
-                            new Weather(dto!.CurrentWeather.Temperature, dto!.CurrentWeather.WeatherCode))
+                        .Select(weatherDto =>
+                            new Weather(weatherDto!.CurrentWeather.Temperature, weatherDto!.CurrentWeather.WeatherCode))
                 ))
             .Validate(
                 w => w.Temperature is > -90 and < 60, // A simple sanity check on the data.
@@ -109,29 +109,29 @@ public sealed class WeatherClient(HttpClient httpClient) : IWeatherClient
 
     public IFlow<AirQuality> GetAirQualityFlow(Geolocation location)
     {
-        var url =
+        var requestUrl =
             $"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={location.Lat}&longitude={location.Lon}&current=european_aqi";
 
         return Flow
-            .Create(ct => httpClient.GetAsync(url, ct))
+            .Create(cancellationToken => httpClient.GetAsync(requestUrl, cancellationToken))
             .Validate(
-                resp => resp.IsSuccessStatusCode,
-                resp => new HttpRequestException($"HTTP {(int)resp.StatusCode} from AQI API"))
-            .Chain(resp => Flow
+                response => response.IsSuccessStatusCode,
+                response => new HttpRequestException($"HTTP {(int)response.StatusCode} from AQI API"))
+            .Chain(response => Flow
                 .WithResource(
-                    acquire: () => resp,
-                    use: r => Flow
-                        .Create(ct =>
-                            r.Content.ReadFromJsonAsync<OpenMeteoAqiResponse>(ct))
+                    acquire: () => response,
+                    use: httpResponse => Flow
+                        .Create(cancellationToken =>
+                            httpResponse.Content.ReadFromJsonAsync<OpenMeteoAqiResponse>(cancellationToken))
                         .Validate(
-                            dto => dto is not null,
+                            aqiDto => aqiDto is not null,
                             _ => new InvalidDataException("Failed to deserialize AQI response."))
-                        .Select(dto =>
-                            new AirQuality(dto!.Current.EuropeanAqi))
+                        .Select(aqiDto =>
+                            new AirQuality(aqiDto!.Current.EuropeanAqi))
                 ))
             .Validate(
-                a => a.Aqi is >= 0 and <= 500,
-                a => new InvalidDataException($"AQI out of range: {a.Aqi}"))
+                airQuality => airQuality.Aqi is >= 0 and <= 500,
+                airQuality => new InvalidDataException($"AQI out of range: {airQuality.Aqi}"))
             .WithRetry(3, typeof(InvalidDataException), typeof(TaskCanceledException))
             .WithTimeout(TimeSpan.FromSeconds(2));
     }
