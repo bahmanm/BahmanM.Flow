@@ -21,6 +21,8 @@ classDiagram
   RecommendationService: +IFlow~string~ GetRecommendationFlow()
 ```
 
+---
+
 The high-level sequence of operations looks like this:
 
 ```mermaid
