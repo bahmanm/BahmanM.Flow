@@ -37,7 +37,6 @@ sequenceDiagram
     R->>W: GetAirQualityFlow(loc)
     W-->>R: Flow~Weather~
     W-->>R: Flow~AirQuality~
-    Note right of R: Weather and Air Quality<br/>are fetched in parallel via Flow.All
     R-->>P: Flow~string~
     P->>FlowEngine: ExecuteAsync(flow)
     FlowEngine-->>P: Outcome~string~
