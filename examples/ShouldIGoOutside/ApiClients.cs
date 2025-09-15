@@ -36,6 +36,10 @@ public interface IWeatherClient
 /// </summary>
 public sealed class GeolocationClient(HttpClient httpClient) : IGeolocationClient
 {
+    /// <inheritdoc/>
+    /// <remarks>
+    /// This implementation applies a default resiliency policy of 2 retry attempts and a 3-second timeout.
+    /// </remarks>
     public IFlow<Geolocation> GetGeolocationFlow() =>
         Flow
             .Create(cancellationToken =>
@@ -99,6 +103,11 @@ public sealed class WeatherClient(HttpClient httpClient) : IWeatherClient
             .WithTimeout(TimeSpan.FromSeconds(3));
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// This implementation uses a more aggressive retry (3 attempts) and a shorter timeout
+    /// compared to the other client methods, reflecting a different reliability assumption for this specific endpoint.
+    /// </remarks>
     public IFlow<AirQuality> GetAirQualityFlow(Geolocation location)
     {
         var requestUrl =
