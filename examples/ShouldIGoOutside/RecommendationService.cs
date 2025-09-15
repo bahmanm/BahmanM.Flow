@@ -19,14 +19,10 @@ public sealed class RecommendationService(
     /// It composes the other private Flows to create the end-to-end sequence.
     /// </summary>
     public IFlow<string> GetRecommendationFlow() =>
-        // Start with step 1...
         DetermineLocationFlow()
-            // ...then, if successful, proceed to step 2.
             .Chain(FetchConditionsFlow)
-            // Log the intermediate results for observability.
             .DoOnSuccess(pair =>
                 _logger.LogInformation("Fetched Weather: {Temp}°C; AQI: {Aqi}", pair.weather.Temperature, pair.aqi.Aqi))
-            // Finally, transform the aggregated data into a human-readable recommendation.
             .Select(pair =>
                 MakeRecommendation(pair.weather, pair.aqi));
 
@@ -46,19 +42,16 @@ public sealed class RecommendationService(
     /// A sub-recipe for fetching weather and air quality based on a given location.
     /// </summary>
     private IFlow<(Weather weather, AirQuality aqi)> FetchConditionsFlow(Geolocation location) =>
-        // This Flow demonstrates a more complex composition.
         weatherClient
             .GetWeatherFlow(location)
-            // After getting the weather, we chain to the next operation: getting the air quality.
             .Chain(weather => weatherClient
                 .GetAirQualityFlow(location)
-                // Safety Net: If the Air Quality API fails, we don't fail the whole process.
-                // Instead, we Recover to a default "Good" AQI value and continue.
-                .DoOnFailure(exception =>
-                    _logger.LogWarning(exception, "Air Quality API failed. Recovering with default AQI."))
+                // Safety Net: If the Air Quality API fails, we recover with a default value instead of failing the entire process.
                 .Recover(_ =>
-                    Flow.Succeed(new AirQuality(0)))
-                // Finally, select both results into a tuple to pass to the next step.
+                {
+                    _logger.LogWarning("Air Quality API failed. Recovering with default AQI.");
+                    return Flow.Succeed(new AirQuality(0));
+                })
                 .Select(airQuality => (weather, airQuality)));
 
     /// <summary>

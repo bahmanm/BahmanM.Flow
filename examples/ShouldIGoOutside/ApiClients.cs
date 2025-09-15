@@ -37,38 +37,30 @@ public interface IWeatherClient
 public sealed class GeolocationClient(HttpClient httpClient) : IGeolocationClient
 {
     public IFlow<Geolocation> GetGeolocationFlow() =>
-        // Start by creating a Flow from an async, failable operation.
         Flow
             .Create(cancellationToken =>
                 httpClient.GetAsync("http://ip-api.com/json", cancellationToken))
-            // Gatekeeper: Ensure the HTTP call was successful before trying to read the body.
             .Validate(
                 resp => resp.IsSuccessStatusCode,
                 resp => new HttpRequestException($"HTTP {(int)resp.StatusCode} from geolocation API"))
-            // Sequencer: Safely read the response body. Using WithResource guarantees disposal.
             .Chain(response => Flow
                 .WithResource(
                     acquire: () => response,
                     use: httpResponse => Flow
                         .Create(cancellationToken =>
                             httpResponse.Content.ReadFromJsonAsync<IpApiGeolocation>(cancellationToken))
-                        // Gatekeeper: Validate the deserialized object.
                         .Validate(
                             geoDto => geoDto is not null,
                             _ => new InvalidDataException("Failed to deserialize geolocation response."))
-                        // Transformer: Map from the internal DTO to our domain record.
                         .Select(geoDto =>
                             new Geolocation(geoDto!.City, geoDto.Lat, geoDto.Lon))
                 ))
-            // Gatekeeper: Final validation on the result.
             .Validate(
                 g => !string.IsNullOrWhiteSpace(g.City),
                 _ => new InvalidDataException("City is missing."))
-            // Resiliency: Add a retry policy for specific, transient failures.
             .WithRetry(2, typeof(InvalidDataException))
             .WithTimeout(TimeSpan.FromSeconds(3));
 
-    // Private record for deserialization, specific to the ip-api.com response shape.
     private sealed record IpApiGeolocation(string City, double Lat, double Lon);
 }
 
@@ -136,7 +128,6 @@ public sealed class WeatherClient(HttpClient httpClient) : IWeatherClient
             .WithTimeout(TimeSpan.FromSeconds(2));
     }
 
-    // Private records for deserialization to match the specific API shapes.
     private sealed record OpenMeteoWeatherResponse(
         [property: JsonPropertyName("current_weather")]
         CurrentWeatherResponse CurrentWeather);
