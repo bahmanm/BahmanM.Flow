@@ -24,7 +24,8 @@ public sealed class RecommendationService(IGeolocationClient geolocationClient, 
                 Console.WriteLine($"--> Fetched Air Quality (AQI): {pair.aqi.Aqi}");
             })
             // Finally, transform the aggregated data into a human-readable recommendation.
-            .Select(pair => MakeRecommendation(pair.weather, pair.aqi));
+            .Select(pair =>
+                MakeRecommendation(pair.weather, pair.aqi));
 
     /// <summary>
     /// A sub-recipe for determining the user's location.
@@ -33,8 +34,10 @@ public sealed class RecommendationService(IGeolocationClient geolocationClient, 
     private IFlow<Geolocation> DetermineLocationFlow() =>
         geolocationClient
             .GetGeolocationFlow()
-            .DoOnSuccess(loc => Console.WriteLine($"--> Determined location: {loc.City}"))
-            .DoOnFailure(ex => Console.WriteLine($"--> Failed to determine location: {ex.Message}"));
+            .DoOnSuccess(loc =>
+                Console.WriteLine($"--> Determined location: {loc.City}"))
+            .DoOnFailure(ex =>
+                Console.WriteLine($"--> Failed to determine location: {ex.Message}"));
 
     /// <summary>
     /// A sub-recipe for fetching weather and air quality based on a given location.
@@ -48,10 +51,13 @@ public sealed class RecommendationService(IGeolocationClient geolocationClient, 
                 .GetAirQualityFlow(loc)
                 // Safety Net: If the Air Quality API fails, we don't fail the whole process.
                 // Instead, we Recover to a default "Good" AQI value and continue.
-                .DoOnFailure(ex => Console.WriteLine($"--> Air Quality API failed: {ex.Message}. Recovering..."))
-                .Recover(_ => Flow.Succeed(new AirQuality(0)))
+                .DoOnFailure(ex =>
+                    Console.WriteLine($"--> Air Quality API failed: {ex.Message}. Recovering..."))
+                .Recover(_ =>
+                    Flow.Succeed(new AirQuality(0)))
                 // Finally, select both results into a tuple to pass to the next step.
-                .Select(a => (w, a)));
+                .Select(a =>
+                    (w, a)));
 
     /// <summary>
     /// A pure function that applies business logic to make a final recommendation.
@@ -59,10 +65,14 @@ public sealed class RecommendationService(IGeolocationClient geolocationClient, 
     private static string MakeRecommendation(in Weather weather, in AirQuality airQuality) =>
         weather switch
         {
-            _ when IsRaining(weather) => "No, it's raining!",
-            _ when weather.Temperature < 10 => "No, it's too cold!",
-            _ when airQuality.Aqi > 100 => "No, the air quality is poor.",
-            _ => "Yes, it's a great day to go outside!"
+            _ when IsRaining(weather) =>
+                "No, it's raining!",
+            _ when weather.Temperature < 10 =>
+                "No, it's too cold!",
+            _ when airQuality.Aqi > 100 =>
+                "No, the air quality is poor.",
+            _ =>
+                "Yes, it's a great day to go outside!"
         };
 
     // A simple helper to make the business logic more readable.

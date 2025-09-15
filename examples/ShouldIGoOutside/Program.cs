@@ -37,7 +37,8 @@ public static class Program
             .WithTimeout(TimeSpan.FromSeconds(10));
 
         // 3️⃣ Execute the Flow and wait for the outcome.
-        var outcome = await FlowEngine.ExecuteAsync(recommendationFlow, new(cts.Token));
+        var outcome = await FlowEngine
+            .ExecuteAsync(recommendationFlow, new(cts.Token));
 
         Console.WriteLine("\n----------------------------------------");
 
