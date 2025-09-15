@@ -137,3 +137,11 @@ Flow supports co‑operative cancellation throughout the pipeline. `FlowEngine` 
 You've met the core operators! With these, you can build almost any Flow.
 
 When you're ready, you can see how to combine these in **[Practical Recipes](./practical-recipes.md)**.
+
+---
+
+## Next Steps
+
+You've seen the core patterns. To see how they all come together in a complete, runnable application, explore the example project:
+
+*   **["Should I Go Outside?" Example Application](./../examples/ShouldIGoOutside)**

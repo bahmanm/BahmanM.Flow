@@ -219,6 +219,8 @@ string result = outcome switch
 };
 ```
 
+**Want to see this in a complete, runnable project? Check out the ["Should I Go Outside?" example application](./examples/ShouldIGoOutside).**
+
 ---
 
 # 🧩 Flow is Composable.  _Wait...What!?_
@@ -353,6 +355,10 @@ class DispatchRequestedConsumer : IKafkaConsumer
 2.  **See More: [Practical Recipes](./docs/practical-recipes.md)**
 
     Ready for more? This document contains a collection of snippets for more advanced scenarios.
+
+3.  **Run a Real Example: ["Should I Go Outside?" App](./examples/ShouldIGoOutside)**
+
+    Explore a complete, runnable console application that uses `Flow` to call multiple real-world APIs and make a recommendation.
 
 ### Deeper Dive (For the Curious)
 

@@ -161,3 +161,11 @@ Now that you've seen some practical recipes, you can dive deeper into the concep
 *   Learn to build your own behaviours in **[Behaviours](./behaviours.md)**.
 *   Read the **[Design Rationale](./design-rationale.md)** to understand the "why" behind Flow.
 *   Browse the **[API Blueprint](./ApiBlueprint.cs)** to see all available methods.
+
+---
+
+## Next Steps
+
+You've seen individual recipes. To see how they all come together in a complete, runnable application, explore the example project:
+
+*   **["Should I Go Outside?" Example Application](./../examples/ShouldIGoOutside)**
