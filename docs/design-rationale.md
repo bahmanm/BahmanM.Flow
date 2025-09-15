@@ -41,7 +41,7 @@ The design choice is to provide specific, named solutions to common problems rat
 
 This principle of pragmatism guides the entire API design.
 
-(For those interested, a more detailed mapping of Flow concepts to their functional counterparts can be found in [Notes for FP Developers](./ForFPDevelopers.md).)
+(For those interested, a more detailed mapping of Flow concepts to their functional counterparts can be found in [Notes for FP Developers](./for-fp-developers.md).)
 
 # 2. `FlowExecutionOptions`: Decoupling Execution from Declaration
 
