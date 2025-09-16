@@ -412,3 +412,6 @@ GEMINI.md
 
 # MacOS Garbage
 .DS_Store
+
+# Jekyll
+_site/

@@ -4,22 +4,30 @@
   <small><i>Engineered Composable Flows (approx. 200 BCE) - Khuzestan, Iran</i></small>
 </p>
 
-# Welcome to the Flow Documentation
+# Flow: Principles and Patterns
 
-**Flow** is a lightweight, powerful framework for building robust, predictable, and testable business logic in .NET. It provides a simple, fluent API for composing complex operations, handling failures, and managing cross-cutting concerns in a declarative and immutable way.
+This site provides a deep dive into the concepts and patterns that make Flow a powerful tool for writing clean, composable business logic.
 
-This documentation site provides a deeper dive into the concepts and patterns behind the library.
+---
 
-## Table of Contents
+## Getting Started
 
-*   **Getting Started**
-    *   [The Core Operators](./core-operators.md)
-    *   [Practical Recipes](./practical-recipes.md)
-*   **Advanced Topics**
-    *   [Behaviours (Extensibility)](./behaviours.md)
-    *   [Design Rationale](./design-rationale.md)
-*   **For Different Audiences**
-    *   [Notes for Functional Programmers](./for-fp-developers.md)
-    *   [Flow's Relatives in the .NET Ecosystem](./relatives-and-ecosystem.md)
-*   **Reference**
-    *   [API Blueprint](./ApiBlueprint.cs)
+For the best experience, we recommend reading the introductory guides in order.
+
+1.  **[Introduction](./introduction.md)**
+    *   Understand the "why" behind Flow and its core "Recipe/Chef" idea.
+2.  **[Your First Pipeline](./basic-pipeline.md)**
+    *   See a real-world example of refactoring complex code into a clean Flow.
+3.  **[Advanced Concepts](./advanced-concepts.md)**
+    *   Explore composable behaviours and see a more complex, real-world example.
+
+## Reference Documentation
+
+*   **[The Recipe Card: An API Quick Reference](./recipe-card.md)**
+*   **[The Core Operators](./core-operators.md)**
+*   **[Practical Recipes](./practical-recipes.md)**
+*   **[Behaviours (Extensibility)](./behaviours.md)**
+*   **[Design Rationale](./design-rationale.md)**
+*   **[Notes for Functional Programmers](./for-fp-developers.md)**
+*   **[Flow's Relatives in the .NET Ecosystem](./relatives-and-ecosystem.md)**
+*   **[API Blueprint](./ApiBlueprint.cs)**
