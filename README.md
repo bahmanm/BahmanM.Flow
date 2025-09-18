@@ -13,8 +13,9 @@
     <td align="center">
         <h1>Flow</h1>
         <h3>Lightweight Library for Clean and Composable Business Logic</h3>
-        <img src="https://img.shields.io/nuget/v/BahmanM.Flow?style=flat&logo=nuget&label=NuGet" alt="NuGet Version"/>  
-        <img src="https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml/badge.svg" alt="CI"/>  
+        <img src="https://github.com/bahmanm/BahmanM.Flow/actions/workflows/ci.yml/badge.svg" alt="CI"/>
+        <img src="https://img.shields.io/nuget/v/BahmanM.Flow?style=flat&logo=nuget&label=NuGet" alt="NuGet Version"/>
+        <a href="https://bahmanm.github.io/BahmanM.Flow/"><img src="https://img.shields.io/badge/documentation-website-blue" alt="Documentation"/></a>
         <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbahmanm%2FBahmanM.Flow.svg?type=shield" alt="FOSSA"/>  
     </td>
   </tr>

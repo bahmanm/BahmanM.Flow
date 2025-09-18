@@ -1,25 +1,30 @@
 <p align="center">
-  <img src="/assets/img/flow-1535x529.png" alt="Hydraulic Systems - Khuzestan, Iran"/>
+  <img src="/assets/img/flow-1535x529.png" style="border-radius: 8px;" alt="Hydraulic Systems - Khuzestan, Iran"/>
   <br/>
   <small><i>Engineered Composable Flows (approx. 200 BCE) - Khuzestan, Iran</i></small>
 </p>
 
-# Welcome to the Flow Documentation
+# Flow: Untangle Your Business Logic
 
-**Flow** is a lightweight, powerful framework for building robust, predictable, and testable business logic in .NET. It provides a simple, fluent API for composing complex operations, handling failures, and managing cross-cutting concerns in a declarative and immutable way.
+This is the official cookbook for Flow. Inside, you'll find the recipes and techniques for turning tangled spaghetti code into clean, composable business logic.
 
-This documentation site provides a deeper dive into the concepts and patterns behind the library.
+---
 
-## Table of Contents
+### Getting Started
 
-*   **Getting Started**
-    *   [The Core Operators](./core-operators.md)
-    *   [Practical Recipes](./practical-recipes.md)
-*   **Advanced Topics**
-    *   [Behaviours (Extensibility)](./behaviours.md)
-    *   [Design Rationale](./design-rationale.md)
-*   **For Different Audiences**
-    *   [Notes for Functional Programmers](./for-fp-developers.md)
-    *   [Flow's Relatives in the .NET Ecosystem](./relatives-and-ecosystem.md)
-*   **Reference**
-    *   [API Blueprint](./ApiBlueprint.cs)
+_Best served in order_ 🍽️
+
+1.  [Introduction](./introduction.md): Understand the _Why_ behind Flow and its core _Recipe/Chef_ idea.
+2.  [Your First Flow](./your-first-flow.md): See a real-world example of refactoring complex code into a clean Flow.
+3.  [Advanced Concepts](./advanced-concepts.md): Explore composable behaviours and see a more complex, real-world example.
+
+### Reference Documentation
+
+-   [The Recipe Card: An API Quick Reference](./recipe-card.md)
+-   [The Core Operators](./core-operators.md)
+-   [Practical Recipes](./practical-recipes.md)
+-   [Behaviours (Extensibility)](./behaviours.md)
+-   [Design Rationale](./design-rationale.md)
+-   [Notes for Functional Programmers](./for-fp-developers.md)
+-   [Flow's Relatives in the .NET Ecosystem](./relatives-and-ecosystem.md)
+-   [API Blueprint](./api-blueprint.md)

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: "en-US" }}">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+{% seo %}
+    <link rel="stylesheet" href="{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}">
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+    {% include head-custom.html %}
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <div class="sidebar-logo-container" style="padding: 1rem; text-align: center;">
+            <a href="{{ '/' | relative_url }}">
+                <img src="{{ '/assets/img/flow-256x256.png' | relative_url }}" alt="Flow Logo" style="max-width: 95%; box-shadow: 1px 1px 10px #000000; border-radius: 8px" />
+            </a>
+        </div>
+
+        <ul style="list-style: none; padding-left: 1rem; margin-top: 2rem; font-size: 1.1em;">
+            <li style="margin-bottom: 1rem;"><a href="{{ '/' | relative_url }}">🏠 Home</a></li>
+            <li style="margin-bottom: 1rem;"><a href="{{ site.github.repository_url }}">🐙 GitHub Repository</a></li>
+            <li style="margin-bottom: 1rem;"><a href="https://www.nuget.org/packages/BahmanM.Flow/">📦 View on NuGet</a></li>
+            <li style="margin-bottom: 1rem;"><a href="{{ site.github.repository_url }}/releases">✨ Releases</a></li>
+        </ul>
+      </header>
+      <section>
+
+      {{ content }}
+
+      </section>
+      <footer>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="{{ "/assets/js/scale.fix.js" | relative_url }}"></script>
+  </body>
+</html>
