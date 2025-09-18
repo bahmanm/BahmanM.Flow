@@ -347,34 +347,6 @@ class DispatchRequestedConsumer : IKafkaConsumer
 
 # 💡 Intrigued!?
 
-### Get Started Now (The 5-Minute Guide)
+You've had the whirlwind tour. For the full story, including practical recipes, deep-dive articles, and the complete API reference, head over to the official documentation site.
 
-1.  **Start Here: [The Core Operators](./docs/core-operators.md)**
-
-    A friendly introduction to the foundational primitives you'll be using to build your own Flows.
-
-2.  **See More: [Practical Recipes](./docs/practical-recipes.md)**
-
-    Ready for more? This document contains a collection of snippets for more advanced scenarios.
-
-3.  **Run a Real Example: ["Should I Go Outside?" App](./examples/ShouldIGoOutside)**
-
-    Explore a complete, runnable console application that uses `Flow` to call multiple real-world APIs and make a recommendation.
-
-### Deeper Dive (For the Curious)
-
-1. **Family Tree: [Flow's Relatives](./docs/relatives-and-ecosystem.md)**
-
-    See how Flow fits in the .NET ecosystem alongside its cousins such as Polly.
-
-2. **Go Pro: [Behaviours](./docs/behaviours.md)**
-
-    Ready to explore further? Learn how to extend your Flow with custom, reusable behaviours.
-
-### Reference Material
-
-1.  **[The "Why": Design Rationale](./docs/design-rationale.md)**: Curious about the principles behind the design?
-
-    This section explains the core architectural decisions that shape the library.
-
-2.  **[API Blueprint](./docs/pages/reference/api-blueprint.md)**: A high-level map of the entire public API surface.
+### [📚 Explore the Full Documentation](https://bahmanm.github.io/BahmanM.Flow/)
