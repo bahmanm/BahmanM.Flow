@@ -5,18 +5,17 @@ using static BahmanM.Flow.Outcome;
 namespace BahmanM.Flow.Tests.Integration;
 
 [Collection("WithResourceDisposal")]
-public class WithResourceDisposalTests : IDisposable
+public class WithResourceDisposalTests
 {
-    public WithResourceDisposalTests() => DisposableProbe.Reset();
-    public void Dispose() => DisposableProbe.Reset();
 
     [Fact]
     public async Task WithResource_Success_DisposesResource_AndYieldsValue()
     {
         // Arrange
         var expected = 42;
+        var allocatedProbes = new ConcurrentBag<DisposableProbe>();
         var flow = Flow.WithResource(
-            acquire: () => new DisposableProbe(),
+            acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
             use: probe => Flow.Succeed(expected)
         );
 
@@ -25,8 +24,7 @@ public class WithResourceDisposalTests : IDisposable
 
         // Assert
         Assert.Equal(Success(expected), outcome);
-        Assert.Equal(DisposableProbe.AllocatedCount, DisposableProbe.DisposedCount);
-        Assert.Equal(0, DisposableProbe.FinalizedWithoutDisposeCount);
+        Assert.All(allocatedProbes, probe => Assert.True(probe.IsDisposed));
     }
 
     [Fact]
@@ -34,8 +32,9 @@ public class WithResourceDisposalTests : IDisposable
     {
         // Arrange
         var ex = new InvalidOperationException("boom");
+        var allocatedProbes = new ConcurrentBag<DisposableProbe>();
         var flow = Flow.WithResource(
-            acquire: () => new DisposableProbe(),
+            acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
             use: _ => Flow.Fail<int>(ex)
         );
 
@@ -44,7 +43,7 @@ public class WithResourceDisposalTests : IDisposable
 
         // Assert
         Assert.Equal(Failure<int>(ex), outcome);
-        Assert.Equal(DisposableProbe.AllocatedCount, DisposableProbe.DisposedCount);
+        Assert.All(allocatedProbes, probe => Assert.True(probe.IsDisposed));
     }
 
     [Fact]
@@ -52,6 +51,7 @@ public class WithResourceDisposalTests : IDisposable
     {
         // Arrange
         var ex = new InvalidOperationException("acquire failed");
+        var allocatedProbes = new ConcurrentBag<DisposableProbe>();
         var flow = Flow.WithResource<DisposableProbe, int>(
             acquire: () => throw ex,
             use: _ => Flow.Succeed(1)
@@ -62,8 +62,7 @@ public class WithResourceDisposalTests : IDisposable
 
         // Assert
         Assert.Equal(Failure<int>(ex), outcome);
-        Assert.Equal(0, DisposableProbe.AllocatedCount);
-        Assert.Equal(0, DisposableProbe.DisposedCount);
+        Assert.True(allocatedProbes.IsEmpty);
     }
 
     [Fact]
@@ -71,8 +70,9 @@ public class WithResourceDisposalTests : IDisposable
     {
         // Arrange
         var ex = new InvalidOperationException("use ctor failed");
+        var allocatedProbes = new ConcurrentBag<DisposableProbe>();
         var flow = Flow.WithResource<DisposableProbe, int>(
-            acquire: () => new DisposableProbe(),
+            acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
             use: _ => throw ex
         );
 
@@ -81,7 +81,7 @@ public class WithResourceDisposalTests : IDisposable
 
         // Assert
         Assert.Equal(Failure<int>(ex), outcome);
-        Assert.Equal(DisposableProbe.AllocatedCount, DisposableProbe.DisposedCount);
+        Assert.All(allocatedProbes, probe => Assert.True(probe.IsDisposed));
     }
 
     [Fact]
@@ -91,8 +91,9 @@ public class WithResourceDisposalTests : IDisposable
         var cts = new CancellationTokenSource();
         var options = new Execution.Options(CancellationToken: cts.Token);
 
+        var allocatedProbes = new ConcurrentBag<DisposableProbe>();
         var flow = Flow.WithResource(
-            acquire: () => new DisposableProbe(),
+            acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
             use: _ => Flow.Create<int>(async () =>
             {
                 await Task.Delay(Timeout.InfiniteTimeSpan, cts.Token);
@@ -107,16 +108,17 @@ public class WithResourceDisposalTests : IDisposable
         // Assert
         var failure = Assert.IsType<Failure<int>>(outcome);
         Assert.IsType<TaskCanceledException>(failure.Exception);
-        Assert.Equal(DisposableProbe.AllocatedCount, DisposableProbe.DisposedCount);
+        Assert.All(allocatedProbes, probe => Assert.True(probe.IsDisposed));
     }
 
     [Fact]
     public async Task WithResource_InsideChain_ComposesAndDisposes()
     {
         // Arrange
+        var allocatedProbes = new ConcurrentBag<DisposableProbe>();
         var flow = Flow.Succeed("ok").Chain(_ =>
             Flow.WithResource(
-                acquire: () => new DisposableProbe(),
+                acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
                 use: _ => Flow.Succeed(123))
         );
 
@@ -125,19 +127,19 @@ public class WithResourceDisposalTests : IDisposable
 
         // Assert
         Assert.Equal(Success(123), outcome);
-        Assert.Equal(DisposableProbe.AllocatedCount, DisposableProbe.DisposedCount);
+        Assert.All(allocatedProbes, probe => Assert.True(probe.IsDisposed));
     }
 
     [Fact]
     public async Task WithResource_Nested_DisposesInnerThenOuter()
     {
         // Arrange
-        DisposableProbe.Reset();
+        var allocatedProbes = new ConcurrentBag<DisposableProbe>();
         var flow = Flow.WithResource<DisposableProbe, int>(
-            acquire: () => new DisposableProbe(),
+            acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
             use: outer =>
                 Flow.WithResource<DisposableProbe, int>(
-                    acquire: () => new DisposableProbe(),
+                    acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
                     use: inner => Flow.Succeed(99)
                 )
         );
@@ -147,8 +149,8 @@ public class WithResourceDisposalTests : IDisposable
 
         // Assert: two allocations, two disposals
         Assert.Equal(Success(99), outcome);
-        Assert.Equal(2, DisposableProbe.AllocatedCount);
-        Assert.Equal(2, DisposableProbe.DisposedCount);
+        Assert.Equal(2, allocatedProbes.Count);
+        Assert.All(allocatedProbes, probe => Assert.True(probe.IsDisposed));
     }
 
     [Fact]
@@ -156,14 +158,14 @@ public class WithResourceDisposalTests : IDisposable
     {
         await RunSerial(100, async () =>
         {
-            DisposableProbe.Reset();
+            var allocatedProbes = new ConcurrentBag<DisposableProbe>();
             var flow = Flow.WithResource<DisposableProbe, int>(
-                acquire: () => new DisposableProbe(),
+                acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
                 use: _ => Flow.Succeed(5)
             );
             var outcome = await FlowEngine.ExecuteAsync(flow);
             Assert.Equal(Success(5), outcome);
-            Assert.Equal(DisposableProbe.AllocatedCount, DisposableProbe.DisposedCount);
+            Assert.All(allocatedProbes, probe => Assert.True(probe.IsDisposed));
         });
     }
 
@@ -172,28 +174,28 @@ public class WithResourceDisposalTests : IDisposable
     {
         await RunSerial(10, async () =>
         {
-            DisposableProbe.Reset();
+            var allocatedProbes = new ConcurrentBag<DisposableProbe>();
             var flow = Flow.WithResource(
-                acquire: () => new DisposableProbe(),
+                acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
                 use: _ => Flow.Succeed(7)
             );
             var outcome = await FlowEngine.ExecuteAsync(flow);
             Assert.Equal(Success(7), outcome);
-            Assert.Equal(DisposableProbe.AllocatedCount, DisposableProbe.DisposedCount);
+            Assert.All(allocatedProbes, probe => Assert.True(probe.IsDisposed));
         });
     }
 
     [Fact]
     public async Task WithResource_Burst_Parallel_100_DisposesAll()
     {
-        DisposableProbe.Reset();
         var exceptions = new ConcurrentBag<Exception>();
+        var allocatedProbes = new ConcurrentBag<DisposableProbe>();
         await RunParallel(8, 100, async _ =>
         {
             try
             {
                 var flow = Flow.WithResource(
-                    acquire: () => new DisposableProbe(),
+                    acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
                     use: _ => Flow.Succeed(1)
                 );
                 var outcome = await FlowEngine.ExecuteAsync(flow);
@@ -206,7 +208,7 @@ public class WithResourceDisposalTests : IDisposable
         });
 
         Assert.True(exceptions.IsEmpty, string.Join("\n", exceptions.Select(e => e.ToString())));
-        Assert.Equal(DisposableProbe.AllocatedCount, DisposableProbe.DisposedCount);
+        Assert.All(allocatedProbes, probe => Assert.True(probe.IsDisposed));
     }
 
     private static async Task RunSerial(int times, Func<Task> body)
