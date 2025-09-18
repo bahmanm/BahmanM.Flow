@@ -17,6 +17,7 @@ _Best served in order_ 🍽️
 1.  [Introduction](./pages/getting-started/introduction.md): Understand the _Why_ behind Flow and its core _Recipe/Chef_ idea.
 2.  [Your First Flow](./pages/getting-started/your-first-flow.md): See a real-world example of refactoring complex code into a clean Flow.
 3.  [Advanced Concepts](./pages/getting-started/advanced-concepts.md): Explore composable behaviours and see a more complex, real-world example.
+4.  [Example Applications](https://github.com/bahmanm/BahmanM.Flow/tree/main/examples): Explore runnable example applications.
 
 ### Reference Documentation
 

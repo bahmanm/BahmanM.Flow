@@ -144,4 +144,4 @@ When you're ready, you can see how to combine these in **[Practical Recipes](./p
 
 You've seen the core patterns. To see how they all come together in a complete, runnable application, explore the example project:
 
-*   **["Should I Go Outside?" Example Application](../../../examples/ShouldIGoOutside)**
+*   ["Should I Go Outside?" Example Application](https://github.com/bahmanm/BahmanM.Flow/tree/main/examples/ShouldIGoOutside)
