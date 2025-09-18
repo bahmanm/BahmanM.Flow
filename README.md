@@ -377,4 +377,4 @@ class DispatchRequestedConsumer : IKafkaConsumer
 
     This section explains the core architectural decisions that shape the library.
 
-2.  **[API Blueprint](./docs/ApiBlueprint.cs)**: A high-level map of the entire public API surface.
+2.  **[API Blueprint](./docs/pages/reference/api-blueprint.md)**: A high-level map of the entire public API surface.

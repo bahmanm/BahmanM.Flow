@@ -112,7 +112,7 @@ That's it! You now know how to extend `Flow` with your own powerful, reusable be
 
 From here, you have a few options:
 *   Dive into the **[Design Rationale](./design-rationale.md)** to better understand the "why" behind Flow's architecture.
-*   Browse the **[API Blueprint](./ApiBlueprint.cs)** to see all available methods and operators.
+*   Browse the **[API Blueprint](./api-blueprint.md)** to see all available methods and operators.
 *   Head back to the **[Learning Path in the main README](../README.md#intrigued-heres-your-learning-path-🗺️)** to choose your next destination.
 
 ---
@@ -121,4 +121,6 @@ From here, you have a few options:
 
 You've seen how to build custom behaviours. To see built-in behaviours like `WithRetry` and `WithTimeout` used in a complete, runnable application, explore the example project:
 
-*   **["Should I Go Outside?" Example Application](./../examples/ShouldIGoOutside)**
+*   **["Should I Go Outside?" Example Application](../../../examples/ShouldIGoOutside)**
+*
+tside)**

@@ -58,4 +58,4 @@ Flow offers a pragmatic, lightweight bridge to declarative composition and expli
 
 Flow is designed to be a practical, opinionated tool for C# developers who want to build more resilient and maintainable business logic without a steep learning curve. It complements existing libraries by focusing specifically on the **composition of operations and explicit outcome management**, providing a clear, declarative approach to complex workflows.
 
-_If you find your favourite library missing from this document, all you need to do is [open an issue](https://github.com/flow-project/flow/issues/new)!_
+_If you find your favourite library missing from this document, all you need to do is [open an issue](https://github.com/bahmanm/BahmanM.Flow/issues/new)!_
