@@ -41,7 +41,7 @@ Good examples include:
 
 # Example: A Simple Circuit Breaker
 
-Let's build a simple circuit breaker from scratch. Our goal: create a behaviour that will "trip" (stop executing a Flow) after 3 consecutive failures.
+Let's build a simple circuit breaker from scratch. The goal: create a behaviour that will "trip" (stop executing a Flow) after 3 consecutive failures.
 
 ### Step 1: The State
 
@@ -62,7 +62,7 @@ public class CircuitBreakerState
 
 ### Step 2: The Behaviour
 
-Next, we implement the `IBehaviour` interface.
+Let's implement the `IBehaviour` interface now.
 
 ```csharp
 public class CircuitBreakerBehaviour(CircuitBreakerState state, int failureThreshold = 3) : IBehaviour
