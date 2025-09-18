@@ -168,7 +168,6 @@ public class AnyCancellationTests
     public async Task Any_LoserWithResource_DisposesOnCancel()
     {
         // Arrange
-        DisposableProbe.Reset();
         var winner = new FlowCompletionSource<string>();
 
         var probe = new DisposableProbe();
@@ -194,7 +193,7 @@ public class AnyCancellationTests
 
         // Assert
         Assert.True(outcome.IsSuccess());
-        Assert.Equal(DisposableProbe.AllocatedCount, DisposableProbe.DisposedCount);
+        Assert.True(probe.IsDisposed);
     }
 
     [Fact]
