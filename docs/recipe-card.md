@@ -15,7 +15,7 @@ var c = Flow.Create(() => GetValueFromDatabase());      // Synchronous, failable
 var d = Flow.Create(ct => GetValueFromApiAsync(ct));    // Asynchronous, cancellable
 
 
-// --- 2. Composing a Pipeline ---
+// --- 2. Composing a Flow ---
 var initialFlow = Flow.Succeed(123);
 
 var transformed = initialFlow.Select(i => i.ToString());      // T -> U

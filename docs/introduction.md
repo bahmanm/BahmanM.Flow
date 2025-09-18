@@ -21,4 +21,4 @@ This separation of concerns is the key to writing code that is easier to read, t
 
 Now that you understand the 'why', let's see a concrete example of Flow in action.
 
--  [Your First Pipeline](./basic-pipeline.md)
+-  [Your First Flow](./your-first-flow.md)

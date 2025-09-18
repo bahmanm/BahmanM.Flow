@@ -141,7 +141,7 @@ A key design decision was how to handle the application of a behaviour to differ
 
     Therefore, `.WithBehaviour()` can be applied to *any* node in the flow. 
 
-    It does not perform a no-op on pure transformations, allowing developers to build powerful, universal behaviours that can observe or interact with the entire pipeline.
+    It does not perform a no-op on pure transformations, allowing developers to build powerful, universal behaviours that can observe or interact with the entire Flow.
 
 This two-pronged approach provides both safety and predictability for the built-in execution modifiers and maximum power and flexibility for user-defined custom behaviours.
 

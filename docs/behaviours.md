@@ -10,7 +10,7 @@ This is where you level up from being a user of Flow to a creator, forging your 
 
 To get started, let's clarify two key terms:
 
-*   An **Operator** is one of the foundational, verb-based primitives you use to build a pipeline operation-by-operation (e.g., `Select`, `Chain`, `Recover`). 
+*   An **Operator** is one of the foundational, verb-based primitives you use to build a Flow operation-by-operation (e.g., `Select`, `Chain`, `Recover`). 
 
 _Each operator is concerned with a single, specific part of the Flow._
 

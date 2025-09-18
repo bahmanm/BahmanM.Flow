@@ -16,7 +16,7 @@ For the best experience, we recommend reading the introductory guides in order.
 
 1.  **[Introduction](./introduction.md)**
     *   Understand the "why" behind Flow and its core "Recipe/Chef" idea.
-2.  **[Your First Pipeline](./basic-pipeline.md)**
+2.  **[Your First Flow](./your-first-flow.md)**
     *   See a real-world example of refactoring complex code into a clean Flow.
 3.  **[Advanced Concepts](./advanced-concepts.md)**
     *   Explore composable behaviours and see a more complex, real-world example.

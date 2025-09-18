@@ -129,7 +129,7 @@ var outcome = await FlowEngine.ExecuteAsync(firstWins);
 
 ### Working With `IDisposable`s
 
-**Problem:** You need to use a resource that requires safe disposal, like an `HttpClient`, in the middle of a complex pipeline.
+**Problem:** You need to use a resource that requires safe disposal, like an `HttpClient`, in the middle of a complex Flow.
 
 **Solution:** Use `Flow.WithResource`. 
 *  It perfectly mirrors a `using` block, but in a way that composes beautifully with the rest of your Flow.

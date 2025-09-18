@@ -1,8 +1,8 @@
 # The Core Operators
 
-An **Operator** is a foundational primitive that you use to build a pipeline, step-by-step, operation-by-operation.
+An **Operator** is a foundational primitive that you use to build a Flow, step-by-step, operation-by-operation.
 
-They are the verbs of the Flow language, each responsible for a single, specific part of the pipeline.
+They are the verbs of the Flow language, each responsible for a single, specific part of the Flow.
 
 > **Heads Up!** All operators have built-in support for `async/await`. For simplicity, the examples below use synchronous code, but each one has an `async` overload waiting for you when you need it.
 
@@ -13,10 +13,10 @@ These are the **Starters**.
 Every Flow begins with one of these.
 
 *   `Flow.Succeed(value)`: Use this when you already have a value and want to bring it into the Flow world.
-*   `Flow.Fail(exception)`: Use this to explicitly start a pipeline in a failed state.
+*   `Flow.Fail(exception)`: Use this to explicitly start a Flow in a failed state.
 *   `Flow.Create(operation)`: Use this when your starting point is an **operation** (a function) that might succeed or fail, like a database call.
 *   `Flow.Create(asyncOperation)`: Async variant that returns a `Task<T>`.
-*   `Flow.Create((CancellationToken ct) => asyncOperation)`: The cancellable async variant. Prefer this when you want your operation to honour pipeline cancellation (e.g. when racing with `Flow.Any` or when the engine token is cancelled).
+*   `Flow.Create((CancellationToken ct) => asyncOperation)`: The cancellable async variant. Prefer this when you want your operation to honour Flow cancellation (e.g. when racing with `Flow.Any` or when the engine token is cancelled).
 
 ### `.Select()`
 
@@ -24,7 +24,7 @@ This is the **Transformer**.
 
 It is your specialist for transforming the value inside a successful Flow.
 
-Think of it like LINQ's `Select`. It takes a transformation operation (`TIn -> TOut`). If the operation throws an exception, Flow will automatically catch it and transition the pipeline to a `Failure` state.
+Think of it like LINQ's `Select`. It takes a transformation operation (`TIn -> TOut`). If the operation throws an exception, Flow will automatically catch it and transition the Flow to a `Failure` state.
 
 ```csharp
 // From a Flow containing a Request to a Flow containing a Command
@@ -38,7 +38,7 @@ This is the **Sequencer**.
 
 It is the primary link for connecting one Flow to the next.
 
-You use `.Chain()` when your next operation returns another Flow. It takes the result of one step and sequences it to the next, keeping the pipeline clean and flat.
+You use `.Chain()` when your next operation returns another Flow. It takes the result of one step and sequences it to the next, keeping the Flow clean and flat.
 
 ```csharp
 // The GetUserFromApiFlow operation itself returns an IFlow<User>.
@@ -51,7 +51,7 @@ This is the **Gatekeeper**.
 
 It is your steadfast ally in enforcing business rules and invariants on the value inside a successful Flow.
 
-You use `.Validate()` to check if the data is in a valid state to continue. It takes a predicate that returns `true` if the data is valid. If the predicate returns `false`, the Gatekeeper stops the "happy path" and transitions the pipeline to a `Failure` state, using the exception you provide.
+You use `.Validate()` to check if the data is in a valid state to continue. It takes a predicate that returns `true` if the data is valid. If the predicate returns `false`, the Gatekeeper stops the "happy path" and transitions the Flow to a `Failure` state, using the exception you provide.
 
 ```csharp
 // Ensure the user is an administrator before allowing them to delete a resource.
@@ -85,7 +85,7 @@ var safeUserFlow = userFlow
 >
 > While `.Validate()` is powerful for stopping a flow, its true potential is unlocked when paired with `.Recover()`. This combination allows you to create sophisticated conditional logic. You can `Validate` a condition and, if it fails, `Recover` into an alternative, successful workflow.
 >
-> This creates a declarative `if/else` for your entire pipeline.
+> This creates a declarative `if/else` for your entire Flow.
 >
 > ```csharp
 > var processedFlow = dataFlow
@@ -126,9 +126,9 @@ This is an important distinction to remember:
 
 ---
 
-### Cancellation (Co‑operative)
+### Cancellation (Co-operative)
 
-Flow supports co‑operative cancellation throughout the pipeline. `FlowEngine` provides a `CancellationToken` via execution options and operators that have cancellable overloads will observe that token.
+Flow supports co-operative cancellation throughout the Flow. `FlowEngine` provides a `CancellationToken` via execution options and operators that have cancellable overloads will observe that token.
 
 ---
 
