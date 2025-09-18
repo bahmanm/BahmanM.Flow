@@ -121,6 +121,4 @@ From here, you have a few options:
 
 You've seen how to build custom behaviours. To see built-in behaviours like `WithRetry` and `WithTimeout` used in a complete, runnable application, explore the example project:
 
-*   **["Should I Go Outside?" Example Application](../../../examples/ShouldIGoOutside)**
-*
-tside)**
+*   ["Should I Go Outside?" Example Application](https://github.com/bahmanm/BahmanM.Flow/tree/main/examples/ShouldIGoOutside)

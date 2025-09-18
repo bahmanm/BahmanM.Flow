@@ -168,4 +168,4 @@ Now that you've seen some practical recipes, you can dive deeper into the concep
 
 You've seen individual recipes. To see how they all come together in a complete, runnable application, explore the example project:
 
-*   **["Should I Go Outside?" Example Application](../../../examples/ShouldIGoOutside)**oOutside)**
+*   ["Should I Go Outside?" Example Application](https://github.com/bahmanm/BahmanM.Flow/tree/main/examples/ShouldIGoOutside)
