@@ -66,4 +66,4 @@ var recovered = initialFlow.Recover(ex => GetFallbackFlow(ex));
 
 Now that you have a solid high-level understanding of Flow, you are ready to dive into the details of the specific operators.
 
-*   **[The Core Operators](./core-operators.md)**
+*   **[The Core Operators](../reference/core-operators.md)**
