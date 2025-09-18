@@ -24,7 +24,12 @@ _Best served in order_ 🍽️
 -   [The Core Operators](./pages/reference/core-operators.md)
 -   [Practical Recipes](./pages/reference/practical-recipes.md)
 -   [Behaviours (Extensibility)](./pages/reference/behaviours.md)
--   [Design Rationale](./pages/deep-dives/design-rationale.md)
--   [Notes for Functional Programmers](./pages/deep-dives/for-fp-developers.md)
 -   [Flow's Relatives in the .NET Ecosystem](./pages/deep-dives/relatives-and-ecosystem.md)
 -   [API Blueprint](./pages/reference/api-blueprint.md)
+
+---
+
+### For Contributors: Design Choices and Implementation Details
+
+-   [Design Rationale](./pages/for-contributors/design-rationale.md)
+-   [Notes for Functional Programmers](./pages/for-contributors/for-fp-developers.md)
