@@ -20,7 +20,7 @@ public static class Flow
 {
     /// <summary>
     /// A Flow that starts with a pre-existing, successful value.
-    /// This is the simplest way to bring a known value into a Flow to begin a pipeline.
+    /// This is the simplest way to begin a Flow with a known value.
     /// </summary>
     /// <example>
     /// <code>

@@ -30,9 +30,9 @@
   <tr>
     <td>🤔 <i>Oh!?</i></td>
     <td>
-      💡 WHAT IF you could build your workflow as a clean, chainable pipeline of operations instead?<br/>
-      💡 A pipeline which clearly separates the "happy path" from error handling, logging, retries, ...<br/>
-      💡 A pipeline which is a pleasure to express, read, and maintain?
+      💡 WHAT IF you could write code as a clean, chainable sequence of operations instead?<br/>
+      💡 A sequence which clearly separates the "happy path" from error handling, logging, retries, ...<br/>
+      💡 A sequence which is a pleasure to express, read, and maintain?
     </td>
   </tr>
   <tr>
@@ -51,7 +51,7 @@
     <td>🧠 <i>Why!?</i></td>
     <td> 
       👉 Business Logic is<br/>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➖ Not just a procedure or sequence of steps. No!<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➖ Not just a procedure. No!<br/>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➕ A reusable <b>recipe</b> (the Flow) executed by a <b>chef</b> (the FlowEngine).<br/> 
       👉 Decoupling of <i>declaration</i> from <i>execution</i> makes your code<br/>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;➕ Testable<br/>
@@ -347,6 +347,6 @@ class DispatchRequestedConsumer : IKafkaConsumer
 
 # 💡 Intrigued!?
 
-You've had the whirlwind tour. For the full story, including practical recipes, deep-dive articles, and the complete API reference, head over to the official documentation site.
+You've had the whirlwind tour!
 
-### [📚 Explore the Full Documentation](https://bahmanm.github.io/BahmanM.Flow/)
+For the full story, including practical recipes, deep-dive articles, and the complete API reference, head over to [🏡 Flow's Home](https://flow.bahmanm.com/).
