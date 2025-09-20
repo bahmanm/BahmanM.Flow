@@ -6,13 +6,13 @@ namespace BahmanM.Flow;
 
 /// <summary>
 /// Provides a set of extension methods for composing and transforming <see cref="IFlow{T}"/> instances.
-/// These methods are the core operators for building flow-based pipelines.
+/// These methods are the core operators for building and extending Flows.
 /// </summary>
 public static class FlowExtensions
 {
     /// <summary>
     /// Performs a synchronous side-effect if the Flow is successful. The original outcome of the Flow is unaffected.
-    /// This operator is the "Bystander" in the pipeline; it lets you peek at the value without changing it.
+    /// This operator is the "Bystander" in the Flow; it lets you peek at the value without changing it.
     /// </summary>
     /// <remarks>
     /// If the <paramref name="action"/> itself throws an exception, the Flow will transition to a 'Failure' state.
@@ -208,7 +208,7 @@ public static class FlowExtensions
     /// </summary>
     /// <remarks>
     /// If the source Flow has failed, the <paramref name="recover"/> function is called with the exception.
-    /// The function should return a new <see cref="IFlow{T}"/> that the engine will execute to continue the pipeline.
+    /// The function should return a new <see cref="IFlow{T}"/> that the engine will execute to continue the Flow.
     /// This allows for sophisticated recovery logic, such as falling back to a cache or retrying with a different strategy.
     /// If the source Flow is already successful, this operation is skipped.
     /// </remarks>

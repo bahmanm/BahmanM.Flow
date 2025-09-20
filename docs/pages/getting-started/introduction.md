@@ -2,7 +2,7 @@
 
 Is your business logic a tangled mess of `try-catch` blocks and `if-else` statements? Do you find error handling, logging, and retries cluttering your core code?
 
-What if you could refactor that complexity into a clean, chainable pipeline of operations instead? A pipeline that is a pleasure to express, read, and maintain?
+What if you could refactor that complexity into a clean, chainable sequence of operations instead? A sequence that is a pleasure to express, read, and maintain?
 
 This is the problem that **Flow** is designed to solve.
 

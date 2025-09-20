@@ -143,7 +143,7 @@ var userProfileFlow = Flow.Succeed("user-123")
         Flow.WithResource(
             acquire: () => new HttpClient(),
             use: httpClient =>
-                // This is a new pipeline that only runs
+                // This is a new Flow that only runs
                 // within the scope of the HttpClient.
                 Flow.Create(async () => await httpClient.GetAsync($"/users/{userId}"))
                     .Chain(response => ProcessHttpResponseFlow(response))

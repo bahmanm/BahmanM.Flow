@@ -36,7 +36,7 @@ async Task<Guid> SendWelcomeAsync(int userId)
 
 ### The 'After'
 
-With Flow, you can refactor that into a clean, declarative pipeline that clearly expresses the sequence of operations.
+With Flow, you can refactor that into a clean, declarative code that clearly expresses the sequence of operations.
 
 ```csharp
 var onboardingFlow =
@@ -61,14 +61,14 @@ await FlowEngine.ExecuteAsync(onboardingFlow);
 
 ### The Core Recipe
 
-This pipeline is made possible by a small set of composable building blocks. Here are the core components used above:
+This Flow is made possible by a small set of composable building blocks. Here are the core components used above:
 
 ```csharp
 // --- 1. Starting a Flow ---
 var a = Flow.Succeed(42);
 var b = Flow.Create(() => GetValueFromDatabase());
 
-// --- 2. Composing a Pipeline ---
+// --- 2. Composing a Flow ---
 var transformed = initialFlow.Select(i => i.ToString());      // T -> U
 var sequenced   = initialFlow.Chain(i => GetNextFlow(i));      // T -> IFlow<U>
 var validated   = initialFlow.Validate(i => i > 0, _ => new Exception("..."));
@@ -82,6 +82,6 @@ Outcome<string> outcome = await FlowEngine.ExecuteAsync(sequenced);
 
 ### Next Up
 
-Now that you've seen a basic pipeline, let's look at more advanced composition techniques.
+Now that you've seen a basic Flow, let's look at more advanced composition techniques.
 
 *   **[Advanced Concepts](./advanced-concepts.md)**
