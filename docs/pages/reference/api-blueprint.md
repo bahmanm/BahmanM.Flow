@@ -50,6 +50,10 @@ public static class Flow
     // Resources
     public static IFlow<T> WithResource<TResource, T>(Func<TResource> acquire, Func<TResource, IFlow<T>> use)
         where TResource : IDisposable;
+    public static IFlow<T> WithResource<TResource, T>(Func<Task<TResource>> acquireAsync, Func<TResource, IFlow<T>> use)
+        where TResource : IAsyncDisposable;
+    public static IFlow<T> WithResource<TResource, T>(Func<CancellationToken, Task<TResource>> acquireAsync, Func<TResource, IFlow<T>> use)
+        where TResource : IAsyncDisposable;
 }
 ```
 

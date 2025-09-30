@@ -42,7 +42,6 @@ internal class WithResource(Ast.IInterpreter interpreter, Options options)
         {
             try
             {
-                // Ensure exactly-once disposal for acquired resource
                 resource.Dispose();
             }
             catch (Exception ex)

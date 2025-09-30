@@ -25,6 +25,10 @@ _Behaviours are applied with operators that start with `With` (e.g., `.WithRetry
 >
 > However, the generic `.WithBehaviour()` operator is different. 
 > It is designed to be a universal tool for applying any custom logic, including logging or auditing, to *any* part of a flow. Therefore, it can be applied to any operator, not just failable ones.
+>
+> **On the Horizon: `WithRetry` and Resource Management**
+> 
+> Please note that the interaction between `.WithRetry()` and `Flow.WithResource` is currently being enhanced. To guarantee resource safety, the correct architectural behaviour is for each retry attempt to re-acquire the resource. This feature is [on the roadmap](https://github.com/bahmanm/BahmanM.Flow/issues/93) and will be available in an upcoming release.
 
 This entire system is designed for extensibility: The `IBehaviour` interface is your entry point for building any custom behaviour you can imagine, which you can then apply using the generic `.WithBehaviour()` operator.
 

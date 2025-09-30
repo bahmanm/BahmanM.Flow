@@ -28,4 +28,6 @@ internal interface IBehaviourStrategy
     IFlow<T> ApplyTo<T>(Ast.Validate.Async<T> node);
     IFlow<T> ApplyTo<T>(Ast.Validate.CancellableAsync<T> node);
     IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResource<TResource, T> node) where TResource : IDisposable;
+    IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResourceAsync<TResource, T> node) where TResource : IAsyncDisposable;
+    IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResourceCancellableAsync<TResource, T> node) where TResource : IAsyncDisposable;
 }

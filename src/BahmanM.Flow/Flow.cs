@@ -160,6 +160,54 @@ public static class Flow
         where TResource : IDisposable => new Ast.Resource.WithResource<TResource, T>(acquire, use);
 
     /// <summary>
+    /// A Flow that safely acquires, uses, and asynchronously disposes of a resource that implements <see cref="IAsyncDisposable"/>.
+    /// </summary>
+    /// <remarks>
+    /// Use this overload when your <typeparamref name="TResource"/> requires asynchronous disposal.
+    /// If your acquisition is synchronous, you can wrap it with <c>Task.FromResult(resource)</c>.
+    /// </remarks>
+    /// <typeparam name="TResource">The type of the resource, which must be <see cref="IAsyncDisposable"/>.</typeparam>
+    /// <typeparam name="T">The type of value produced by the 'use' Flow.</typeparam>
+    /// <param name="acquireAsync">An asynchronous function to acquire the resource.</param>
+    /// <param name="use">A function that takes the acquired resource and returns the next <see cref="IFlow{T}"/> to execute.</param>
+    /// <returns>An <see cref="IFlow{T}"/> that, upon execution, will manage the lifecycle of the resource and run the 'use' Flow.</returns>
+    /// <example>
+    /// <code>
+    /// // TResource implements IAsyncDisposable and requires DisposeAsync()
+    /// var pingFlow = Flow.WithResource(
+    ///     acquireAsync: () => OpenClientAsync(),
+    ///     use: client => Flow.Create(async () => await client.GetAsync("/ping"))
+    /// );
+    ///
+    /// var outcome = await FlowEngine.ExecuteAsync(pingFlow);
+    /// </code>
+    /// </example>
+    public static IFlow<T> WithResource<TResource, T>(Func<Task<TResource>> acquireAsync, Func<TResource, IFlow<T>> use)
+        where TResource : IAsyncDisposable => new Ast.Resource.WithResourceAsync<TResource, T>(acquireAsync, use);
+
+    /// <summary>
+    /// A Flow that safely acquires (cancellable), uses, and asynchronously disposes of a resource that implements <see cref="IAsyncDisposable"/>.
+    /// </summary>
+    /// <remarks>
+    /// Prefer this overload when acquisition may take time and should honour cooperative cancellation.
+    /// </remarks>
+    /// <typeparam name="TResource">The type of the resource, which must be <see cref="IAsyncDisposable"/>.</typeparam>
+    /// <typeparam name="T">The type of value produced by the 'use' Flow.</typeparam>
+    /// <param name="acquireAsync">A cancellable asynchronous function to acquire the resource.</param>
+    /// <param name="use">A function that takes the acquired resource and returns the next <see cref="IFlow{T}"/> to execute.</param>
+    /// <returns>An <see cref="IFlow{T}"/> that, upon execution, will manage the lifecycle of the resource and run the 'use' Flow.</returns>
+    /// <example>
+    /// <code>
+    /// var flow = Flow.WithResource(
+    ///     acquireAsync: ct => OpenClientAsync(ct),
+    ///     use: client => Flow.Create(async ct => await client.GetAsync("/data", ct))
+    /// );
+    /// </code>
+    /// </example>
+    public static IFlow<T> WithResource<TResource, T>(Func<CancellationToken, Task<TResource>> acquireAsync, Func<TResource, IFlow<T>> use)
+        where TResource : IAsyncDisposable => new Ast.Resource.WithResourceCancellableAsync<TResource, T>(acquireAsync, use);
+
+    /// <summary>
     /// Contains delegate definitions for the various operations that can be passed to Flow operators.
     /// </summary>
     public static class Operations

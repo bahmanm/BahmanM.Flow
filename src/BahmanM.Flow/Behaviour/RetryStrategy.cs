@@ -36,6 +36,8 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
     public IFlow<T> ApplyTo<T>(Ast.Validate.CancellableAsync<T> node) => node;
 
     public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResource<TResource, T> node) where TResource : IDisposable => node;
+    public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResourceAsync<TResource, T> node) where TResource : IAsyncDisposable => node;
+    public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResourceCancellableAsync<TResource, T> node) where TResource : IAsyncDisposable => node;
 
     public IFlow<T> ApplyTo<T>(Ast.Create.Sync<T> node)
     {
