@@ -145,9 +145,41 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
     public IFlow<T> ApplyTo<T>(Ast.Validate.CancellableAsync<T> node) =>
         node with { Upstream = node.Upstream.AsNode().Apply(this) };
 
-    public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResource<TResource, T> node) where TResource : IDisposable => node;
-    public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResourceAsync<TResource, T> node) where TResource : IAsyncDisposable => node;
-    public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResourceCancellableAsync<TResource, T> node) where TResource : IAsyncDisposable => node;
+    public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResource<TResource, T> node) where TResource : IDisposable
+    {
+        Func<CancellationToken, Task<T>> newOperation = parentScopeToken =>
+            TimedScope.ExecuteAsync(
+                duration,
+                parentScopeToken,
+                childScopeToken => FlowEngine
+                    .ExecuteAsync(node, new Execution.Options(childScopeToken))
+                    .Unwrap());
+        return new Ast.Create.CancellableAsync<T>(newOperation);
+    }
+
+    public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResourceAsync<TResource, T> node) where TResource : IAsyncDisposable
+    {
+        Func<CancellationToken, Task<T>> newOperation = parentScopeToken =>
+            TimedScope.ExecuteAsync(
+                duration,
+                parentScopeToken,
+                childScopeToken => FlowEngine
+                    .ExecuteAsync(node, new Execution.Options(childScopeToken))
+                    .Unwrap());
+        return new Ast.Create.CancellableAsync<T>(newOperation);
+    }
+
+    public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResourceCancellableAsync<TResource, T> node) where TResource : IAsyncDisposable
+    {
+        Func<CancellationToken, Task<T>> newOperation = parentScopeToken =>
+            TimedScope.ExecuteAsync(
+                duration,
+                parentScopeToken,
+                childScopeToken => FlowEngine
+                    .ExecuteAsync(node, new Execution.Options(childScopeToken))
+                    .Unwrap());
+        return new Ast.Create.CancellableAsync<T>(newOperation);
+    }
 
     private static class TimedScope
     {
