@@ -83,4 +83,6 @@ internal interface IValidateInterpreter
 internal interface IResourceInterpreter
 {
     internal Task<Outcome<T>> Interpret<TResource, T>(Resource.WithResource<TResource, T> node) where TResource : IDisposable;
+    internal Task<Outcome<T>> Interpret<TResource, T>(Resource.WithResourceAsync<TResource, T> node) where TResource : IAsyncDisposable;
+    internal Task<Outcome<T>> Interpret<TResource, T>(Resource.WithResourceCancellableAsync<TResource, T> node) where TResource : IAsyncDisposable;
 }

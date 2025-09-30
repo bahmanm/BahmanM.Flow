@@ -128,8 +128,12 @@ internal class NodeInterpreters
         internal ResourceNodes(Ast.IInterpreter interpreter, Options options)
         {
             WithResource = new Execution.Resource.WithResource(interpreter, options);
+            WithResourceAsync = new Execution.Resource.WithResourceAsyncExecutor(interpreter, options);
+            WithResourceCancellableAsync = new Execution.Resource.WithResourceCancellableAsyncExecutor(interpreter, options);
         }
 
         internal Execution.Resource.WithResource WithResource { get; }
+        internal Execution.Resource.WithResourceAsyncExecutor WithResourceAsync { get; }
+        internal Execution.Resource.WithResourceCancellableAsyncExecutor WithResourceCancellableAsync { get; }
     }
 }

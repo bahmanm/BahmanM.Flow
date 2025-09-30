@@ -146,6 +146,8 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         node with { Upstream = node.Upstream.AsNode().Apply(this) };
 
     public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResource<TResource, T> node) where TResource : IDisposable => node;
+    public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResourceAsync<TResource, T> node) where TResource : IAsyncDisposable => node;
+    public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResourceCancellableAsync<TResource, T> node) where TResource : IAsyncDisposable => node;
 
     private static class TimedScope
     {

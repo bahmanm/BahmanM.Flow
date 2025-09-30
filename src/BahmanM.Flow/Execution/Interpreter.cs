@@ -42,6 +42,12 @@ internal class Interpreter : Ast.IInterpreter
     public Task<Outcome<T>> Interpret<TResource, T>(Ast.Resource.WithResource<TResource, T> node) where TResource : IDisposable =>
         NodeInterpreters.Resource.WithResource.Interpret(node);
 
+    public Task<Outcome<T>> Interpret<TResource, T>(Ast.Resource.WithResourceAsync<TResource, T> node) where TResource : IAsyncDisposable =>
+        NodeInterpreters.Resource.WithResourceAsync.Interpret(node);
+
+    public Task<Outcome<T>> Interpret<TResource, T>(Ast.Resource.WithResourceCancellableAsync<TResource, T> node) where TResource : IAsyncDisposable =>
+        NodeInterpreters.Resource.WithResourceCancellableAsync.Interpret(node);
+
     public Task<Outcome<T[]>> Interpret<T>(Ast.Primitive.All<T> node) => NodeInterpreters.Primitives.All.Interpret(node);
     public Task<Outcome<T>> Interpret<T>(Ast.Primitive.Any<T> node) => NodeInterpreters.Primitives.Any.Interpret(node);
     public Task<Outcome<T>> Interpret<T>(Ast.Primitive.Succeed<T> node) => NodeInterpreters.Primitives.Succeed.Interpret(node);
