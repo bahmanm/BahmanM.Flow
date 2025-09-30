@@ -23,7 +23,7 @@
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Title>Flow</Title>
-    <PackageIcon>../../docs/assets/img/flow-256x256.png</PackageIcon>
+    <PackageIcon>docs/assets/img/flow-256x256.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
