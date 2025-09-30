@@ -1,5 +1,7 @@
 using BahmanM.Flow.Support;
 
+using BahmanM.Flow.Behaviour.Support;
+
 namespace BahmanM.Flow.Behaviour;
 
 internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
@@ -179,53 +181,5 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
                     .ExecuteAsync(node, new Execution.Options(childScopeToken))
                     .Unwrap());
         return new Ast.Create.CancellableAsync<T>(newOperation);
-    }
-
-    private static class TimedScope
-    {
-        public static async Task<T> ExecuteAsync<T>(
-            TimeSpan thisScopeTimeout,
-            CancellationToken parentScopeToken,
-            Func<CancellationToken, Task<T>> work)
-        {
-            using var childScopeCts = CancellationTokenSource.CreateLinkedTokenSource(parentScopeToken);
-            var childScopeToken = childScopeCts.Token;
-            var workTask = StartWork(work, childScopeToken);
-
-            var timeoutExpiryTask = Task.Delay(thisScopeTimeout);
-            var parentScopeCancellationTask = Task.Delay(Timeout.InfiniteTimeSpan, parentScopeToken);
-
-            var firstCompletedTask = await Task.WhenAny(workTask, timeoutExpiryTask, parentScopeCancellationTask).ConfigureAwait(false);
-
-            if (firstCompletedTask == workTask)
-                return await workTask.ConfigureAwait(false);
-
-            TryCancel(childScopeCts);
-
-            if (firstCompletedTask == parentScopeCancellationTask)
-                throw new TaskCanceledException();
-
-            ObserveFaults(workTask);
-            throw new TimeoutException($"The operation has timed out after {thisScopeTimeout}.");
-        }
-
-        private static Task<T> StartWork<T>(Func<CancellationToken, Task<T>> w, CancellationToken ct)
-        {
-            try { return w(ct); }
-            catch (Exception ex) { return Task.FromException<T>(ex); }
-        }
-
-        private static void TryCancel(CancellationTokenSource cts)
-        {
-            try { cts.Cancel(); } catch { /* best-effort */ }
-        }
-
-        private static void ObserveFaults(Task t)
-        {
-            if (t.IsCompleted) return;
-            _ = t.ContinueWith(
-                tt => _ = tt.Exception,
-                TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnFaulted);
-        }
     }
 }
