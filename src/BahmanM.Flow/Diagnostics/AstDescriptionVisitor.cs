@@ -34,8 +34,10 @@ internal sealed class AstDescriptionVisitor
             return;
         }
         var nodeType = nodeObj.GetType();
-        var (label, typeArgs) = Classify(nodeType);
-        _writer.WriteLine(FormatLabel(label, typeArgs));
+        var (label, typeArgs, hint) = Classify(nodeType);
+        var line = FormatLabel(label, typeArgs);
+        if (!string.IsNullOrEmpty(hint)) line += $" {hint}";
+        _writer.WriteLine(line);
 
         // Traverse typical single-upstream edges without executing user code.
         // Many AST records expose either Upstream or Source.
@@ -113,59 +115,59 @@ internal sealed class AstDescriptionVisitor
         return t.Name;
     }
 
-    private static (string label, Type[] typeArgs) Classify(Type nodeType)
+    private static (string label, Type[] typeArgs, string? hint) Classify(Type nodeType)
     {
-        if (!nodeType.IsGenericType) return (nodeType.Name, Type.EmptyTypes);
+        if (!nodeType.IsGenericType) return (nodeType.Name, Type.EmptyTypes, null);
         var def = nodeType.GetGenericTypeDefinition();
         var args = nodeType.GetGenericArguments();
 
         // Primitive
-        if (def == typeof(BahmanM.Flow.Ast.Primitive.Succeed<>)) return ("Succeed", [args[0]]);
-        if (def == typeof(BahmanM.Flow.Ast.Primitive.Fail<>)) return ("Fail", [args[0]]);
-        if (def == typeof(BahmanM.Flow.Ast.Primitive.All<>)) return ("All", [args[0]]); // element type
-        if (def == typeof(BahmanM.Flow.Ast.Primitive.Any<>)) return ("Any", [args[0]]);
+        if (def == typeof(BahmanM.Flow.Ast.Primitive.Succeed<>)) return ("Succeed", [args[0]], null);
+        if (def == typeof(BahmanM.Flow.Ast.Primitive.Fail<>)) return ("Fail", [args[0]], null);
+        if (def == typeof(BahmanM.Flow.Ast.Primitive.All<>)) return ("All", [args[0]], null); // element type
+        if (def == typeof(BahmanM.Flow.Ast.Primitive.Any<>)) return ("Any", [args[0]], null);
 
         // Create
-        if (def == typeof(BahmanM.Flow.Ast.Create.Sync<>)) return ("Create.Sync", [args[0]]);
-        if (def == typeof(BahmanM.Flow.Ast.Create.Async<>)) return ("Create.Async", [args[0]]);
-        if (def == typeof(BahmanM.Flow.Ast.Create.CancellableAsync<>)) return ("Create.CancellableAsync", [args[0]]);
+        if (def == typeof(BahmanM.Flow.Ast.Create.Sync<>)) return ("Create.Sync", [args[0]], null);
+        if (def == typeof(BahmanM.Flow.Ast.Create.Async<>)) return ("Create.Async", [args[0]], null);
+        if (def == typeof(BahmanM.Flow.Ast.Create.CancellableAsync<>)) return ("Create.CancellableAsync", [args[0]], null);
 
         // Select
-        if (def == typeof(BahmanM.Flow.Ast.Select.Sync<,>)) return ("Select.Sync", [args[0], args[1]]);
-        if (def == typeof(BahmanM.Flow.Ast.Select.Async<,>)) return ("Select.Async", [args[0], args[1]]);
-        if (def == typeof(BahmanM.Flow.Ast.Select.CancellableAsync<,>)) return ("Select.CancellableAsync", [args[0], args[1]]);
+        if (def == typeof(BahmanM.Flow.Ast.Select.Sync<,>)) return ("Select.Sync", [args[0], args[1]], null);
+        if (def == typeof(BahmanM.Flow.Ast.Select.Async<,>)) return ("Select.Async", [args[0], args[1]], null);
+        if (def == typeof(BahmanM.Flow.Ast.Select.CancellableAsync<,>)) return ("Select.CancellableAsync", [args[0], args[1]], null);
 
         // Chain
-        if (def == typeof(BahmanM.Flow.Ast.Chain.Sync<,>)) return ("Chain.Sync", [args[0], args[1]]);
-        if (def == typeof(BahmanM.Flow.Ast.Chain.Async<,>)) return ("Chain.Async", [args[0], args[1]]);
-        if (def == typeof(BahmanM.Flow.Ast.Chain.CancellableAsync<,>)) return ("Chain.CancellableAsync", [args[0], args[1]]);
+        if (def == typeof(BahmanM.Flow.Ast.Chain.Sync<,>)) return ("Chain.Sync", [args[0], args[1]], null);
+        if (def == typeof(BahmanM.Flow.Ast.Chain.Async<,>)) return ("Chain.Async", [args[0], args[1]], null);
+        if (def == typeof(BahmanM.Flow.Ast.Chain.CancellableAsync<,>)) return ("Chain.CancellableAsync", [args[0], args[1]], null);
 
         // Recover
-        if (def == typeof(BahmanM.Flow.Ast.Recover.Sync<>)) return ("Recover.Sync", [args[0]]);
-        if (def == typeof(BahmanM.Flow.Ast.Recover.Async<>)) return ("Recover.Async", [args[0]]);
-        if (def == typeof(BahmanM.Flow.Ast.Recover.CancellableAsync<>)) return ("Recover.CancellableAsync", [args[0]]);
+        if (def == typeof(BahmanM.Flow.Ast.Recover.Sync<>)) return ("Recover.Sync", [args[0]], null);
+        if (def == typeof(BahmanM.Flow.Ast.Recover.Async<>)) return ("Recover.Async", [args[0]], null);
+        if (def == typeof(BahmanM.Flow.Ast.Recover.CancellableAsync<>)) return ("Recover.CancellableAsync", [args[0]], null);
 
         // Validate
-        if (def == typeof(BahmanM.Flow.Ast.Validate.Sync<>)) return ("Validate.Sync", [args[0]]);
-        if (def == typeof(BahmanM.Flow.Ast.Validate.Async<>)) return ("Validate.Async", [args[0]]);
-        if (def == typeof(BahmanM.Flow.Ast.Validate.CancellableAsync<>)) return ("Validate.CancellableAsync", [args[0]]);
+        if (def == typeof(BahmanM.Flow.Ast.Validate.Sync<>)) return ("Validate.Sync", [args[0]], null);
+        if (def == typeof(BahmanM.Flow.Ast.Validate.Async<>)) return ("Validate.Async", [args[0]], null);
+        if (def == typeof(BahmanM.Flow.Ast.Validate.CancellableAsync<>)) return ("Validate.CancellableAsync", [args[0]], null);
 
         // DoOnSuccess
-        if (def == typeof(BahmanM.Flow.Ast.DoOnSuccess.Sync<>)) return ("DoOnSuccess.Sync", [args[0]]);
-        if (def == typeof(BahmanM.Flow.Ast.DoOnSuccess.Async<>)) return ("DoOnSuccess.Async", [args[0]]);
-        if (def == typeof(BahmanM.Flow.Ast.DoOnSuccess.CancellableAsync<>)) return ("DoOnSuccess.CancellableAsync", [args[0]]);
+        if (def == typeof(BahmanM.Flow.Ast.DoOnSuccess.Sync<>)) return ("DoOnSuccess.Sync", [args[0]], null);
+        if (def == typeof(BahmanM.Flow.Ast.DoOnSuccess.Async<>)) return ("DoOnSuccess.Async", [args[0]], null);
+        if (def == typeof(BahmanM.Flow.Ast.DoOnSuccess.CancellableAsync<>)) return ("DoOnSuccess.CancellableAsync", [args[0]], null);
 
         // DoOnFailure
-        if (def == typeof(BahmanM.Flow.Ast.DoOnFailure.Sync<>)) return ("DoOnFailure.Sync", [args[0]]);
-        if (def == typeof(BahmanM.Flow.Ast.DoOnFailure.Async<>)) return ("DoOnFailure.Async", [args[0]]);
-        if (def == typeof(BahmanM.Flow.Ast.DoOnFailure.CancellableAsync<>)) return ("DoOnFailure.CancellableAsync", [args[0]]);
+        if (def == typeof(BahmanM.Flow.Ast.DoOnFailure.Sync<>)) return ("DoOnFailure.Sync", [args[0]], null);
+        if (def == typeof(BahmanM.Flow.Ast.DoOnFailure.Async<>)) return ("DoOnFailure.Async", [args[0]], null);
+        if (def == typeof(BahmanM.Flow.Ast.DoOnFailure.CancellableAsync<>)) return ("DoOnFailure.CancellableAsync", [args[0]], null);
 
         // Resources
-        if (def == typeof(BahmanM.Flow.Ast.Resource.WithResource<,>)) return ("Resource.WithResource", [args[0], args[1]]);
-        if (def == typeof(BahmanM.Flow.Ast.Resource.WithResourceAsync<,>)) return ("Resource.WithResourceAsync", [args[0], args[1]]);
-        if (def == typeof(BahmanM.Flow.Ast.Resource.WithResourceCancellableAsync<,>)) return ("Resource.WithResourceCancellableAsync", [args[0], args[1]]);
+        if (def == typeof(BahmanM.Flow.Ast.Resource.WithResource<,>)) return ("Resource.WithResource", [args[0], args[1]], "[acquire: sync, dispose: sync]");
+        if (def == typeof(BahmanM.Flow.Ast.Resource.WithResourceAsync<,>)) return ("Resource.WithResourceAsync", [args[0], args[1]], "[acquire: async, dispose: async]");
+        if (def == typeof(BahmanM.Flow.Ast.Resource.WithResourceCancellableAsync<,>)) return ("Resource.WithResourceCancellableAsync", [args[0], args[1]], "[acquire: cancellable, dispose: async]");
 
-        return (nodeType.Name, args);
+        return (nodeType.Name, args, null);
     }
 
     private static Type? ExtractIFlowValueType(Type flowType)

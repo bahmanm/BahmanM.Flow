@@ -125,27 +125,45 @@ public class DescribeTests
         Assert.Equal(expected, plan);
     }
 
-    [Fact(Skip = "To be completed after core visitor is in place")]
-    public void Describe_All_Prints_Indexed_Children()
-    {
-        var flow = Flow.All(Flow.Succeed("a"), Flow.Succeed("b"));
-        var plan = flow.DescribeToString();
-        Assert.Contains("All<String>", plan);
-    }
-
-    [Fact(Skip = "To be completed after resource rendering is in place")]
-    public void Describe_WithResource_Prints_Variant()
+    [Fact]
+    public void Describe_WithResource_Prints_Header_With_Mode()
     {
         var flow = Flow.WithResource(
             acquire: () => new Dummy(),
             use: _ => Flow.Succeed(1));
 
         var plan = flow.DescribeToString();
-        Assert.Contains("Resource.WithResource<Dummy, Int32>", plan);
+        var expected = string.Join("\n", new[]
+        {
+            "Resource.WithResource<Dummy, Int32> [acquire: sync, dispose: sync]",
+            ""
+        });
+        Assert.Equal(expected, plan);
+    }
+
+    [Fact]
+    public void Describe_WithResourceAsync_Prints_Header_With_Mode()
+    {
+        var flow = Flow.WithResource(
+            acquireAsync: () => Task.FromResult<IAsyncDisposable>(new AsyncDummy()),
+            use: _ => Flow.Succeed(1));
+
+        var plan = flow.DescribeToString();
+        var expected = string.Join("\n", new[]
+        {
+            "Resource.WithResourceAsync<IAsyncDisposable, Int32> [acquire: async, dispose: async]",
+            ""
+        });
+        Assert.Equal(expected, plan);
     }
 
     private sealed class Dummy : IDisposable
     {
         public void Dispose() { }
+    }
+
+    private sealed class AsyncDummy : IAsyncDisposable
+    {
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 }
