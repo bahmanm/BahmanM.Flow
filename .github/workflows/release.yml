@@ -30,6 +30,7 @@ on:
 permissions:
   contents: write
   packages: write
+  id-token: write
 
 concurrency:
   group: release
@@ -107,13 +108,20 @@ jobs:
           /p:SymbolPackageFormat=snupkg
           /p:Version=${{ steps.meta.outputs.version }}
 
+      - name: NuGet Login
+        if: inputs.publish-nuget == true
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ github.repository_owner }}
+
       - name: Publish to NuGet
         if: inputs.publish-nuget == true
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY || secrets.NUGET_API_KEY }}
         run: |
           if [ -z "$NUGET_API_KEY" ]; then
-            echo "ERROR: NUGET_API_KEY secret is not set" >&2
+            echo "ERROR: NUGET_API_KEY was not provided (neither via NuGet Trusted Publishing nor secrets.NUGET_API_KEY)" >&2
             exit 1
           fi
           dotnet nuget push './artifacts/*.nupkg' \
