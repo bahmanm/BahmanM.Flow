@@ -5,6 +5,7 @@ internal interface IDescriptionVisitor<TResult>
     TResult Visit<T>(Primitive.Succeed<T> node);
     TResult Visit<T>(Primitive.Fail<T> node);
     TResult Visit<T>(Primitive.All<T> node);
+    TResult Visit<T>(Primitive.Any<T> node);
     TResult Visit<T>(Create.Sync<T> node);
     TResult Visit<T>(Create.Async<T> node);
     TResult Visit<T>(Create.CancellableAsync<T> node);

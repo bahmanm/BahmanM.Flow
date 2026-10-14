@@ -15,6 +15,9 @@ internal sealed class DescriptionViewProjector : IDescriptionVisitor<Description
     public DescriptionView Visit<T>(Primitive.All<T> node) =>
         Create("All", node.Id, [typeof(T)], [], flows: node.Flows);
 
+    public DescriptionView Visit<T>(Primitive.Any<T> node) =>
+        Create("Any", node.Id, [typeof(T)], [], flows: node.Flows);
+
     public DescriptionView Visit<T>(Create.Sync<T> node) =>
         Create("Create.Sync", node.Id, [typeof(T)], [
             new DescriptionField("operation", OperationFormatter.Format(node.Operation))
