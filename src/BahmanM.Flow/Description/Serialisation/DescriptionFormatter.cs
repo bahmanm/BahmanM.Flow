@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 
 namespace BahmanM.Flow.Description.Serialisation;
@@ -7,46 +8,54 @@ internal static class DescriptionFormatter
 {
     internal static string Describe<T>(IDescription<T> description)
     {
+        var view = description.Accept(new DescriptionViewProjector());
         var output = new StringBuilder();
-        Append(description, output, string.Empty, isLast: true, isRoot: true, includeLabel: true);
+        Append(view, output, string.Empty, isRoot: true, includeLabel: true);
         return output.ToString().TrimEnd();
     }
 
     private static void Append(
-        IDescription description,
+        DescriptionView view,
         StringBuilder output,
         string prefix,
-        bool isLast,
         bool isRoot,
         bool includeLabel)
     {
         if (!isRoot && includeLabel)
-            output.Append(prefix).Append(isLast ? "└── " : "├── ");
+            output.Append(prefix).Append("└── ");
 
         if (includeLabel)
-            output.Append(description.OperatorDisplayName).Append(" [node: ").Append(description.ShortId).AppendLine("]");
+        {
+            output.Append(FormatOperatorName(view)).Append(" [node: ").Append(ShortId(view.Id)).AppendLine("]");
+        }
 
-        var entries = new List<(string Label, bool IsSource)>();
-        if (description is IOperation operation)
-            entries.Add(($"operation: {OperationFormatter.Format(operation.Operation)}", false));
-        if (description is IValue value)
-            entries.Add(($"value: {DescriptionValueFormatter.Format(value.Value, description.ValueType)}", false));
-        if (description is IFailure failure)
-            entries.Add(($"exception: {TypeFormatter.Format(failure.Exception.GetType())}", false));
-        if (description.Source is not null)
-            entries.Add(($"upstream: {description.Source.OperatorDisplayName} [node: {description.Source.ShortId}]", true));
+        var entries = view.Fields
+            .Select(field => (Label: $"{field.Label}: {field.Value}", Source: (DescriptionView?)null))
+            .ToList();
+        if (view.Upstream is not null)
+        {
+            entries.Add((
+                $"upstream: {FormatOperatorName(view.Upstream)} [node: {ShortId(view.Upstream.Id)}]",
+                view.Upstream));
+        }
 
         for (var index = 0; index < entries.Count; index++)
         {
             var entry = entries[index];
-            var last = index == entries.Count - 1;
-            output.Append(prefix).Append(last ? "└── " : "├── ").AppendLine(entry.Label);
+            var isLast = index == entries.Count - 1;
+            output.Append(prefix).Append(isLast ? "└── " : "├── ").AppendLine(entry.Label);
 
-            if (entry.IsSource)
+            if (entry.Source is not null)
             {
-                var childPrefix = prefix + (last ? "    " : "│   ");
-                Append(description.Source!, output, childPrefix, isLast: true, isRoot: true, includeLabel: false);
+                var childPrefix = prefix + (isLast ? "    " : "│   ");
+                Append(entry.Source, output, childPrefix, isRoot: true, includeLabel: false);
             }
         }
     }
+
+    private static string FormatOperatorName(DescriptionView view) =>
+        $"{view.OperatorName}<{string.Join(", ", view.TypeArguments.Select(TypeFormatter.Format))}>";
+
+    private static string ShortId(string id) =>
+        Convert.ToHexString(SHA1.HashData(Encoding.ASCII.GetBytes(id)))[..10].ToLowerInvariant();
 }

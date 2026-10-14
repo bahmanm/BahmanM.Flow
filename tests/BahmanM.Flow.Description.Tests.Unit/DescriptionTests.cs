@@ -215,11 +215,12 @@ public class DescriptionTests
         // Act
         var expectedShortId = Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(
             System.Text.Encoding.ASCII.GetBytes(description.Id)))[..10].ToLowerInvariant();
+        var descriptionText = DescriptionFormatter.Describe(description);
 
         // Assert
         Assert.Equal(32, description.Id.Length);
         Assert.All(description.Id, character => Assert.Contains(character, "0123456789abcdef"));
-        Assert.Equal(expectedShortId, description.ShortId);
+        Assert.Contains($"[node: {expectedShortId}]", descriptionText);
     }
 
     [Fact]
@@ -243,5 +244,213 @@ public class DescriptionTests
         Assert.Contains("Succeed<string>", result);
         Assert.Contains("value: \"Hello\"", result);
         Assert.Equal(0, invocationCount);
+    }
+
+    [Fact]
+    public async Task Validate_Sync_Description_Lowers_And_Defers_Both_Callbacks()
+    {
+        // Arrange
+        var predicateCalls = 0;
+        var factoryCalls = 0;
+        Func<int, bool> predicate = value =>
+        {
+            predicateCalls++;
+            return value > 0;
+        };
+        Func<int, Exception> exceptionFactory = _ =>
+        {
+            factoryCalls++;
+            return new InvalidOperationException("invalid");
+        };
+        var description = DescriptionFlowBuilder.Validate(
+            DescriptionFlowBuilder.Succeed(42), predicate, exceptionFactory);
+
+        // Act
+        _ = DescriptionFormatter.Describe(description);
+        var lowered = description.Lower();
+        var predicateCallsBeforeExecution = predicateCalls;
+        var factoryCallsBeforeExecution = factoryCalls;
+
+        var outcome = await FlowEngine.ExecuteAsync(description);
+        var expected = await FlowEngine.ExecuteAsync(
+            Flow.Succeed(42).Validate(_ => true, _ => new InvalidOperationException("unused")));
+
+        // Assert
+        Assert.Equal(expected, outcome);
+        Assert.Equal(Outcome.Success(42), outcome);
+        Assert.IsType<Ast.Validate.Sync<int>>(lowered);
+        Assert.Equal(0, predicateCallsBeforeExecution);
+        Assert.Equal(0, factoryCallsBeforeExecution);
+        Assert.Equal(1, predicateCalls);
+        Assert.Equal(0, factoryCalls);
+    }
+
+    [Fact]
+    public async Task Validate_Sync_Description_Preserves_Factory_Exception_And_Describes_Both_Callbacks()
+    {
+        // Arrange
+        var expected = new InvalidOperationException("invalid");
+        var description = DescriptionFlowBuilder.Validate(
+            DescriptionFlowBuilder.Succeed(0), _ => false, _ => expected);
+
+        // Act
+        var descriptionText = DescriptionFormatter.Describe(description);
+        var outcome = await FlowEngine.ExecuteAsync(description);
+        var expectedOutcome = await FlowEngine.ExecuteAsync(
+            Flow.Succeed(0).Validate(_ => false, _ => expected));
+
+        // Assert
+        Assert.Contains("predicate: lambda(int) -> bool", descriptionText);
+        Assert.Contains("exceptionFactory: lambda(int) -> Exception", descriptionText);
+        Assert.Equal(expectedOutcome, outcome);
+        Assert.Same(expected, Assert.IsType<Failure<int>>(outcome).Exception);
+        Assert.IsType<Ast.Validate.Sync<int>>(description.Lower());
+    }
+
+    [Fact]
+    public async Task Validate_Sync_Description_Passes_Through_Upstream_Failure_Without_Calling_Callbacks()
+    {
+        // Arrange
+        var expected = new InvalidOperationException("upstream");
+        var callbackCalls = 0;
+        var description = DescriptionFlowBuilder.Validate(
+            DescriptionFlowBuilder.Fail<int>(expected),
+            _ => { callbackCalls++; return true; },
+            _ => { callbackCalls++; return new Exception("unused"); });
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(description);
+        var expectedOutcome = await FlowEngine.ExecuteAsync(
+            Flow.Fail<int>(expected).Validate(_ => true, _ => new Exception("unused")));
+
+        // Assert
+        Assert.Equal(expectedOutcome, outcome);
+        Assert.Same(expected, Assert.IsType<Failure<int>>(outcome).Exception);
+        Assert.Equal(0, callbackCalls);
+    }
+
+    [Fact]
+    public async Task DoOnSuccess_Sync_Description_Runs_Action_And_Preserves_Success()
+    {
+        // Arrange
+        var actionCalls = 0;
+        Flow.Operations.DoOnSuccess.Sync<int> action = value =>
+        {
+            Assert.Equal(42, value);
+            actionCalls++;
+        };
+        var description = DescriptionFlowBuilder.DoOnSuccess(DescriptionFlowBuilder.Succeed(42), action);
+
+        // Act
+        var descriptionText = DescriptionFormatter.Describe(description);
+        var callsBeforeExecution = actionCalls;
+        var lowered = description.Lower();
+        var outcome = await FlowEngine.ExecuteAsync(description);
+        var expectedOutcome = await FlowEngine.ExecuteAsync(
+            Flow.Succeed(42).DoOnSuccess((Flow.Operations.DoOnSuccess.Sync<int>)(_ => { })));
+
+        // Assert
+        Assert.Equal(expectedOutcome, outcome);
+        Assert.Equal(Outcome.Success(42), outcome);
+        Assert.Equal(0, callsBeforeExecution);
+        Assert.IsType<Ast.DoOnSuccess.Sync<int>>(lowered);
+        Assert.Equal(1, actionCalls);
+        Assert.Contains("action: lambda(int) -> void", descriptionText);
+    }
+
+    [Fact]
+    public async Task DoOnSuccess_Sync_Description_Turns_Action_Exception_Into_Failure()
+    {
+        // Arrange
+        var expected = new InvalidOperationException("action");
+        Flow.Operations.DoOnSuccess.Sync<int> action = _ => throw expected;
+        var description = DescriptionFlowBuilder.DoOnSuccess(DescriptionFlowBuilder.Succeed(42), action);
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(description);
+        var expectedOutcome = await FlowEngine.ExecuteAsync(
+            Flow.Succeed(42).DoOnSuccess((Flow.Operations.DoOnSuccess.Sync<int>)(_ => throw expected)));
+
+        // Assert
+        Assert.Equal(expectedOutcome, outcome);
+        Assert.Same(expected, Assert.IsType<Failure<int>>(outcome).Exception);
+    }
+
+    [Fact]
+    public async Task DoOnSuccess_Sync_Description_Skips_Action_And_Preserves_Upstream_Failure()
+    {
+        // Arrange
+        var expected = new InvalidOperationException("upstream");
+        var actionCalls = 0;
+        Flow.Operations.DoOnSuccess.Sync<int> action = _ => actionCalls++;
+        var description = DescriptionFlowBuilder.DoOnSuccess(DescriptionFlowBuilder.Fail<int>(expected), action);
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(description);
+        var expectedOutcome = await FlowEngine.ExecuteAsync(
+            Flow.Fail<int>(expected).DoOnSuccess((Flow.Operations.DoOnSuccess.Sync<int>)(_ => { })));
+
+        // Assert
+        Assert.Equal(expectedOutcome, outcome);
+        Assert.Same(expected, Assert.IsType<Failure<int>>(outcome).Exception);
+        Assert.Equal(0, actionCalls);
+    }
+
+    [Fact]
+    public async Task DoOnFailure_Sync_Description_Runs_Action_And_Preserves_Original_Failure()
+    {
+        // Arrange
+        var expected = new InvalidOperationException("upstream");
+        Exception? observed = null;
+        Flow.Operations.DoOnFailure.Sync action = exception => observed = exception;
+        var description = DescriptionFlowBuilder.DoOnFailure(DescriptionFlowBuilder.Fail<int>(expected), action);
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(description);
+        var expectedOutcome = await FlowEngine.ExecuteAsync(
+            Flow.Fail<int>(expected).DoOnFailure((Flow.Operations.DoOnFailure.Sync)(_ => { })));
+
+        // Assert
+        Assert.Same(expected, observed);
+        Assert.Equal(expectedOutcome, outcome);
+        Assert.Same(expected, Assert.IsType<Failure<int>>(outcome).Exception);
+        Assert.IsType<Ast.DoOnFailure.Sync<int>>(description.Lower());
+    }
+
+    [Fact]
+    public async Task DoOnFailure_Sync_Description_Swallows_Action_Exception()
+    {
+        // Arrange
+        var expected = new InvalidOperationException("upstream");
+        Flow.Operations.DoOnFailure.Sync action = _ => throw new Exception("observer");
+        var description = DescriptionFlowBuilder.DoOnFailure(DescriptionFlowBuilder.Fail<int>(expected), action);
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(description);
+        var expectedOutcome = await FlowEngine.ExecuteAsync(
+            Flow.Fail<int>(expected).DoOnFailure((Flow.Operations.DoOnFailure.Sync)(_ => throw new Exception("observer"))));
+
+        // Assert
+        Assert.Equal(expectedOutcome, outcome);
+        Assert.Same(expected, Assert.IsType<Failure<int>>(outcome).Exception);
+    }
+
+    [Fact]
+    public async Task DoOnFailure_Sync_Description_Skips_Action_And_Preserves_Upstream_Success()
+    {
+        // Arrange
+        var actionCalls = 0;
+        Flow.Operations.DoOnFailure.Sync action = _ => actionCalls++;
+        var description = DescriptionFlowBuilder.DoOnFailure(DescriptionFlowBuilder.Succeed(42), action);
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(description);
+        var expectedOutcome = await FlowEngine.ExecuteAsync(
+            Flow.Succeed(42).DoOnFailure((Flow.Operations.DoOnFailure.Sync)(_ => { })));
+
+        // Assert
+        Assert.Equal(expectedOutcome, outcome);
+        Assert.Equal(Outcome.Success(42), outcome);
+        Assert.Equal(0, actionCalls);
     }
 }

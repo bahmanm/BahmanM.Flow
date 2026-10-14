@@ -1,10 +1,9 @@
 namespace BahmanM.Flow.Description.Create;
 
 internal sealed record CancellableAsync<T>(Flow.Operations.Create.CancellableAsync<T> Operation)
-    : Node<T>("Create.CancellableAsync"), IOperation
+    : Node<T>
 {
-    Delegate IOperation.Operation => Operation;
-
+    public override TResult Accept<TResult>(IDescriptionVisitor<TResult> visitor) => visitor.Visit(this);
     public override Ast.INode<T> Lower() =>
         new Ast.Create.CancellableAsync<T>(cancellationToken => Operation(cancellationToken));
 }
