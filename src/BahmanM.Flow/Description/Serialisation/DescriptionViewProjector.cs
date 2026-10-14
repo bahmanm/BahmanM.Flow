@@ -48,14 +48,46 @@ internal sealed class DescriptionViewProjector : IDescriptionVisitor<Description
             new DescriptionField("exceptionFactory", OperationFormatter.Format(node.ExceptionFactory))
         ], node.Upstream);
 
+    public DescriptionView Visit<T>(Validate.Async<T> node) =>
+        Create("Validate.Async", node.Id, [typeof(T)], [
+            new DescriptionField("predicate", OperationFormatter.Format(node.PredicateAsync)),
+            new DescriptionField("exceptionFactory", OperationFormatter.Format(node.ExceptionFactory))
+        ], node.Upstream);
+
+    public DescriptionView Visit<T>(Validate.CancellableAsync<T> node) =>
+        Create("Validate.CancellableAsync", node.Id, [typeof(T)], [
+            new DescriptionField("predicate", OperationFormatter.Format(node.PredicateCancellableAsync)),
+            new DescriptionField("exceptionFactory", OperationFormatter.Format(node.ExceptionFactory))
+        ], node.Upstream);
+
     public DescriptionView Visit<T>(DoOnSuccess.Sync<T> node) =>
         Create("DoOnSuccess.Sync", node.Id, [typeof(T)], [
             new DescriptionField("action", OperationFormatter.Format(node.Action))
         ], node.Upstream);
 
+    public DescriptionView Visit<T>(DoOnSuccess.Async<T> node) =>
+        Create("DoOnSuccess.Async", node.Id, [typeof(T)], [
+            new DescriptionField("action", OperationFormatter.Format(node.AsyncAction))
+        ], node.Upstream);
+
+    public DescriptionView Visit<T>(DoOnSuccess.CancellableAsync<T> node) =>
+        Create("DoOnSuccess.CancellableAsync", node.Id, [typeof(T)], [
+            new DescriptionField("action", OperationFormatter.Format(node.AsyncAction))
+        ], node.Upstream);
+
     public DescriptionView Visit<T>(DoOnFailure.Sync<T> node) =>
         Create("DoOnFailure.Sync", node.Id, [typeof(T)], [
             new DescriptionField("action", OperationFormatter.Format(node.Action))
+        ], node.Upstream);
+
+    public DescriptionView Visit<T>(DoOnFailure.Async<T> node) =>
+        Create("DoOnFailure.Async", node.Id, [typeof(T)], [
+            new DescriptionField("action", OperationFormatter.Format(node.AsyncAction))
+        ], node.Upstream);
+
+    public DescriptionView Visit<T>(DoOnFailure.CancellableAsync<T> node) =>
+        Create("DoOnFailure.CancellableAsync", node.Id, [typeof(T)], [
+            new DescriptionField("action", OperationFormatter.Format(node.AsyncAction))
         ], node.Upstream);
 
     private DescriptionView Create(
