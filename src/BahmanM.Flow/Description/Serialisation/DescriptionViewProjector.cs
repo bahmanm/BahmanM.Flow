@@ -33,6 +33,12 @@ internal sealed class DescriptionViewProjector : IDescriptionVisitor<Description
             new DescriptionField("operation", OperationFormatter.Format(node.Operation))
         ]);
 
+    public DescriptionView Visit<T>(Retry.Retry<T> node) =>
+        Create("Retry", node.Id, [typeof(T)], [
+            new DescriptionField("maxAttempts", node.MaxAttempts.ToString()),
+            new DescriptionField("nonRetryableExceptions", string.Join(", ", node.NonRetryableExceptions.Select(TypeFormatter.Format)))
+        ], node.Source);
+
     public DescriptionView Visit<TIn, TOut>(Select.Sync<TIn, TOut> node) =>
         Create("Select.Sync", node.Id, [typeof(TIn), typeof(TOut)], [
             new DescriptionField("operation", OperationFormatter.Format(node.Operation))

@@ -21,6 +21,17 @@ internal static class DescriptionFlowBuilder
     internal static Description.IDescription<T> Create<T>(Flow.Operations.Create.CancellableAsync<T> operation) =>
         new Description.Create.CancellableAsync<T>(operation);
 
+    internal static Description.IDescription<T> Retry<T>(
+        Description.IDescription<T> source,
+        int maxAttempts) =>
+        new Description.Retry.Retry<T>(source, maxAttempts, [typeof(TimeoutException)]);
+
+    internal static Description.IDescription<T> Retry<T>(
+        Description.IDescription<T> source,
+        int maxAttempts,
+        params Type[] nonRetryableExceptions) =>
+        new Description.Retry.Retry<T>(source, maxAttempts, nonRetryableExceptions);
+
     internal static Description.IDescription<TOut> Select<TIn, TOut>(
         Description.IDescription<TIn> upstream,
         Flow.Operations.Select.Sync<TIn, TOut> operation) =>
