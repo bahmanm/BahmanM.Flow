@@ -90,6 +90,16 @@ internal sealed class DescriptionViewProjector : IDescriptionVisitor<Description
             new DescriptionField("action", OperationFormatter.Format(node.AsyncAction))
         ], node.Upstream);
 
+    public DescriptionView Visit<TIn, TOut>(Chain.Sync<TIn, TOut> node) =>
+        Create("Chain.Sync", node.Id, [typeof(TIn), typeof(TOut)], [
+            new DescriptionField("operation", OperationFormatter.Format(node.Operation))
+        ], node.Upstream);
+
+    public DescriptionView Visit<T>(Recover.Sync<T> node) =>
+        Create("Recover.Sync", node.Id, [typeof(T)], [
+            new DescriptionField("recover", OperationFormatter.Format(node.Recover))
+        ], node.Source);
+
     private DescriptionView Create(
         string operatorName,
         string id,

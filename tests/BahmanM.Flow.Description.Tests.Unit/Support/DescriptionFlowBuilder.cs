@@ -77,4 +77,14 @@ internal static class DescriptionFlowBuilder
         Description.IDescription<T> upstream,
         Flow.Operations.DoOnFailure.CancellableAsync action) =>
         new Description.DoOnFailure.CancellableAsync<T>(upstream, action);
+
+    internal static Description.IDescription<TOut> Chain<TIn, TOut>(
+        Description.IDescription<TIn> upstream,
+        Flow.Operations.Chain.Sync<TIn, TOut> operation) =>
+        new Description.Chain.Sync<TIn, TOut>(upstream, operation);
+
+    internal static Description.IDescription<T> Recover<T>(
+        Description.IDescription<T> source,
+        Flow.Operations.Recover.Sync<T> recover) =>
+        new Description.Recover.Sync<T>(source, recover);
 }
