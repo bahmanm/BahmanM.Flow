@@ -56,6 +56,84 @@ public class DescriptionTests
     }
 
     [Fact]
+    public async Task Create_Async_Description_Defers_Operation_Until_Execution()
+    {
+        // Arrange
+        var invocationCount = 0;
+        Flow.Operations.Create.Async<int> operation = () => Task.FromResult(++invocationCount);
+        var description = DescriptionFlowBuilder.Create(operation);
+
+        // Act
+        var invocationCountBeforeExecution = invocationCount;
+        var outcome = await FlowEngine.ExecuteAsync(description);
+
+        // Assert
+        Assert.Equal(0, invocationCountBeforeExecution);
+        Assert.Equal(1, Assert.IsType<Success<int>>(outcome).Value);
+        Assert.Equal(1, invocationCount);
+        Assert.IsType<Ast.Create.Async<int>>(description.Lower());
+    }
+
+    [Fact]
+    public async Task Create_Async_Description_Captures_Operation_Exception()
+    {
+        // Arrange
+        var exception = new InvalidOperationException("async failure");
+        Flow.Operations.Create.Async<int> operation = () => Task.FromException<int>(exception);
+        var description = DescriptionFlowBuilder.Create(operation);
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(description);
+
+        // Assert
+        Assert.Same(exception, Assert.IsType<Failure<int>>(outcome).Exception);
+    }
+
+    [Fact]
+    public async Task Create_CancellableAsync_Description_Passes_Execution_Cancellation_Token()
+    {
+        // Arrange
+        using var cancellationTokenSource = new CancellationTokenSource();
+        var observedToken = CancellationToken.None;
+        Flow.Operations.Create.CancellableAsync<int> operation = cancellationToken =>
+        {
+            observedToken = cancellationToken;
+            return Task.FromResult(1);
+        };
+        var description = DescriptionFlowBuilder.Create(operation);
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(description, new Execution.Options(cancellationTokenSource.Token));
+
+        // Assert
+        Assert.Equal(cancellationTokenSource.Token, observedToken);
+        Assert.Equal(1, Assert.IsType<Success<int>>(outcome).Value);
+        Assert.IsType<Ast.Create.CancellableAsync<int>>(description.Lower());
+    }
+
+    [Fact]
+    public async Task Create_CancellableAsync_Description_Does_Not_Invoke_Operation_When_Already_Cancelled()
+    {
+        // Arrange
+        using var cancellationTokenSource = new CancellationTokenSource();
+        cancellationTokenSource.Cancel();
+        var invocationCount = 0;
+        Flow.Operations.Create.CancellableAsync<int> operation = _ =>
+        {
+            invocationCount++;
+            return Task.FromResult(1);
+        };
+        var description = DescriptionFlowBuilder.Create(operation);
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(description, new Execution.Options(cancellationTokenSource.Token));
+
+        // Assert
+        Assert.IsAssignableFrom<OperationCanceledException>(Assert.IsType<Failure<int>>(outcome).Exception);
+        Assert.Equal(0, invocationCount);
+    }
+
+    [Fact]
     public async Task Select_Description_Lowers_And_Defers_Operation()
     {
         // Arrange
@@ -78,6 +156,54 @@ public class DescriptionTests
         Assert.Equal(expected, actual);
         Assert.Equal(1, invocationCount);
         Assert.IsType<Ast.Select.Sync<string, int>>(description.Lower());
+    }
+
+    [Fact]
+    public async Task Select_Async_Description_Lowers_And_Defers_Operation()
+    {
+        // Arrange
+        var invocationCount = 0;
+        Flow.Operations.Select.Async<string, int> operation = value =>
+        {
+            invocationCount++;
+            return Task.FromResult(value.Length);
+        };
+        var description = DescriptionFlowBuilder.Select(DescriptionFlowBuilder.Succeed("Hello"), operation);
+        Flow.Operations.Select.Async<string, int> expectedOperation = value => Task.FromResult(value.Length);
+        var expectedFlow = Flow.Succeed("Hello").Select(expectedOperation);
+
+        // Act
+        var invocationCountBeforeExecution = invocationCount;
+        var actual = await FlowEngine.ExecuteAsync(description);
+        var expected = await FlowEngine.ExecuteAsync(expectedFlow);
+
+        // Assert
+        Assert.Equal(0, invocationCountBeforeExecution);
+        Assert.Equal(expected, actual);
+        Assert.Equal(1, invocationCount);
+        Assert.IsType<Ast.Select.Async<string, int>>(description.Lower());
+    }
+
+    [Fact]
+    public async Task Select_CancellableAsync_Description_Passes_Execution_Cancellation_Token()
+    {
+        // Arrange
+        using var cancellationTokenSource = new CancellationTokenSource();
+        var observedToken = CancellationToken.None;
+        Flow.Operations.Select.CancellableAsync<string, int> operation = (value, cancellationToken) =>
+        {
+            observedToken = cancellationToken;
+            return Task.FromResult(value.Length);
+        };
+        var description = DescriptionFlowBuilder.Select(DescriptionFlowBuilder.Succeed("Hello"), operation);
+
+        // Act
+        var outcome = await FlowEngine.ExecuteAsync(description, new Execution.Options(cancellationTokenSource.Token));
+
+        // Assert
+        Assert.Equal(cancellationTokenSource.Token, observedToken);
+        Assert.Equal(5, Assert.IsType<Success<int>>(outcome).Value);
+        Assert.IsType<Ast.Select.CancellableAsync<string, int>>(description.Lower());
     }
 
     [Fact]

@@ -68,7 +68,7 @@ public static class FlowEngine
     internal static Task<Outcome<T>> ExecuteAsync<T>(Description.IDescription<T> description) =>
         ExecuteAsync(description, new Execution.Options(CancellationToken.None));
 
-    private static Task<Outcome<T>> ExecuteAsync<T>(
+    internal static Task<Outcome<T>> ExecuteAsync<T>(
         Description.IDescription<T> description,
         Execution.Options options) =>
         description.Lower().Accept(new Execution.Interpreter(options));
