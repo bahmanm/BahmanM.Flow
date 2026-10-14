@@ -32,12 +32,9 @@ internal static class DescriptionFormatter
         var entries = view.Fields
             .Select(field => (Label: $"{field.Label}: {field.Value}", Source: (DescriptionView?)null))
             .ToList();
-        if (view.Upstream is not null)
-        {
-            entries.Add((
-                $"upstream: {FormatOperatorName(view.Upstream)} [node: {ShortId(view.Upstream.Id)}]",
-                view.Upstream));
-        }
+        entries.AddRange(view.Children.Select(child => (
+            $"{child.Label}: {FormatOperatorName(child.View)} [node: {ShortId(child.View.Id)}]",
+            (DescriptionView?)child.View)));
 
         for (var index = 0; index < entries.Count; index++)
         {

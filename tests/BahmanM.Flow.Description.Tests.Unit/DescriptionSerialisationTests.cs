@@ -27,4 +27,34 @@ public class DescriptionSerialisationTests
         Assert.Contains("value: \"Hello\"", result);
         Assert.Equal(0, invocationCount);
     }
+
+    [Fact]
+    public void Describe_All_Shows_Ordered_Flow_Children_Without_Executing_Them()
+    {
+        // Arrange
+        var invocationCount = 0;
+        Flow.Operations.Create.Sync<int> first = () =>
+        {
+            invocationCount++;
+            return 1;
+        };
+        Flow.Operations.Create.Sync<int> second = () =>
+        {
+            invocationCount++;
+            return 2;
+        };
+        var description = DescriptionFlowBuilder.All(
+            DescriptionFlowBuilder.Create(first),
+            DescriptionFlowBuilder.Create(second));
+
+        // Act
+        var result = DescriptionFormatter.Describe(description);
+
+        // Assert
+        Assert.Contains("All<int>", result);
+        Assert.Contains("flow[0]: Create.Sync<int>", result);
+        Assert.Contains("flow[1]: Create.Sync<int>", result);
+        Assert.True(result.IndexOf("flow[0]", StringComparison.Ordinal) < result.IndexOf("flow[1]", StringComparison.Ordinal));
+        Assert.Equal(0, invocationCount);
+    }
 }

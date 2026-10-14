@@ -12,6 +12,9 @@ internal sealed class DescriptionViewProjector : IDescriptionVisitor<Description
             new DescriptionField("exception", TypeFormatter.Format(node.Exception.GetType()))
         ]);
 
+    public DescriptionView Visit<T>(Primitive.All<T> node) =>
+        Create("All", node.Id, [typeof(T)], [], flows: node.Flows);
+
     public DescriptionView Visit<T>(Create.Sync<T> node) =>
         Create("Create.Sync", node.Id, [typeof(T)], [
             new DescriptionField("operation", OperationFormatter.Format(node.Operation))
@@ -125,11 +128,14 @@ internal sealed class DescriptionViewProjector : IDescriptionVisitor<Description
         string id,
         IReadOnlyList<Type> typeArguments,
         IReadOnlyList<DescriptionField> fields,
-        IDescription? upstream = null) =>
+        IDescription? upstream = null,
+        IReadOnlyList<IDescription>? flows = null) =>
         new(
             operatorName,
             id,
             typeArguments,
             fields,
-            upstream?.Accept(this));
+            upstream is not null
+                ? [new DescriptionChild("upstream", upstream.Accept(this))]
+                : flows?.Select((flow, index) => new DescriptionChild($"flow[{index}]", flow.Accept(this))).ToArray() ?? []);
 }

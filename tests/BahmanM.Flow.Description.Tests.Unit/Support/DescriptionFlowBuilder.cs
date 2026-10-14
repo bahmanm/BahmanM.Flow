@@ -6,6 +6,9 @@ internal static class DescriptionFlowBuilder
 
     internal static Description.IDescription<T> Fail<T>(Exception exception) => new Description.Primitive.Fail<T>(exception);
 
+    internal static Description.IDescription<T[]> All<T>(params Description.IDescription<T>[] flows) =>
+        new Description.Primitive.All<T>(flows);
+
     internal static Description.IDescription<T> Create<T>(Flow.Operations.Create.Sync<T> operation) =>
         new Description.Create.Sync<T>(operation);
 

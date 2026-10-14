@@ -5,6 +5,8 @@ internal sealed record DescriptionView(
     string Id,
     IReadOnlyList<Type> TypeArguments,
     IReadOnlyList<DescriptionField> Fields,
-    DescriptionView? Upstream);
+    IReadOnlyList<DescriptionChild> Children);
 
 internal sealed record DescriptionField(string Label, string Value);
+
+internal sealed record DescriptionChild(string Label, DescriptionView View);
