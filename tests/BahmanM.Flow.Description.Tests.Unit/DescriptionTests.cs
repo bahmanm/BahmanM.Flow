@@ -1,7 +1,7 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Tests.Unit.Support;
+using BahmanM.Flow.Description.Tests.Unit.Support;
 
-namespace BahmanM.Flow.Tests.Unit;
+namespace BahmanM.Flow.Description.Tests.Unit;
 
 public class DescriptionTests
 {

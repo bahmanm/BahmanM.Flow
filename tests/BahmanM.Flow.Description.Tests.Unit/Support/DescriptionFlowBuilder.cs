@@ -1,4 +1,4 @@
-namespace BahmanM.Flow.Tests.Unit.Support;
+namespace BahmanM.Flow.Description.Tests.Unit.Support;
 
 internal static class DescriptionFlowBuilder
 {
