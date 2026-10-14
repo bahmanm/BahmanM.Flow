@@ -27,7 +27,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="BahmanM.Flow.Tests.Unit" />
+    <InternalsVisibleTo Include="BahmanM.Flow.Description.Tests.Unit" />
     <InternalsVisibleTo Include="BahmanM.Flow.Tests.UserAcceptance" />
     <InternalsVisibleTo Include="BahmanM.Flow.Tests.Support" />
   </ItemGroup>
