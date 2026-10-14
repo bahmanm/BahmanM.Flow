@@ -95,8 +95,28 @@ internal sealed class DescriptionViewProjector : IDescriptionVisitor<Description
             new DescriptionField("operation", OperationFormatter.Format(node.Operation))
         ], node.Upstream);
 
+    public DescriptionView Visit<TIn, TOut>(Chain.Async<TIn, TOut> node) =>
+        Create("Chain.Async", node.Id, [typeof(TIn), typeof(TOut)], [
+            new DescriptionField("operation", OperationFormatter.Format(node.Operation))
+        ], node.Upstream);
+
+    public DescriptionView Visit<TIn, TOut>(Chain.CancellableAsync<TIn, TOut> node) =>
+        Create("Chain.CancellableAsync", node.Id, [typeof(TIn), typeof(TOut)], [
+            new DescriptionField("operation", OperationFormatter.Format(node.Operation))
+        ], node.Upstream);
+
     public DescriptionView Visit<T>(Recover.Sync<T> node) =>
         Create("Recover.Sync", node.Id, [typeof(T)], [
+            new DescriptionField("recover", OperationFormatter.Format(node.Recover))
+        ], node.Source);
+
+    public DescriptionView Visit<T>(Recover.Async<T> node) =>
+        Create("Recover.Async", node.Id, [typeof(T)], [
+            new DescriptionField("recover", OperationFormatter.Format(node.Recover))
+        ], node.Source);
+
+    public DescriptionView Visit<T>(Recover.CancellableAsync<T> node) =>
+        Create("Recover.CancellableAsync", node.Id, [typeof(T)], [
             new DescriptionField("recover", OperationFormatter.Format(node.Recover))
         ], node.Source);
 

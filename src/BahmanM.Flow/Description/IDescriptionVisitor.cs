@@ -20,5 +20,9 @@ internal interface IDescriptionVisitor<TResult>
     TResult Visit<T>(DoOnFailure.Async<T> node);
     TResult Visit<T>(DoOnFailure.CancellableAsync<T> node);
     TResult Visit<TIn, TOut>(Chain.Sync<TIn, TOut> node);
+    TResult Visit<TIn, TOut>(Chain.Async<TIn, TOut> node);
+    TResult Visit<TIn, TOut>(Chain.CancellableAsync<TIn, TOut> node);
     TResult Visit<T>(Recover.Sync<T> node);
+    TResult Visit<T>(Recover.Async<T> node);
+    TResult Visit<T>(Recover.CancellableAsync<T> node);
 }

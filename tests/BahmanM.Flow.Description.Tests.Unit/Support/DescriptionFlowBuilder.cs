@@ -83,8 +83,28 @@ internal static class DescriptionFlowBuilder
         Flow.Operations.Chain.Sync<TIn, TOut> operation) =>
         new Description.Chain.Sync<TIn, TOut>(upstream, operation);
 
+    internal static Description.IDescription<TOut> Chain<TIn, TOut>(
+        Description.IDescription<TIn> upstream,
+        Flow.Operations.Chain.Async<TIn, TOut> operation) =>
+        new Description.Chain.Async<TIn, TOut>(upstream, operation);
+
+    internal static Description.IDescription<TOut> Chain<TIn, TOut>(
+        Description.IDescription<TIn> upstream,
+        Flow.Operations.Chain.CancellableAsync<TIn, TOut> operation) =>
+        new Description.Chain.CancellableAsync<TIn, TOut>(upstream, operation);
+
     internal static Description.IDescription<T> Recover<T>(
         Description.IDescription<T> source,
         Flow.Operations.Recover.Sync<T> recover) =>
         new Description.Recover.Sync<T>(source, recover);
+
+    internal static Description.IDescription<T> Recover<T>(
+        Description.IDescription<T> source,
+        Flow.Operations.Recover.Async<T> recover) =>
+        new Description.Recover.Async<T>(source, recover);
+
+    internal static Description.IDescription<T> Recover<T>(
+        Description.IDescription<T> source,
+        Func<Exception, CancellationToken, Task<IFlow<T>>> recover) =>
+        new Description.Recover.CancellableAsync<T>(source, recover);
 }
