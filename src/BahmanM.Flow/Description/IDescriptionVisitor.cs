@@ -27,4 +27,7 @@ internal interface IDescriptionVisitor<TResult>
     TResult Visit<T>(Recover.Sync<T> node);
     TResult Visit<T>(Recover.Async<T> node);
     TResult Visit<T>(Recover.CancellableAsync<T> node);
+    TResult Visit<TResource, T>(Resource.WithResource<TResource, T> node) where TResource : IDisposable;
+    TResult Visit<TResource, T>(Resource.WithResourceAsync<TResource, T> node) where TResource : IAsyncDisposable;
+    TResult Visit<TResource, T>(Resource.WithResourceCancellableAsync<TResource, T> node) where TResource : IAsyncDisposable;
 }

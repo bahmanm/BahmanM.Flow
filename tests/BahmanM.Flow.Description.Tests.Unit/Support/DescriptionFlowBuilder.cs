@@ -113,4 +113,22 @@ internal static class DescriptionFlowBuilder
         Description.IDescription<T> source,
         Func<Exception, CancellationToken, Task<IFlow<T>>> recover) =>
         new Description.Recover.CancellableAsync<T>(source, recover);
+
+    internal static Description.IDescription<T> WithResource<TResource, T>(
+        Func<TResource> acquire,
+        Func<TResource, IFlow<T>> use)
+        where TResource : IDisposable =>
+        new Description.Resource.WithResource<TResource, T>(acquire, use);
+
+    internal static Description.IDescription<T> WithResource<TResource, T>(
+        Func<Task<TResource>> acquireAsync,
+        Func<TResource, IFlow<T>> use)
+        where TResource : IAsyncDisposable =>
+        new Description.Resource.WithResourceAsync<TResource, T>(acquireAsync, use);
+
+    internal static Description.IDescription<T> WithResource<TResource, T>(
+        Func<CancellationToken, Task<TResource>> acquireAsync,
+        Func<TResource, IFlow<T>> use)
+        where TResource : IAsyncDisposable =>
+        new Description.Resource.WithResourceCancellableAsync<TResource, T>(acquireAsync, use);
 }

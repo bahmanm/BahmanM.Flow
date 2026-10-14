@@ -126,6 +126,27 @@ internal sealed class DescriptionViewProjector : IDescriptionVisitor<Description
             new DescriptionField("recover", OperationFormatter.Format(node.Recover))
         ], node.Source);
 
+    public DescriptionView Visit<TResource, T>(Resource.WithResource<TResource, T> node)
+        where TResource : IDisposable =>
+        Create("WithResource.Sync", node.Id, [typeof(TResource), typeof(T)], [
+            new DescriptionField("acquire", OperationFormatter.Format(node.Acquire)),
+            new DescriptionField("use", OperationFormatter.Format(node.Use))
+        ]);
+
+    public DescriptionView Visit<TResource, T>(Resource.WithResourceAsync<TResource, T> node)
+        where TResource : IAsyncDisposable =>
+        Create("WithResource.Async", node.Id, [typeof(TResource), typeof(T)], [
+            new DescriptionField("acquire", OperationFormatter.Format(node.AcquireAsync)),
+            new DescriptionField("use", OperationFormatter.Format(node.Use))
+        ]);
+
+    public DescriptionView Visit<TResource, T>(Resource.WithResourceCancellableAsync<TResource, T> node)
+        where TResource : IAsyncDisposable =>
+        Create("WithResource.CancellableAsync", node.Id, [typeof(TResource), typeof(T)], [
+            new DescriptionField("acquire", OperationFormatter.Format(node.AcquireAsync)),
+            new DescriptionField("use", OperationFormatter.Format(node.Use))
+        ]);
+
     private DescriptionView Create(
         string operatorName,
         string id,
