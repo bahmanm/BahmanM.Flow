@@ -24,18 +24,18 @@ internal static class DescriptionFlowBuilder
     internal static Description.IDescription<T> Retry<T>(
         Description.IDescription<T> source,
         int maxAttempts) =>
-        new Description.Retry.Retry<T>(source, maxAttempts, [typeof(TimeoutException)]);
+        new Description.Behaviour.Retry.Retry<T>(source, maxAttempts, [typeof(TimeoutException)]);
 
     internal static Description.IDescription<T> Retry<T>(
         Description.IDescription<T> source,
         int maxAttempts,
         params Type[] nonRetryableExceptions) =>
-        new Description.Retry.Retry<T>(source, maxAttempts, nonRetryableExceptions);
+        new Description.Behaviour.Retry.Retry<T>(source, maxAttempts, nonRetryableExceptions);
 
     internal static Description.IDescription<T> Timeout<T>(
         Description.IDescription<T> source,
         TimeSpan duration) =>
-        new Description.Behaviour.Timeout<T>(source, duration);
+        new Description.Behaviour.Timeout.Timeout<T>(source, duration);
 
     internal static Description.IDescription<TOut> Select<TIn, TOut>(
         Description.IDescription<TIn> upstream,

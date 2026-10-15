@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using BahmanM.Flow.Behaviour;
 using BahmanM.Flow.Support;
 
-namespace BahmanM.Flow.Description.Retry;
+namespace BahmanM.Flow.Description.Behaviour.Retry;
 
 internal sealed record Retry<T> : Node<T>
 {

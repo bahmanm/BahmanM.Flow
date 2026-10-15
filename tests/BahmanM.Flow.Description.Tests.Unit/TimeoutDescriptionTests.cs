@@ -39,6 +39,103 @@ public class TimeoutDescriptionTests
     }
 
     [Fact]
+    public async Task Timeout_AsyncDescription_DefersOperation_AndTimesOutDuringExecution()
+    {
+        // Arrange
+        var invocationCount = 0;
+        var operationStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var operationCompleted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Flow.Operations.Create.Async<int> operation = async () =>
+        {
+            invocationCount++;
+            operationStarted.TrySetResult();
+            await Task.Delay(TimeSpan.FromMilliseconds(300));
+            operationCompleted.TrySetResult();
+            return 42;
+        };
+        var description = DescriptionFlowBuilder.Timeout(
+            DescriptionFlowBuilder.Create(operation),
+            TimeSpan.FromMilliseconds(100));
+
+        // Act
+        var descriptionText = DescriptionFormatter.Describe(description);
+        var lowered = description.Lower();
+        var invocationCountBeforeExecution = invocationCount;
+        var execution = FlowEngine.ExecuteAsync(description);
+        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var outcome = await execution;
+        await operationCompleted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+        // Assert
+        Assert.Contains("Timeout<int>", descriptionText);
+        Assert.Contains("Create.Async<int>", descriptionText);
+        Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
+        Assert.Equal(0, invocationCountBeforeExecution);
+        Assert.Equal(1, invocationCount);
+        Assert.True(operationCompleted.Task.IsCompletedSuccessfully);
+        Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(outcome).Exception);
+    }
+
+    [Fact]
+    public async Task Timeout_CancellableAsyncDescription_LinksExternalCancellationToOperationToken()
+    {
+        // Arrange
+        using var externalCancellation = new CancellationTokenSource();
+        var operationStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var operationToken = CancellationToken.None;
+        Flow.Operations.Create.CancellableAsync<int> operation = async token =>
+        {
+            operationToken = token;
+            operationStarted.TrySetResult();
+            await Task.Delay(global::System.Threading.Timeout.InfiniteTimeSpan, token);
+            return 42;
+        };
+        var description = DescriptionFlowBuilder.Timeout(
+            DescriptionFlowBuilder.Create(operation),
+            TimeSpan.FromSeconds(5));
+
+        // Act
+        var execution = FlowEngine.ExecuteAsync(
+            description,
+            new Execution.Options(externalCancellation.Token));
+        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await externalCancellation.CancelAsync();
+        var outcome = await execution;
+
+        // Assert
+        Assert.NotEqual(externalCancellation.Token, operationToken);
+        Assert.True(operationToken.IsCancellationRequested);
+        Assert.IsAssignableFrom<OperationCanceledException>(Assert.IsType<Failure<int>>(outcome).Exception);
+    }
+
+    [Fact]
+    public async Task Timeout_CancellableAsyncDescription_CancelsOperationTokenOnTimeout()
+    {
+        // Arrange
+        var operationStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var operationToken = CancellationToken.None;
+        Flow.Operations.Create.CancellableAsync<int> operation = async token =>
+        {
+            operationToken = token;
+            operationStarted.TrySetResult();
+            await Task.Delay(global::System.Threading.Timeout.InfiniteTimeSpan, token);
+            return 42;
+        };
+        var description = DescriptionFlowBuilder.Timeout(
+            DescriptionFlowBuilder.Create(operation),
+            TimeSpan.FromMilliseconds(100));
+
+        // Act
+        var execution = FlowEngine.ExecuteAsync(description);
+        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var outcome = await execution;
+
+        // Assert
+        Assert.True(operationToken.IsCancellationRequested);
+        Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(outcome).Exception);
+    }
+
+    [Fact]
     public async Task LoweredTimeout_CanBeExecutedRepeatedly_WithIndependentTimeoutScopes()
     {
         // Arrange

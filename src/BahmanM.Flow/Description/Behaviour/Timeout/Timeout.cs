@@ -1,7 +1,7 @@
 using BahmanM.Flow.Behaviour;
 using BahmanM.Flow.Support;
 
-namespace BahmanM.Flow.Description.Behaviour;
+namespace BahmanM.Flow.Description.Behaviour.Timeout;
 
 internal sealed record Timeout<T> : Node<T>
 {
