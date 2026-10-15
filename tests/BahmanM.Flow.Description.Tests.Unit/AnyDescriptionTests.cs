@@ -46,7 +46,7 @@ public class AnyDescriptionTests
             MarkStarted();
             try
             {
-                await Task.Delay(global::System.Threading.Timeout.InfiniteTimeSpan, cancellationToken);
+                await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
                 return -1;
             }
             catch (TaskCanceledException)

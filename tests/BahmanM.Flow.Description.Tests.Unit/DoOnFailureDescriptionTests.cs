@@ -105,7 +105,7 @@ public class DoOnFailureDescriptionTests
         Flow.Operations.DoOnFailure.CancellableAsync action = async (_, token) =>
         {
             observedToken = token;
-            await Task.Delay(global::System.Threading.Timeout.InfiniteTimeSpan, token);
+            await Task.Delay(Timeout.InfiniteTimeSpan, token);
         };
         var description = DescriptionFlowBuilder.DoOnFailure(
             DescriptionFlowBuilder.Fail<int>(expectedException), action);
@@ -115,7 +115,7 @@ public class DoOnFailureDescriptionTests
         var outcome = await FlowEngine.ExecuteAsync(description, options);
         var expected = await FlowEngine.ExecuteAsync(
             Flow.Fail<int>(expectedException).DoOnFailure(
-                (_, token) => Task.Delay(global::System.Threading.Timeout.InfiniteTimeSpan, token)),
+                (_, token) => Task.Delay(Timeout.InfiniteTimeSpan, token)),
             options);
 
         // Assert

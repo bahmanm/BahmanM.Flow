@@ -87,7 +87,7 @@ public class TimeoutDescriptionTests
         {
             operationToken = token;
             operationStarted.TrySetResult();
-            await Task.Delay(global::System.Threading.Timeout.InfiniteTimeSpan, token);
+            await Task.Delay(Timeout.InfiniteTimeSpan, token);
             return 42;
         };
         var description = DescriptionFlowBuilder.Timeout(
@@ -118,7 +118,7 @@ public class TimeoutDescriptionTests
         {
             operationToken = token;
             operationStarted.TrySetResult();
-            await Task.Delay(global::System.Threading.Timeout.InfiniteTimeSpan, token);
+            await Task.Delay(Timeout.InfiniteTimeSpan, token);
             return 42;
         };
         var description = DescriptionFlowBuilder.Timeout(
