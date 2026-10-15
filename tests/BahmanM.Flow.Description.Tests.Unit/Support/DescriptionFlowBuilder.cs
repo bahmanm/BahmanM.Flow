@@ -32,6 +32,11 @@ internal static class DescriptionFlowBuilder
         params Type[] nonRetryableExceptions) =>
         new Description.Retry.Retry<T>(source, maxAttempts, nonRetryableExceptions);
 
+    internal static Description.IDescription<T> Timeout<T>(
+        Description.IDescription<T> source,
+        TimeSpan duration) =>
+        new Description.Behaviour.Timeout<T>(source, duration);
+
     internal static Description.IDescription<TOut> Select<TIn, TOut>(
         Description.IDescription<TIn> upstream,
         Flow.Operations.Select.Sync<TIn, TOut> operation) =>
