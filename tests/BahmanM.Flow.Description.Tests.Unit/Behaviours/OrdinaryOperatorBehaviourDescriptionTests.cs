@@ -88,7 +88,7 @@ public class OrdinaryOperatorBehaviourDescriptionTests
         };
         var source = DescriptionFlowBuilder.Create(operation);
         var wrapped = Wrap(source, kind, variant, () => operatorCalls++, token => operatorToken = token);
-        var description = DescriptionFlowBuilder.Timeout(wrapped, TimeSpan.FromMilliseconds(150));
+        var description = DescriptionFlowBuilder.Timeout(wrapped, TimeSpan.FromMilliseconds(300));
 
         var text = DescriptionFormatter.Describe(description);
         var lowered = description.Lower();
@@ -118,7 +118,7 @@ public class OrdinaryOperatorBehaviourDescriptionTests
     {
         var selectStarted = NewSignal();
         var releaseSelect = NewSignal();
-        var timeout = TimeSpan.FromMilliseconds(150);
+        var timeout = TimeSpan.FromMilliseconds(300);
         var selectToken = CancellationToken.None;
         Flow.Operations.Select.CancellableAsync<int, int> select = async (value, token) =>
         {

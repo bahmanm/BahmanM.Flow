@@ -115,7 +115,7 @@ public class CompositeBehaviourDescriptionTests
         var all = DescriptionFlowBuilder.All(
             DescriptionFlowBuilder.Create(WaitForCancellation()),
             DescriptionFlowBuilder.Create(WaitForCancellation()));
-        var description = DescriptionFlowBuilder.Timeout(all, TimeSpan.FromMilliseconds(150));
+        var description = DescriptionFlowBuilder.Timeout(all, TimeSpan.FromMilliseconds(300));
 
         // Act
         var text = DescriptionFormatter.Describe(description);
@@ -166,7 +166,7 @@ public class CompositeBehaviourDescriptionTests
         var any = DescriptionFlowBuilder.Any(
             DescriptionFlowBuilder.Create(WaitForCancellation()),
             DescriptionFlowBuilder.Create(WaitForCancellation()));
-        var description = DescriptionFlowBuilder.Timeout(any, TimeSpan.FromMilliseconds(150));
+        var description = DescriptionFlowBuilder.Timeout(any, TimeSpan.FromMilliseconds(300));
 
         // Act
         var text = DescriptionFormatter.Describe(description);

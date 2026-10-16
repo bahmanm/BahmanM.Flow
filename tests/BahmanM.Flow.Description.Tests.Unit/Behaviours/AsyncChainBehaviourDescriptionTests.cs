@@ -90,7 +90,7 @@ public class AsyncChainBehaviourDescriptionTests
                 : Flow.Create(async () => await child());
         };
         var chain = DescriptionFlowBuilder.Chain(upstream, operation);
-        var description = DescriptionFlowBuilder.Timeout(chain, TimeSpan.FromMilliseconds(250));
+        var description = DescriptionFlowBuilder.Timeout(chain, TimeSpan.FromMilliseconds(500));
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);

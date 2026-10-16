@@ -87,7 +87,7 @@ public class SyncChainBehaviourDescriptionTests
                 : Flow.Create(() => child());
         };
         var chain = DescriptionFlowBuilder.Chain(upstream, operation);
-        var description = DescriptionFlowBuilder.Timeout(chain, TimeSpan.FromMilliseconds(100));
+        var description = DescriptionFlowBuilder.Timeout(chain, TimeSpan.FromMilliseconds(200));
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);

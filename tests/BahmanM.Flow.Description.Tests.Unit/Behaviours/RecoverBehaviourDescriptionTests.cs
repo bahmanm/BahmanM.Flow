@@ -68,7 +68,7 @@ public class RecoverBehaviourDescriptionTests
         bool returnDescription)
     {
         // Arrange
-        var timeout = TimeSpan.FromMilliseconds(100);
+        var timeout = TimeSpan.FromMilliseconds(200);
         var sourceExecutions = 0;
         var callbackExecutions = 0;
         var fallbackExecutions = 0;

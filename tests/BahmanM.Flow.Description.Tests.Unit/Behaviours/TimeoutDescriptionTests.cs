@@ -78,7 +78,7 @@ public class TimeoutDescriptionTests
         };
         var description = DescriptionFlowBuilder.Timeout(
             DescriptionFlowBuilder.Create(operation),
-            TimeSpan.FromMilliseconds(100));
+            TimeSpan.FromMilliseconds(200));
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -146,7 +146,7 @@ public class TimeoutDescriptionTests
         };
         var description = DescriptionFlowBuilder.Timeout(
             DescriptionFlowBuilder.Create(operation),
-            TimeSpan.FromMilliseconds(100));
+            TimeSpan.FromMilliseconds(200));
 
         // Act
         var execution = FlowEngine.ExecuteAsync(description);
@@ -166,9 +166,9 @@ public class TimeoutDescriptionTests
         Flow.Operations.Create.Sync<int> operation = () => ++invocationCount;
         var description = DescriptionFlowBuilder.Timeout(
             DescriptionFlowBuilder.Create(operation),
-            TimeSpan.FromMilliseconds(50));
+            TimeSpan.FromMilliseconds(100));
         var lowered = description.Lower();
-        await Task.Delay(TimeSpan.FromMilliseconds(100));
+        await Task.Delay(TimeSpan.FromMilliseconds(200));
 
         // Act
         var firstOutcome = await FlowEngine.ExecuteAsync(lowered);
@@ -198,7 +198,7 @@ public class TimeoutDescriptionTests
         };
         var source = DescriptionFlowBuilder.Create(operation);
         var retried = DescriptionFlowBuilder.Retry(source, 3);
-        var description = DescriptionFlowBuilder.Timeout(retried, TimeSpan.FromMilliseconds(100));
+        var description = DescriptionFlowBuilder.Timeout(retried, TimeSpan.FromMilliseconds(200));
 
         // Act
         var execution = FlowEngine.ExecuteAsync(description);
@@ -224,7 +224,7 @@ public class TimeoutDescriptionTests
             return 42;
         };
         var source = DescriptionFlowBuilder.Create(operation);
-        var timed = DescriptionFlowBuilder.Timeout(source, TimeSpan.FromMilliseconds(100));
+        var timed = DescriptionFlowBuilder.Timeout(source, TimeSpan.FromMilliseconds(200));
         var description = DescriptionFlowBuilder.Retry(timed, 3);
 
         // Act

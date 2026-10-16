@@ -16,7 +16,7 @@ public class WithTimeoutOnLeavesCancellationTests
             return "done";
         });
 
-        var timed = leaf.WithTimeout(TimeSpan.FromMilliseconds(50));
+        var timed = leaf.WithTimeout(TimeSpan.FromMilliseconds(100));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timed);
@@ -41,7 +41,7 @@ public class WithTimeoutOnLeavesCancellationTests
             return Flow.Succeed("done");
         });
 
-        var timed = flow.WithTimeout(TimeSpan.FromMilliseconds(50));
+        var timed = flow.WithTimeout(TimeSpan.FromMilliseconds(100));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timed);

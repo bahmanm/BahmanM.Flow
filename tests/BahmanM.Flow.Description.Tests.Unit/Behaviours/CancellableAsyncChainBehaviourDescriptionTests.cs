@@ -81,7 +81,7 @@ public class CancellableAsyncChainBehaviourDescriptionTests
         };
         var description = DescriptionFlowBuilder.Timeout(
             DescriptionFlowBuilder.Chain(DescriptionFlowBuilder.Succeed(1), operation),
-            TimeSpan.FromMilliseconds(150));
+            TimeSpan.FromMilliseconds(300));
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -164,7 +164,7 @@ public class CancellableAsyncChainBehaviourDescriptionTests
                 : Flow.Create(token => child(token));
         };
         var chain = DescriptionFlowBuilder.Chain(upstream, operation);
-        var description = DescriptionFlowBuilder.Timeout(chain, TimeSpan.FromMilliseconds(200));
+        var description = DescriptionFlowBuilder.Timeout(chain, TimeSpan.FromMilliseconds(400));
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);

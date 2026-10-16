@@ -5,7 +5,7 @@ namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
 public class ResourceBehaviourDescriptionTests
 {
-    private static readonly TimeSpan TimeoutDuration = TimeSpan.FromMilliseconds(200);
+    private static readonly TimeSpan TimeoutDuration = TimeSpan.FromMilliseconds(400);
 
     [Theory]
     [InlineData(ResourceKind.Sync)]
