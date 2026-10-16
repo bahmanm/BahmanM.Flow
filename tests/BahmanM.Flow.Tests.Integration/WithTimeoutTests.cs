@@ -236,12 +236,81 @@ public class WithTimeoutTests
         Assert.Contains(aggregate.InnerExceptions, exception => exception is TimeoutException);
     }
 
+    [Fact]
+    public async Task WithTimeoutInsideAll_PreservesExecutionTimeProvider()
+    {
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var flow = Flow.All(CreateNeverCompletingFlow(started).WithTimeout(TimeoutDuration), Flow.Succeed("ready"));
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+
+        var failure = Assert.IsType<Failure<string[]>>(outcome);
+        var aggregate = Assert.IsType<AggregateException>(failure.Exception);
+        Assert.Contains(aggregate.InnerExceptions, exception => exception is TimeoutException);
+    }
+
+    [Fact]
+    public async Task WithTimeoutInChainReturnedFlow_PreservesExecutionTimeProvider()
+    {
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var flow = Flow.Succeed("start").Chain(_ => CreateNeverCompletingFlow(started).WithTimeout(TimeoutDuration));
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+    }
+
+    [Fact]
+    public async Task WithTimeoutInRecoveredFlow_PreservesExecutionTimeProvider()
+    {
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var flow = Flow.Fail<string>(new InvalidOperationException("trigger recovery"))
+            .Recover(_ => CreateNeverCompletingFlow(started).WithTimeout(TimeoutDuration));
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+    }
+
+    [Fact]
+    public async Task WithTimeoutInResourceFlow_PreservesExecutionTimeProvider()
+    {
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var flow = Flow.WithResource(
+            acquire: () => new CancellationTokenSource(),
+            use: _ => CreateNeverCompletingFlow(started).WithTimeout(TimeoutDuration));
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+    }
+
     private static Execution.Options CreateOptions(TimeProvider timeProvider) =>
         new(CancellationToken.None) { TimeProvider = timeProvider };
 
-    private static IFlow<string> CreateNeverCompletingFlow() =>
+    private static IFlow<string> CreateNeverCompletingFlow(TaskCompletionSource? started = null) =>
         Flow.Create<string>(async cancellationToken =>
         {
+            started?.TrySetResult();
             await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
             return SimoneDeBeauvoir;
         });

@@ -1,4 +1,5 @@
 using BahmanM.Flow.Description.Serialisation;
+using Microsoft.Extensions.Time.Testing;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -63,28 +64,33 @@ public class TimeoutDescriptionTests
     [Fact]
     public async Task Timeout_AsyncDescription_DefersOperation_AndTimesOutDuringExecution()
     {
-        // Arrange
+        var timeProvider = new FakeTimeProvider();
         var invocationCount = 0;
         var operationStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var operationCompleted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var operationCompletion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var operationFinished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         Flow.Operations.Create.Async<int> operation = async () =>
         {
             invocationCount++;
             operationStarted.TrySetResult();
-            await Task.Delay(TimeSpan.FromMilliseconds(300));
-            operationCompleted.TrySetResult();
-            return 42;
+            var value = await operationCompletion.Task;
+            operationFinished.TrySetResult();
+            return value;
         };
-        var description = (((Flow.Create<int>(() => operation())).AsDescription()).WithTimeout(TimeSpan.FromMilliseconds(200))).AsDescription();
+        var timeout = TimeSpan.FromMinutes(1);
+        var description = (((Flow.Create<int>(() => operation())).AsDescription()).WithTimeout(timeout)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
         var lowered = description.Lower();
         var invocationCountBeforeExecution = invocationCount;
-        var execution = FlowEngine.ExecuteAsync(description);
+        var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
+        var execution = FlowEngine.ExecuteAsync(description, options);
         await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        timeProvider.Advance(timeout);
         var outcome = await execution;
-        await operationCompleted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        operationCompletion.SetResult(42);
+        await operationFinished.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
         // Assert
         Assert.Contains("Timeout<int>", descriptionText);
@@ -92,7 +98,7 @@ public class TimeoutDescriptionTests
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
         Assert.Equal(0, invocationCountBeforeExecution);
         Assert.Equal(1, invocationCount);
-        Assert.True(operationCompleted.Task.IsCompletedSuccessfully);
+        Assert.True(operationFinished.Task.IsCompletedSuccessfully);
         Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(outcome).Exception);
     }
 
@@ -129,7 +135,7 @@ public class TimeoutDescriptionTests
     [Fact]
     public async Task Timeout_CancellableAsyncDescription_CancelsOperationTokenOnTimeout()
     {
-        // Arrange
+        var timeProvider = new FakeTimeProvider();
         var operationStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var operationToken = CancellationToken.None;
         Flow.Operations.Create.CancellableAsync<int> operation = async token =>
@@ -139,11 +145,13 @@ public class TimeoutDescriptionTests
             await Task.Delay(Timeout.InfiniteTimeSpan, token);
             return 42;
         };
-        var description = (((Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription()).WithTimeout(TimeSpan.FromMilliseconds(200))).AsDescription();
+        var timeout = TimeSpan.FromMinutes(1);
+        var description = (((Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription()).WithTimeout(timeout)).AsDescription();
 
-        // Act
-        var execution = FlowEngine.ExecuteAsync(description);
+        var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
+        var execution = FlowEngine.ExecuteAsync(description, options);
         await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        timeProvider.Advance(timeout);
         var outcome = await execution;
 
         // Assert
@@ -152,31 +160,56 @@ public class TimeoutDescriptionTests
     }
 
     [Fact]
-    public async Task LoweredTimeout_CanBeExecutedRepeatedly_WithIndependentTimeoutScopes()
+    public async Task LoweredTimeout_CanBeExecutedConcurrently_WithIndependentTimeProviders()
     {
-        // Arrange
+        var firstTimeProvider = new FakeTimeProvider();
+        var secondTimeProvider = new FakeTimeProvider();
         var invocationCount = 0;
-        Flow.Operations.Create.Sync<int> operation = () => ++invocationCount;
-        var description = (((Flow.Create<int>(() => operation())).AsDescription()).WithTimeout(TimeSpan.FromMilliseconds(100))).AsDescription();
+        var started = new[]
+        {
+            new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously),
+            new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously)
+        };
+        var completion = new[]
+        {
+            new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously),
+            new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously)
+        };
+        Flow.Operations.Create.CancellableAsync<int> operation = async token =>
+        {
+            var index = Interlocked.Increment(ref invocationCount) - 1;
+            started[index].TrySetResult();
+            return await completion[index].Task.WaitAsync(token);
+        };
+        var timeout = TimeSpan.FromMinutes(1);
+        var description = (((Flow.Create<int>(token => operation(token))).AsDescription()).WithTimeout(timeout)).AsDescription();
         var lowered = description.Lower();
-        await Task.Delay(TimeSpan.FromMilliseconds(200));
 
-        // Act
-        var firstOutcome = await FlowEngine.ExecuteAsync(lowered);
-        var secondOutcome = await FlowEngine.ExecuteAsync(lowered);
+        var firstOptions = new Execution.Options(CancellationToken.None) { TimeProvider = firstTimeProvider };
+        var secondOptions = new Execution.Options(CancellationToken.None) { TimeProvider = secondTimeProvider };
+        var firstExecution = FlowEngine.ExecuteAsync(lowered, firstOptions);
+        var secondExecution = FlowEngine.ExecuteAsync(lowered, secondOptions);
+        await Task.WhenAll(started[0].Task, started[1].Task).WaitAsync(TimeSpan.FromSeconds(2));
 
-        // Assert
-        Assert.Equal(1, Assert.IsType<Success<int>>(firstOutcome).Value);
-        Assert.Equal(2, Assert.IsType<Success<int>>(secondOutcome).Value);
+        firstTimeProvider.Advance(timeout);
+        var firstOutcome = await firstExecution.WaitAsync(TimeSpan.FromSeconds(2));
+        Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(firstOutcome).Exception);
+        Assert.False(secondExecution.IsCompleted);
+
+        completion[1].SetResult(42);
+        var secondOutcome = await secondExecution.WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.Equal(42, Assert.IsType<Success<int>>(secondOutcome).Value);
         Assert.Equal(2, invocationCount);
     }
 
     [Fact]
     public async Task Timeout_AroundRetry_BoundsTheWholeRetrySequence()
     {
-        // Arrange
+        var timeProvider = new FakeTimeProvider();
         var attempts = 0;
         var secondAttemptStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var releaseSecondAttempt = new ManualResetEventSlim();
         Flow.Operations.Create.Sync<int> operation = () =>
         {
             attempts++;
@@ -184,47 +217,64 @@ public class TimeoutDescriptionTests
                 throw new InvalidOperationException("try again");
 
             secondAttemptStarted.TrySetResult();
-            Thread.Sleep(TimeSpan.FromMilliseconds(500));
+            releaseSecondAttempt.Wait();
             return 42;
         };
         var source = (Flow.Create<int>(() => operation())).AsDescription();
         var retried = ((source).WithRetry(3)).AsDescription();
-        var description = ((retried).WithTimeout(TimeSpan.FromMilliseconds(200))).AsDescription();
+        var timeout = TimeSpan.FromMinutes(1);
+        var description = ((retried).WithTimeout(timeout)).AsDescription();
 
-        // Act
-        var execution = FlowEngine.ExecuteAsync(description);
-        await secondAttemptStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        var outcome = await execution;
+        try
+        {
+            var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
+            var execution = FlowEngine.ExecuteAsync(description, options);
+            await secondAttemptStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            timeProvider.Advance(timeout);
+            var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
 
-        // Assert
-        Assert.Equal(2, attempts);
-        Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(outcome).Exception);
+            Assert.Equal(2, attempts);
+            Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(outcome).Exception);
+        }
+        finally
+        {
+            releaseSecondAttempt.Set();
+        }
     }
 
     [Fact]
     public async Task Retry_AroundTimeout_DoesNotRetryTimeoutExceptionByDefault()
     {
-        // Arrange
+        var timeProvider = new FakeTimeProvider();
         var attempts = 0;
         var operationStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var releaseOperation = new ManualResetEventSlim();
         Flow.Operations.Create.Sync<int> operation = () =>
         {
             attempts++;
             operationStarted.TrySetResult();
-            Thread.Sleep(TimeSpan.FromMilliseconds(500));
+            releaseOperation.Wait();
             return 42;
         };
         var source = (Flow.Create<int>(() => operation())).AsDescription();
-        var timed = ((source).WithTimeout(TimeSpan.FromMilliseconds(200))).AsDescription();
+        var timeout = TimeSpan.FromMinutes(1);
+        var timed = ((source).WithTimeout(timeout)).AsDescription();
         var description = ((timed).WithRetry(3)).AsDescription();
 
-        // Act
-        var execution = FlowEngine.ExecuteAsync(description);
-        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        var outcome = await execution;
+        try
+        {
+            var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
+            var execution = FlowEngine.ExecuteAsync(description, options);
+            await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            timeProvider.Advance(timeout);
+            var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
 
-        // Assert
-        Assert.Equal(1, attempts);
-        Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(outcome).Exception);
+            Assert.Equal(1, attempts);
+            Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(outcome).Exception);
+        }
+        finally
+        {
+            releaseOperation.Set();
+        }
     }
 }
