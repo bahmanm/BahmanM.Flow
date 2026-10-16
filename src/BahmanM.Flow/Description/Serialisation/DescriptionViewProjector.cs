@@ -44,6 +44,11 @@ internal sealed class DescriptionViewProjector : IDescriptionVisitor<Description
             new DescriptionField("duration", node.Duration.ToString("c", System.Globalization.CultureInfo.InvariantCulture))
         ], node.Source);
 
+    public DescriptionView Visit<T>(Behaviour.Custom.Custom<T> node) =>
+        Create("CustomBehaviour", node.Id, [typeof(T)], [
+            new DescriptionField("operationType", node.Behaviour.OperationType)
+        ], node.Source);
+
     public DescriptionView Visit<TIn, TOut>(Select.Sync<TIn, TOut> node) =>
         Create("Select.Sync", node.Id, [typeof(TIn), typeof(TOut)], [
             new DescriptionField("operation", OperationFormatter.Format(node.Operation))

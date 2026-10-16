@@ -6,6 +6,84 @@ namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 public class RetryDescriptionTests
 {
     [Fact]
+    public async Task Retry_Description_RetriesAsyncCreate()
+    {
+        var attempts = 0;
+        Flow.Operations.Create.Async<int> operation = async () =>
+        {
+            await Task.Yield();
+            if (++attempts < 3)
+                throw new InvalidOperationException("try again");
+            return 42;
+        };
+        var description = DescriptionFlowBuilder.Retry(
+            DescriptionFlowBuilder.Create(operation),
+            maxAttempts: 3,
+            typeof(TimeoutException));
+
+        var lowered = description.Lower();
+        Assert.Equal(0, attempts);
+        Assert.IsType<Ast.Create.Async<int>>(lowered);
+
+        var outcome = await FlowEngine.ExecuteAsync(description);
+
+        Assert.Equal(Outcome.Success(42), outcome);
+        Assert.Equal(3, attempts);
+    }
+
+    [Fact]
+    public async Task Retry_Description_RetriesCancellableAsyncCreateAndPreservesToken()
+    {
+        var attempts = 0;
+        var receivedTokens = new List<CancellationToken>();
+        Flow.Operations.Create.CancellableAsync<int> operation = async token =>
+        {
+            receivedTokens.Add(token);
+            await Task.Yield();
+            if (++attempts < 3)
+                throw new InvalidOperationException("try again");
+            return 42;
+        };
+        var description = DescriptionFlowBuilder.Retry(
+            DescriptionFlowBuilder.Create(operation),
+            maxAttempts: 3,
+            typeof(TimeoutException));
+
+        var lowered = description.Lower();
+        Assert.Equal(0, attempts);
+        Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
+
+        var outcome = await FlowEngine.ExecuteAsync(description);
+
+        Assert.Equal(Outcome.Success(42), outcome);
+        Assert.Equal(3, attempts);
+        Assert.All(receivedTokens, token => Assert.Equal(CancellationToken.None, token));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Retry_Description_RetainsApplicationAroundPrimitiveNoOp(bool fail)
+    {
+        var exception = new InvalidOperationException("primitive failure");
+        var source = fail
+            ? DescriptionFlowBuilder.Fail<int>(exception)
+            : DescriptionFlowBuilder.Succeed(42);
+        var description = DescriptionFlowBuilder.Retry(source, maxAttempts: 3);
+
+        var text = DescriptionFormatter.Describe(description);
+        var lowered = description.Lower();
+        var outcome = await FlowEngine.ExecuteAsync(description);
+
+        Assert.Contains("Retry<int>", text);
+        Assert.IsType(fail ? typeof(Ast.Primitive.Fail<int>) : typeof(Ast.Primitive.Succeed<int>), lowered);
+        if (fail)
+            Assert.Same(exception, Assert.IsType<Failure<int>>(outcome).Exception);
+        else
+            Assert.Equal(Outcome.Success(42), outcome);
+    }
+
+    [Fact]
     public async Task Retry_Description_RetainsPolicy_AndRetriesCreateOnExecution()
     {
         // Arrange

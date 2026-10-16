@@ -35,7 +35,7 @@ public class RecoverBehaviourDescriptionTests
         var source = DescriptionFlowBuilder.Create(sourceOperation);
         var fallback = returnDescription
             ? DescriptionFlowBuilder.Create(fallbackOperation)
-            : Flow.Create<int>(() => fallbackOperation());
+            : Flow.Create(() => fallbackOperation());
         var recover = CreateRecover(source, fallback, kind, _ => callbackExecutions++);
         var description = DescriptionFlowBuilder.Retry(recover, 3);
 
@@ -95,7 +95,7 @@ public class RecoverBehaviourDescriptionTests
         var source = DescriptionFlowBuilder.Create(sourceOperation);
         var fallback = returnDescription
             ? DescriptionFlowBuilder.Create(fallbackOperation)
-            : Flow.Create<int>(() => fallbackOperation());
+            : Flow.Create(() => fallbackOperation());
         var recover = CreateRecover(source, fallback, kind, exception =>
         {
             callbackExecutions++;
@@ -130,8 +130,8 @@ public class RecoverBehaviourDescriptionTests
         Assert.True(fallbackCompleted.Task.IsCompletedSuccessfully);
     }
 
-    private static Description.IDescription<int> CreateRecover(
-        Description.IDescription<int> source,
+    private static IDescription<int> CreateRecover(
+        IDescription<int> source,
         IFlow<int> fallback,
         RecoverKind kind,
         Action<Exception> onRecovery) =>

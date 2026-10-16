@@ -39,7 +39,7 @@ public class CancellableAsyncChainBehaviourDescriptionTests
             };
             return returnDescription
                 ? DescriptionFlowBuilder.Create(child)
-                : Flow.Create<int>(token => child(token));
+                : Flow.Create(cancellationToken => child(cancellationToken));
         };
         var chain = DescriptionFlowBuilder.Chain(upstream, operation);
         var description = DescriptionFlowBuilder.Retry(chain, 3);
@@ -161,7 +161,7 @@ public class CancellableAsyncChainBehaviourDescriptionTests
             };
             return returnDescription
                 ? DescriptionFlowBuilder.Create(child)
-                : Flow.Create<int>(token => child(token));
+                : Flow.Create(token => child(token));
         };
         var chain = DescriptionFlowBuilder.Chain(upstream, operation);
         var description = DescriptionFlowBuilder.Timeout(chain, TimeSpan.FromMilliseconds(200));
@@ -208,7 +208,7 @@ public class CancellableAsyncChainBehaviourDescriptionTests
             };
             return returnDescription
                 ? DescriptionFlowBuilder.Create(child)
-                : Flow.Create<int>(token => child(token));
+                : Flow.Create(token => child(token));
         };
         var chain = DescriptionFlowBuilder.Chain(DescriptionFlowBuilder.Succeed(41), operation);
         var description = DescriptionFlowBuilder.Timeout(chain, TimeSpan.FromSeconds(5));

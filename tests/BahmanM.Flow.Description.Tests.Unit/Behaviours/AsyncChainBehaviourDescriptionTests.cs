@@ -34,7 +34,7 @@ public class AsyncChainBehaviourDescriptionTests
             };
             return returnDescription
                 ? DescriptionFlowBuilder.Create(child)
-                : Flow.Create<int>(async () => await child());
+                : Flow.Create(async () => await child());
         };
         var chain = DescriptionFlowBuilder.Chain(upstream, operation);
         var description = DescriptionFlowBuilder.Retry(chain, 3);
@@ -87,7 +87,7 @@ public class AsyncChainBehaviourDescriptionTests
             };
             return returnDescription
                 ? DescriptionFlowBuilder.Create(child)
-                : Flow.Create<int>(async () => await child());
+                : Flow.Create(async () => await child());
         };
         var chain = DescriptionFlowBuilder.Chain(upstream, operation);
         var description = DescriptionFlowBuilder.Timeout(chain, TimeSpan.FromMilliseconds(250));

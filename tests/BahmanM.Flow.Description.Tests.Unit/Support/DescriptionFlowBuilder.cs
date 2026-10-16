@@ -37,6 +37,11 @@ internal static class DescriptionFlowBuilder
         TimeSpan duration) =>
         new Behaviour.Timeout.Timeout<T>(source, duration);
 
+    internal static IDescription<T> WithBehaviour<T>(
+        IDescription<T> source,
+        BahmanM.Flow.Behaviour.IBehaviour behaviour) =>
+        new Behaviour.Custom.Custom<T>(source, behaviour);
+
     internal static IDescription<TOut> Select<TIn, TOut>(
         IDescription<TIn> upstream,
         Flow.Operations.Select.Sync<TIn, TOut> operation) =>

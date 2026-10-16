@@ -5,6 +5,29 @@ namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
 public class TimeoutDescriptionTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Timeout_Description_RetainsApplicationAroundPrimitiveNoOp(bool fail)
+    {
+        var exception = new InvalidOperationException("primitive failure");
+        var source = fail
+            ? DescriptionFlowBuilder.Fail<int>(exception)
+            : DescriptionFlowBuilder.Succeed(42);
+        var description = DescriptionFlowBuilder.Timeout(source, TimeSpan.Zero);
+
+        var text = DescriptionFormatter.Describe(description);
+        var lowered = description.Lower();
+        var outcome = await FlowEngine.ExecuteAsync(description);
+
+        Assert.Contains("Timeout<int>", text);
+        Assert.IsType(fail ? typeof(Ast.Primitive.Fail<int>) : typeof(Ast.Primitive.Succeed<int>), lowered);
+        if (fail)
+            Assert.Same(exception, Assert.IsType<Failure<int>>(outcome).Exception);
+        else
+            Assert.Equal(Outcome.Success(42), outcome);
+    }
+
     [Fact]
     public async Task Timeout_Description_RetainsDuration_AndDefersOperationUntilExecution()
     {
