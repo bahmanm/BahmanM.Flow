@@ -13,8 +13,10 @@ public class WithTimeoutOnLeavesCancellationTests
         var timeProvider = new FakeTimeProvider();
         var sideEffects = new ConcurrentBag<string>();
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var operationToken = CancellationToken.None;
         var leaf = Flow.Create<string>(async ct =>
         {
+            operationToken = ct;
             started.TrySetResult();
             await Task.Delay(Timeout.InfiniteTimeSpan, ct);
             sideEffects.Add("leaf completed");
@@ -28,6 +30,7 @@ public class WithTimeoutOnLeavesCancellationTests
 
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
+        Assert.True(operationToken.IsCancellationRequested);
         Assert.Empty(sideEffects);
     }
 
@@ -37,8 +40,10 @@ public class WithTimeoutOnLeavesCancellationTests
         var timeProvider = new FakeTimeProvider();
         var sideEffects = new ConcurrentBag<string>();
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var operationToken = CancellationToken.None;
         var flow = Flow.Succeed("start").Chain(async (string _, CancellationToken ct) =>
         {
+            operationToken = ct;
             started.TrySetResult();
             await Task.Delay(Timeout.InfiniteTimeSpan, ct);
             sideEffects.Add("chain inner completed");
@@ -52,6 +57,7 @@ public class WithTimeoutOnLeavesCancellationTests
 
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
+        Assert.True(operationToken.IsCancellationRequested);
         Assert.Empty(sideEffects);
     }
 
@@ -62,9 +68,11 @@ public class WithTimeoutOnLeavesCancellationTests
         using var cts = new CancellationTokenSource();
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var options = new Execution.Options(cts.Token);
+        var operationToken = CancellationToken.None;
 
         var leaf = Flow.Create<string>(async ct =>
         {
+            operationToken = ct;
             started.TrySetResult();
             await Task.Delay(Timeout.InfiniteTimeSpan, ct);
             sideEffects.Add("leaf completed");
@@ -78,6 +86,7 @@ public class WithTimeoutOnLeavesCancellationTests
 
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TaskCanceledException>(failure.Exception);
+        Assert.True(operationToken.IsCancellationRequested);
         Assert.Empty(sideEffects);
     }
 

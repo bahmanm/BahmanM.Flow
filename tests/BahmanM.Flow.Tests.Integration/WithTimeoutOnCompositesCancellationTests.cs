@@ -14,8 +14,11 @@ public class WithTimeoutOnCompositesCancellationTests
         var sideEffects = new ConcurrentBag<string>();
         var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstToken = CancellationToken.None;
+        var secondToken = CancellationToken.None;
         var slow1 = Flow.Create<string>(async ct =>
         {
+            firstToken = ct;
             firstStarted.TrySetResult();
             await Task.Delay(Timeout.InfiniteTimeSpan, ct);
             sideEffects.Add("slow1 completed");
@@ -24,6 +27,7 @@ public class WithTimeoutOnCompositesCancellationTests
 
         var slow2 = Flow.Create<string>(async ct =>
         {
+            secondToken = ct;
             secondStarted.TrySetResult();
             await Task.Delay(Timeout.InfiniteTimeSpan, ct);
             sideEffects.Add("slow2 completed");
@@ -39,6 +43,8 @@ public class WithTimeoutOnCompositesCancellationTests
 
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
+        Assert.True(firstToken.IsCancellationRequested);
+        Assert.True(secondToken.IsCancellationRequested);
         Assert.Empty(sideEffects);
     }
 
@@ -49,8 +55,11 @@ public class WithTimeoutOnCompositesCancellationTests
         var sideEffects = new ConcurrentBag<string>();
         var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstToken = CancellationToken.None;
+        var secondToken = CancellationToken.None;
         var slow1 = Flow.Create<string>(async ct =>
         {
+            firstToken = ct;
             firstStarted.TrySetResult();
             await Task.Delay(Timeout.InfiniteTimeSpan, ct);
             sideEffects.Add("slow1 completed");
@@ -59,6 +68,7 @@ public class WithTimeoutOnCompositesCancellationTests
 
         var slow2 = Flow.Create<string>(async ct =>
         {
+            secondToken = ct;
             secondStarted.TrySetResult();
             await Task.Delay(Timeout.InfiniteTimeSpan, ct);
             sideEffects.Add("slow2 completed");
@@ -74,6 +84,8 @@ public class WithTimeoutOnCompositesCancellationTests
 
         var failure = Assert.IsType<Failure<string[]>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
+        Assert.True(firstToken.IsCancellationRequested);
+        Assert.True(secondToken.IsCancellationRequested);
         Assert.Empty(sideEffects);
     }
 
