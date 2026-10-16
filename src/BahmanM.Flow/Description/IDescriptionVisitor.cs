@@ -2,6 +2,10 @@ namespace BahmanM.Flow.Description;
 
 internal interface IDescriptionVisitor<TResult>
 {
+    TResult Visit<T>(ExistingFlow<T> node);
+    TResult Visit<T>(Behaviour.Retry.Retry<T> node);
+    TResult Visit<T>(Behaviour.Timeout.Timeout<T> node);
+    TResult Visit<T>(Behaviour.Custom.Custom<T> node);
     TResult Visit<T>(Primitive.Succeed<T> node);
     TResult Visit<T>(Primitive.Fail<T> node);
     TResult Visit<T>(Primitive.All<T> node);
@@ -9,9 +13,6 @@ internal interface IDescriptionVisitor<TResult>
     TResult Visit<T>(Create.Sync<T> node);
     TResult Visit<T>(Create.Async<T> node);
     TResult Visit<T>(Create.CancellableAsync<T> node);
-    TResult Visit<T>(Behaviour.Retry.Retry<T> node);
-    TResult Visit<T>(Behaviour.Timeout.Timeout<T> node);
-    TResult Visit<T>(Behaviour.Custom.Custom<T> node);
     TResult Visit<TIn, TOut>(Select.Sync<TIn, TOut> node);
     TResult Visit<TIn, TOut>(Select.Async<TIn, TOut> node);
     TResult Visit<TIn, TOut>(Select.CancellableAsync<TIn, TOut> node);

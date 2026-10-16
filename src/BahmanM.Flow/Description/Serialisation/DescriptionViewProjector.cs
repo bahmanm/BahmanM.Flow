@@ -2,6 +2,11 @@ namespace BahmanM.Flow.Description.Serialisation;
 
 internal sealed class DescriptionViewProjector : IDescriptionVisitor<DescriptionView>
 {
+    public DescriptionView Visit<T>(ExistingFlow<T> node) =>
+        Create("ExistingFlow", node.Id, [typeof(T)], [
+            new DescriptionField("runtimeType", TypeFormatter.Format(node.Flow.GetType()))
+        ]);
+
     public DescriptionView Visit<T>(Primitive.Succeed<T> node) =>
         Create("Succeed", node.Id, [typeof(T)], [
             new DescriptionField("value", DescriptionValueFormatter.Format(node.Value, typeof(T)))
@@ -47,7 +52,12 @@ internal sealed class DescriptionViewProjector : IDescriptionVisitor<Description
     public DescriptionView Visit<T>(Behaviour.Custom.Custom<T> node) =>
         Create("CustomBehaviour", node.Id, [typeof(T)], [
             new DescriptionField("operationType", node.Behaviour.OperationType)
-        ], node.Source);
+        ], children: node.CachedResultDescription is { } cachedResultDescription
+            ? [
+                new DescriptionChild("source", node.Source.Accept(this)),
+                new DescriptionChild("cachedResultDescription", cachedResultDescription.Accept(this))
+            ]
+            : [new DescriptionChild("source", node.Source.Accept(this))]);
 
     public DescriptionView Visit<TIn, TOut>(Select.Sync<TIn, TOut> node) =>
         Create("Select.Sync", node.Id, [typeof(TIn), typeof(TOut)], [
@@ -169,13 +179,14 @@ internal sealed class DescriptionViewProjector : IDescriptionVisitor<Description
         IReadOnlyList<Type> typeArguments,
         IReadOnlyList<DescriptionField> fields,
         IDescription? upstream = null,
-        IReadOnlyList<IDescription>? flows = null) =>
+        IReadOnlyList<IDescription>? flows = null,
+        IReadOnlyList<DescriptionChild>? children = null) =>
         new(
             operatorName,
             id,
             typeArguments,
             fields,
-            upstream is not null
+            children ?? (upstream is not null
                 ? [new DescriptionChild("upstream", upstream.Accept(this))]
-                : flows?.Select((flow, index) => new DescriptionChild($"flow[{index}]", flow.Accept(this))).ToArray() ?? []);
+                : flows?.Select((flow, index) => new DescriptionChild($"flow[{index}]", flow.Accept(this))).ToArray() ?? []));
 }

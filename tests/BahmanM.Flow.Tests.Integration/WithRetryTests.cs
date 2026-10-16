@@ -27,7 +27,7 @@ namespace BahmanM.Flow.Tests.Integration
 
         [Theory]
         [ClassData(typeof(NonFailableFlowsTheoryData))]
-        public void WithRetry_OnNonFailableNodes_IsANoOpAndReturnsSameInstance(IFlow<string> nonFailableFlow)
+        public async Task WithRetry_OnNonFailableNodes_IsANoOpAndPreservesOutcome(IFlow<string> nonFailableFlow)
         {
             // Arrange
             var originalFlow = nonFailableFlow;
@@ -36,7 +36,9 @@ namespace BahmanM.Flow.Tests.Integration
             var resultFlow = originalFlow.WithRetry(3);
 
             // Assert
-            Assert.Equal(originalFlow, resultFlow);
+            Assert.Equal(
+                await FlowEngine.ExecuteAsync(originalFlow),
+                await FlowEngine.ExecuteAsync(resultFlow));
         }
 
         [Fact]

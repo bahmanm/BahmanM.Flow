@@ -1,3 +1,5 @@
+using BahmanM.Flow.Support;
+
 namespace BahmanM.Flow;
 
 /// <summary>
@@ -30,7 +32,7 @@ public static class Flow
     /// <typeparam name="T">The type of the value encapsulated by the Flow.</typeparam>
     /// <param name="value">The successful value to start the Flow with.</param>
     /// <returns>An <see cref="IFlow{T}"/> that will immediately yield the provided value when executed.</returns>
-    public static IFlow<T> Succeed<T>(T value) => new Ast.Primitive.Succeed<T>(value);
+    public static IFlow<T> Succeed<T>(T value) => new Description.Primitive.Succeed<T>(value);
 
     /// <summary>
     /// A Flow that starts in a failed state with a given exception.
@@ -43,7 +45,7 @@ public static class Flow
     /// <typeparam name="T">The type of the value that the Flow would have produced.</typeparam>
     /// <param name="exception">The exception to start the Flow with.</param>
     /// <returns>An <see cref="IFlow{T}"/> that will immediately yield a failure with the provided exception when executed.</returns>
-    public static IFlow<T> Fail<T>(Exception exception) => new Ast.Primitive.Fail<T>(exception);
+    public static IFlow<T> Fail<T>(Exception exception) => new Description.Primitive.Fail<T>(exception);
 
     /// <summary>
     /// A Flow from a failable, synchronous operation. The operation is deferred and will only be
@@ -61,14 +63,14 @@ public static class Flow
     /// <typeparam name="T">The type of the value produced by the operation.</typeparam>
     /// <param name="operation">A synchronous function that returns a value or throws an exception.</param>
     /// <returns>An <see cref="IFlow{T}"/> that will execute the operation when run.</returns>
-    public static IFlow<T> Create<T>(Func<T> operation) => new Ast.Create.Sync<T>(() => operation());
+    public static IFlow<T> Create<T>(Func<T> operation) => new Description.Create.Sync<T>(() => operation());
 
     /// <summary>
     /// A Flow from a failable, asynchronous operation. The operation is deferred and will only be
     /// executed when the Flow is run by the <see cref="FlowEngine"/>.
     /// </summary>
     /// <inheritdoc cref="Create{T}(Func{T})"/>
-    public static IFlow<T> Create<T>(Func<Task<T>> operation) => new Ast.Create.Async<T>(() => operation());
+    public static IFlow<T> Create<T>(Func<Task<T>> operation) => new Description.Create.Async<T>(() => operation());
 
     /// <summary>
     /// A flow from a failable, cancellable asynchronous operation. The operation is deferred and will only be
@@ -81,7 +83,7 @@ public static class Flow
     /// </remarks>
     /// <inheritdoc cref="Create{T}(Func{T})"/>
     public static IFlow<T> Create<T>(Func<CancellationToken, Task<T>> operation) =>
-        new Ast.Create.CancellableAsync<T>(operation);
+        new Description.Create.CancellableAsync<T>(cancellationToken => operation(cancellationToken));
 
     /// <summary>
     /// A composite Flow that runs multiple Flows in parallel and collects their results.
@@ -106,7 +108,7 @@ public static class Flow
     /// <param name="moreFlows">Additional Flows to run in parallel.</param>
     /// <returns>An <see cref="IFlow{T}"/> that, upon execution, will run all provided Flows in parallel and, if all are successful, yield an array of their results.</returns>
     public static IFlow<T[]> All<T>(IFlow<T> flow, params IFlow<T>[] moreFlows) =>
-        new Ast.Primitive.All<T>([flow, ..moreFlows]);
+        new Description.Primitive.All<T>([flow.AsDescription(), ..moreFlows.Select(item => item.AsDescription())]);
 
     /// <summary>
     /// A composite Flow that races multiple Flows against each other and returns the result of the first one to succeed.
@@ -131,7 +133,7 @@ public static class Flow
     /// <param name="moreFlows">Additional Flows to race.</param>
     /// <returns>An <see cref="IFlow{T}"/> that, upon execution, will race all provided Flows and yield the result of the first successful Flow.</returns>
     public static IFlow<T> Any<T>(IFlow<T> flow, params IFlow<T>[] moreFlows) =>
-        new Ast.Primitive.Any<T>([flow, ..moreFlows]);
+        new Description.Primitive.Any<T>([flow.AsDescription(), ..moreFlows.Select(item => item.AsDescription())]);
 
     /// <summary>
     /// A Flow that safely acquires, uses, and disposes of a resource.
@@ -157,7 +159,7 @@ public static class Flow
     /// <param name="use">A function that takes the acquired resource and returns the next <see cref="IFlow{T}"/> to execute.</param>
     /// <returns>An <see cref="IFlow{T}"/> that, upon execution, will manage the lifecycle of the resource and run the 'use' Flow.</returns>
     public static IFlow<T> WithResource<TResource, T>(Func<TResource> acquire, Func<TResource, IFlow<T>> use)
-        where TResource : IDisposable => new Ast.Resource.WithResource<TResource, T>(acquire, use);
+        where TResource : IDisposable => new Description.Resource.WithResource<TResource, T>(acquire, use);
 
     /// <summary>
     /// A Flow that safely acquires, uses, and asynchronously disposes of a resource that implements <see cref="IAsyncDisposable"/>.
@@ -183,7 +185,7 @@ public static class Flow
     /// </code>
     /// </example>
     public static IFlow<T> WithResource<TResource, T>(Func<Task<TResource>> acquireAsync, Func<TResource, IFlow<T>> use)
-        where TResource : IAsyncDisposable => new Ast.Resource.WithResourceAsync<TResource, T>(acquireAsync, use);
+        where TResource : IAsyncDisposable => new Description.Resource.WithResourceAsync<TResource, T>(acquireAsync, use);
 
     /// <summary>
     /// A Flow that safely acquires (cancellable), uses, and asynchronously disposes of a resource that implements <see cref="IAsyncDisposable"/>.
@@ -205,7 +207,7 @@ public static class Flow
     /// </code>
     /// </example>
     public static IFlow<T> WithResource<TResource, T>(Func<CancellationToken, Task<TResource>> acquireAsync, Func<TResource, IFlow<T>> use)
-        where TResource : IAsyncDisposable => new Ast.Resource.WithResourceCancellableAsync<TResource, T>(acquireAsync, use);
+        where TResource : IAsyncDisposable => new Description.Resource.WithResourceCancellableAsync<TResource, T>(acquireAsync, use);
 
     /// <summary>
     /// Contains delegate definitions for the various operations that can be passed to Flow operators.
