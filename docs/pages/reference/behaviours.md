@@ -18,17 +18,23 @@ _Each operator is concerned with a single, specific part of the Flow._
 
 _Behaviours are applied with operators that start with `With` (e.g., `.WithRetry`, `.WithTimeout`) to signify that you are creating a new Flow *with* an added superpower._
 
-> **Note on Applicability**
->
-> The built-in behaviours that alter execution - `.WithRetry()` and `.WithTimeout()` - are only applicable to failable operations, such as `Flow.Create()` or `.Chain()`. 
-> Applying them to a pure transformation, like `.Select()`, is a logical no-op and will result in an equivalent flow being returned.
->
-> However, the generic `.WithBehaviour()` operator is different. 
-> It is designed to be a universal tool for applying any custom logic, including logging or auditing, to *any* part of a flow. Therefore, it can be applied to any operator, not just failable ones.
->
-> **On the Horizon: `WithRetry` and Resource Management**
-> 
-> Please note that the interaction between `.WithRetry()` and `Flow.WithResource` is currently being enhanced. To guarantee resource safety, the correct architectural behaviour is for each retry attempt to re-acquire the resource. This feature is [on the roadmap](https://github.com/bahmanm/BahmanM.Flow/issues/93) and will be available in an upcoming release.
+## Applicability
+
+The effect of `.WithRetry()` and `.WithTimeout()` depends on the operator immediately before them. Some common cases are:
+
+| Applied directly to | `.WithRetry()` | `.WithTimeout()` |
+| --- | --- | --- |
+| `Flow.Create(...)` | Retries the creation callback. | Runs the creation callback in a timed scope. |
+| `Select`, `Validate`, `DoOnSuccess`, or `DoOnFailure` | No effect; does not retry the callback or its upstream flow. | Applies timeout to the upstream flow; does not time the operator's own callback. |
+| `Flow.WithResource(...)` | No effect; does not retry acquisition, use, or the returned child flow. | Places resource execution in a timed scope, subject to the limits below. |
+
+These rules cover synchronous, asynchronous, and cancellable asynchronous variants. To retry a `Create` operation followed by `Select`, put `.WithRetry()` before `.Select()`.
+
+Resource timeouts use cooperative cancellation. Synchronous acquisition can delay the start of the timer, and disposal may continue after a timeout result has been returned. A timeout therefore does not guarantee that all resource work has stopped when the result arrives.
+
+Retrying a whole resource scope with fresh acquisition on each attempt is not currently implemented. Applying retry to a supported operation inside the resource scope retries that operation while retaining the same resource.
+
+The generic `.WithBehaviour()` operator can apply custom logic, including logging or auditing, to any operator.
 
 This entire system is designed for extensibility: The `IBehaviour` interface is your entry point for building any custom behaviour you can imagine, which you can then apply using the generic `.WithBehaviour()` operator.
 

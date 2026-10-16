@@ -115,23 +115,18 @@ To solve this problem correctly while keeping the `FlowEngine` simple, behaviour
 
 This design keeps the `FlowEngine` completely ignorant of complex behaviours, fulfilling its role as a simple, dumb interpreter.
 
-### 8a. The Pragmatic API for Behaviours: Pure vs. Failable Nodes
+### 8a. Where Built-in Behaviours Apply
 
-A key design question is how execution-altering behaviours should apply to different kinds of operations. Flow takes a pragmatic approach that prioritises developer experience and the Principle of Least Surprise.
+Behaviour placement matters. Retry and timeout follow different rules when applied to ordinary operators such as `Select`, `Validate`, `DoOnSuccess`, and `DoOnFailure`:
 
-*   **Application on Pure Nodes (e.g., `.Select()`): A Deliberate No-Op**
+*   Retry leaves these operators unchanged and does not propagate to their upstream flow. To retry a `Create` operation followed by `Select`, apply `.WithRetry()` before `.Select()`.
+*   Timeout rewrites their upstream flow, leaving their own callbacks outside the timed scope. A timeout applied after `Select` can therefore time an upstream `Create`, but does not bound the transformation itself.
 
-    What should happen when you apply a `.WithRetry()` to a pure, in-memory transformation like `.Select()`? Since the operation cannot fail, retrying it is a logical contradiction.
+These rules apply to synchronous, asynchronous, and cancellable asynchronous variants. A callback can still throw; retry being a no-op does not mean that the callback cannot fail.
 
-    While Flow could throw a runtime `InvalidOperationException`, the chosen behaviuor is to make this a **silent no-op**. The operator simply returns an equivalent flow. This is a conscious trade-off that favours a frictionless developer experience. A user might refactor a `Chain` into a `Select` (because the operation was made pure), and they should not be punished by having their code suddenly throw an exception because they forgot to remove a now-redundant `.WithRetry()` call.
+Direct retry on `WithResource` is also a no-op for all three resource variants. It does not retry acquisition, use, or the returned child flow. Retrying the whole scope with fresh acquisition on each attempt is not currently implemented. Retry applied to a supported operation inside the scope retains the same resource.
 
-*   **Application on Failable Nodes (e.g., `Create`, `Chain`, `WithResource`): Defined Semantic Interaction**
-
-    In contrast, when applied to failable, effectful nodes, these behaviours have powerful and specific semantics defined by the architecture (and captured in the ADRs). For example:
-    -   `.WithTimeout()` wraps the entire operation—including the whole `WithResource` lifecycle—in a timed scope to provide a complete safety net.
-    -   `.WithRetry()` is designed to re-execute the failable operation, including the full re-acquisition of resources when applied to a `WithResource` block.
-
-This two-pronged approach provides both safety and predictability for the built-in execution modifiers where it matters, and forgiveness where it doesn't.
+Timeout places resource execution in a timed scope, with cooperative cancellation. Synchronous acquisition can delay the timer's start, and disposal may continue after the timeout result. See [Behaviours](../reference/behaviours.md#applicability) for the applicability table and resource-timeout limits.
 
 # 9. The `Validate` Operator and Value-Introspection
 
