@@ -24,7 +24,7 @@ public class AsyncChainAndRecoverDescriptionTests
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         var callbackCallsBeforeExecution = callbackCalls;
         var childCallsBeforeExecution = childCalls;
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -130,7 +130,7 @@ public class AsyncChainAndRecoverDescriptionTests
         Assert.Equal(1, childCalls);
         Assert.Equal(expected, outcome);
         Assert.Equal(Outcome.Success(42), outcome);
-        Assert.IsType<Ast.Chain.CancellableAsync<int, int>>(description.Lower());
+        Assert.IsType<Ast.Chain.CancellableAsync<int, int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
     }
 
     [Fact]
@@ -198,7 +198,7 @@ public class AsyncChainAndRecoverDescriptionTests
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         var callbackCallsBeforeExecution = callbackCalls;
         var childCallsBeforeExecution = childCalls;
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -300,7 +300,7 @@ public class AsyncChainAndRecoverDescriptionTests
         Assert.Equal(expected, outcome);
         Assert.Equal(Outcome.Success(0), outcome);
         Assert.Equal(Outcome.Success(42), successOutcome);
-        Assert.IsType<Ast.Recover.CancellableAsync<int>>(failed.Lower());
+        Assert.IsType<Ast.Recover.CancellableAsync<int>>(failed.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
     }
 
     [Fact]

@@ -27,7 +27,7 @@ public class CompositeBehaviourDescriptionTests
 
         // Act
         var text = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (firstExecutions, secondExecutions);
         var outcome = await FlowEngine.ExecuteAsync(description);
 
@@ -65,7 +65,7 @@ public class CompositeBehaviourDescriptionTests
 
         // Act
         var text = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (firstExecutions, secondExecutions);
         var outcome = await FlowEngine.ExecuteAsync(description);
 
@@ -112,7 +112,7 @@ public class CompositeBehaviourDescriptionTests
 
         // Act
         var text = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         var startedAfterLowering = startedCount;
         var execution = FlowEngine.ExecuteAsync(description);
         await started.Task.WaitAsync(TimeSpan.FromSeconds(2));
@@ -161,7 +161,7 @@ public class CompositeBehaviourDescriptionTests
 
         // Act
         var text = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         var startsAfterLowering = startedCount;
         var execution = FlowEngine.ExecuteAsync(description);
         await bothStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
@@ -207,7 +207,7 @@ public class CompositeBehaviourDescriptionTests
         var description = ((any).WithTimeout(TimeSpan.FromSeconds(5))).AsDescription();
 
         // Act
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         Assert.False(loserStarted.Task.IsCompleted);
         var outcome = await FlowEngine.ExecuteAsync(description);
         await loserCancelled.Task.WaitAsync(TimeSpan.FromSeconds(2));

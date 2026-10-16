@@ -1,5 +1,4 @@
 using BahmanM.Flow.Execution;
-using BahmanM.Flow.Support;
 
 namespace BahmanM.Flow;
 
@@ -64,13 +63,13 @@ public static class FlowEngine
     /// <param name="flow">The Flow to execute.</param>
     /// <param name="options">The execution options, including the cancellation token and time provider.</param>
     public static Task<Outcome<T>> ExecuteAsync<T>(IFlow<T> flow, Options options) =>
-        flow.AsNode().Accept(new Interpreter(options));
+        FlowExecutor.ExecuteAsync(flow, options, FacadeBehaviourStrategyFactory.Instance);
 
     internal static Task<Outcome<T>> ExecuteAsync<T>(Description.IDescription<T> description) =>
-        ExecuteAsync(description, new Options(CancellationToken.None));
+        FlowExecutor.ExecuteAsync(description, new Options(CancellationToken.None), FacadeBehaviourStrategyFactory.Instance);
 
     internal static Task<Outcome<T>> ExecuteAsync<T>(
         Description.IDescription<T> description,
         Options options) =>
-        description.Lower().Accept(new Interpreter(options));
+        FlowExecutor.ExecuteAsync(description, options, FacadeBehaviourStrategyFactory.Instance);
 }

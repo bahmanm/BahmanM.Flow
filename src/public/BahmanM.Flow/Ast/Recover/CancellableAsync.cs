@@ -8,7 +8,9 @@ namespace BahmanM.Flow.Ast.Recover;
 /// <typeparam name="T">The value type produced by the source and recovery flows.</typeparam>
 public sealed record CancellableAsync<T> (IFlow<T> Source, Func<Exception, CancellationToken, Task<IFlow<T>>> Recover) : INode<T>
 {
-    Task<Outcome<T>> INode<T>.Accept(IInterpreter interpreter) => interpreter.Interpret(this);
+    Task<Outcome<T>> INode<T>.Accept(IInterpreter interpreter) =>
+        interpreter.Interpret(new Internal.CancellableAsync<T>(Source, (error, cancellationToken) => Recover(error, cancellationToken)));
 
-    IFlow<T> INode<T>.Apply(IBehaviourStrategy strategy) => strategy.ApplyTo(this);
+    IFlow<T> INode<T>.Apply(IBehaviourStrategy strategy) =>
+        new Internal.CancellableAsync<T>(Source, (error, cancellationToken) => Recover(error, cancellationToken)).Apply(strategy);
 }

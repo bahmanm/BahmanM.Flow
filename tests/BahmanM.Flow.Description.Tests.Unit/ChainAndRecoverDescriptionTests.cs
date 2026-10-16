@@ -23,7 +23,7 @@ public class ChainAndRecoverDescriptionTests
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         var callbackCallsBeforeExecution = callbackCalls;
         var childCallsBeforeExecution = childCalls;
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -104,7 +104,7 @@ public class ChainAndRecoverDescriptionTests
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         var callbackCallsBeforeExecution = callbackCalls;
         var childCallsBeforeExecution = childCalls;
         var outcome = await FlowEngine.ExecuteAsync(description);

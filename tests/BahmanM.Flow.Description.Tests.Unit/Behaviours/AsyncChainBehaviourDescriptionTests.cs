@@ -40,7 +40,7 @@ public class AsyncChainBehaviourDescriptionTests
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (upstreamExecutions, callbackExecutions, childAttempts);
         var outcome = await FlowEngine.ExecuteAsync(description);
 
@@ -93,7 +93,7 @@ public class AsyncChainBehaviourDescriptionTests
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (upstreamExecutions, callbackExecutions, childExecutions);
         var execution = FlowEngine.ExecuteAsync(description);
         await childStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));

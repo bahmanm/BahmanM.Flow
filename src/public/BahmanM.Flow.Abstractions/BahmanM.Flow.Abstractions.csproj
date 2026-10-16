@@ -4,4 +4,9 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="BahmanM.Flow" />
+    <InternalsVisibleTo Include="BahmanM.Flow.Execution" />
+  </ItemGroup>
+
 </Project>

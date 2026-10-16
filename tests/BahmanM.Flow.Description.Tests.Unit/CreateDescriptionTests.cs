@@ -19,7 +19,7 @@ public class CreateDescriptionTests
         Assert.Equal(0, invocationCountBeforeExecution);
         Assert.Equal(1, Assert.IsType<Success<int>>(outcome).Value);
         Assert.Equal(1, invocationCount);
-        Assert.IsType<Ast.Create.Sync<int>>(description.Lower());
+        Assert.IsType<Ast.Create.Sync<int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class CreateDescriptionTests
         Assert.Equal(0, invocationCountBeforeExecution);
         Assert.Equal(1, Assert.IsType<Success<int>>(outcome).Value);
         Assert.Equal(1, invocationCount);
-        Assert.IsType<Ast.Create.Async<int>>(description.Lower());
+        Assert.IsType<Ast.Create.Async<int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public class CreateDescriptionTests
         // Assert
         Assert.Equal(cancellationTokenSource.Token, observedToken);
         Assert.Equal(1, Assert.IsType<Success<int>>(outcome).Value);
-        Assert.IsType<Ast.Create.CancellableAsync<int>>(description.Lower());
+        Assert.IsType<Ast.Create.CancellableAsync<int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
     }
 
     [Fact]

@@ -25,7 +25,7 @@ public class SelectDescriptionTests
         Assert.Equal(0, invocationCountBeforeExecution);
         Assert.Equal(expected, actual);
         Assert.Equal(1, invocationCount);
-        Assert.IsType<Ast.Select.Sync<string, int>>(description.Lower());
+        Assert.IsType<Ast.Select.Sync<string, int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class SelectDescriptionTests
         Assert.Equal(0, invocationCountBeforeExecution);
         Assert.Equal(expected, actual);
         Assert.Equal(1, invocationCount);
-        Assert.IsType<Ast.Select.Async<string, int>>(description.Lower());
+        Assert.IsType<Ast.Select.Async<string, int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
     }
 
     [Fact]
@@ -73,6 +73,6 @@ public class SelectDescriptionTests
         // Assert
         Assert.Equal(cancellationTokenSource.Token, observedToken);
         Assert.Equal(5, Assert.IsType<Success<int>>(outcome).Value);
-        Assert.IsType<Ast.Select.CancellableAsync<string, int>>(description.Lower());
+        Assert.IsType<Ast.Select.CancellableAsync<string, int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
     }
 }

@@ -29,7 +29,7 @@ public class WithResourceDescriptionTests
             acquired => Flow.Create(() => acquired.Value));
 
         var text = DescriptionFormatter.Describe(description);
-        Assert.IsType<Ast.Resource.WithResource<SyncResource, int>>(description.Lower());
+        Assert.IsType<Ast.Resource.WithResource<SyncResource, int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
         Assert.Contains("WithResource.Sync<SyncResource, int>", text);
         Assert.Contains("acquire: lambda() -> SyncResource", text);
         Assert.Contains("use: lambda(SyncResource) -> IFlow<int>", text);
@@ -98,7 +98,7 @@ public class WithResourceDescriptionTests
             acquired => Flow.Succeed(acquired.Value));
 
         var text = DescriptionFormatter.Describe(description);
-        var lowered = Assert.IsType<Ast.Resource.WithResourceAsync<AsyncResource, int>>(description.Lower());
+        var lowered = Assert.IsType<Ast.Resource.WithResourceAsync<AsyncResource, int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
         var beforeExecution = (acquireCalls, useCalls, resource.IsDisposed);
         var outcome = await FlowEngine.ExecuteAsync(description);
         var expectedOutcome = await FlowEngine.ExecuteAsync(expected);
@@ -139,7 +139,7 @@ public class WithResourceDescriptionTests
             },
             acquired => Flow.Succeed(acquired.Value));
 
-        var lowered = Assert.IsType<Ast.Resource.WithResourceCancellableAsync<AsyncResource, int>>(description.Lower());
+        var lowered = Assert.IsType<Ast.Resource.WithResourceCancellableAsync<AsyncResource, int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
         var outcome = await FlowEngine.ExecuteAsync(description, new Execution.Options(cancellation.Token));
         var expectedOutcome = await FlowEngine.ExecuteAsync(expected, new Execution.Options(cancellation.Token));
 

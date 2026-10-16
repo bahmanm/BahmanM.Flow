@@ -19,7 +19,7 @@ public class DoOnSuccessDescriptionTests
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
         var callsBeforeExecution = actionCalls;
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         var outcome = await FlowEngine.ExecuteAsync(description);
         var expectedOutcome = await FlowEngine.ExecuteAsync(
             Flow.Succeed(42).DoOnSuccess(_ => { }));
@@ -98,7 +98,7 @@ public class DoOnSuccessDescriptionTests
         Assert.Equal(1, actionCalls);
         Assert.Contains("DoOnSuccess.Async<int>", descriptionText);
         Assert.Contains("action: lambda(int) -> Task", descriptionText);
-        Assert.IsType<Ast.DoOnSuccess.Async<int>>(description.Lower());
+        Assert.IsType<Ast.DoOnSuccess.Async<int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
     }
 
     [Fact]
@@ -125,6 +125,6 @@ public class DoOnSuccessDescriptionTests
         Assert.Equal(expected, outcome);
         Assert.Equal(Outcome.Success(42), outcome);
         Assert.Equal(cancellationTokenSource.Token, observedToken);
-        Assert.IsType<Ast.DoOnSuccess.CancellableAsync<int>>(description.Lower());
+        Assert.IsType<Ast.DoOnSuccess.CancellableAsync<int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
     }
 }

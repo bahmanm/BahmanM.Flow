@@ -16,7 +16,7 @@ public class PrimitiveDescriptionTests
 
         // Assert
         Assert.Equal(expected, actual);
-        Assert.IsType<Ast.Primitive.Succeed<string>>(description.Lower());
+        Assert.IsType<Ast.Primitive.Succeed<string>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
     }
 
     [Fact]
@@ -31,6 +31,6 @@ public class PrimitiveDescriptionTests
 
         // Assert
         Assert.Same(exception, Assert.IsType<Failure<string>>(outcome).Exception);
-        Assert.IsType<Ast.Primitive.Fail<string>>(description.Lower());
+        Assert.IsType<Ast.Primitive.Fail<string>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
     }
 }

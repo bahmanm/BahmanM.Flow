@@ -10,7 +10,7 @@ public class AnyDescriptionTests
         var description = (Flow.Any((Flow.Succeed(2)).AsDescription(), (Flow.Succeed(1)).AsDescription())).AsDescription();
 
         // Act
-        var lowered = Assert.IsType<Ast.Primitive.Any<int>>(description.Lower());
+        var lowered = Assert.IsType<Ast.Primitive.Any<int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
 
         // Assert
         Assert.Equal([2, 1], lowered.Flows
@@ -78,7 +78,7 @@ public class AnyDescriptionTests
             Assert.IsType<Success<int>>(expected).Value,
             Assert.IsType<Success<int>>(actual).Value);
         Assert.Equal(42, Assert.IsType<Success<int>>(actual).Value);
-        Assert.IsType<Ast.Primitive.Any<int>>(description.Lower());
+        Assert.IsType<Ast.Primitive.Any<int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
     }
 
     [Fact]

@@ -21,7 +21,7 @@ public class ResourceBehaviourDescriptionTests
         var expected = expectedSource.WithRetry(maxAttempts: 3);
 
         var text = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
 
         Assert.Contains("Retry<int>", text);
         Assert.Contains($"WithResource.{kind}<", text);
@@ -74,7 +74,7 @@ public class ResourceBehaviourDescriptionTests
         var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         Assert.Equal((0, 0, false), (acquireCalls, useCalls, resource.IsDisposed));
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
 
@@ -112,7 +112,7 @@ public class ResourceBehaviourDescriptionTests
             })).AsDescription();
         var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         Assert.False(resource.IsDisposed);
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
 
@@ -152,7 +152,7 @@ public class ResourceBehaviourDescriptionTests
         var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         Assert.Equal(CancellationToken.None, acquireToken);
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
 
@@ -195,7 +195,7 @@ public class ResourceBehaviourDescriptionTests
         var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         Assert.False(acquisitionCompleted);
         Assert.Equal(0, useCalls);
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
@@ -246,7 +246,7 @@ public class ResourceBehaviourDescriptionTests
             })).AsDescription();
         var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         Assert.Equal(0, useCalls);
         Assert.False(resource.IsDisposed);
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
@@ -280,7 +280,7 @@ public class ResourceBehaviourDescriptionTests
                 return (Flow.Succeed(42)).AsDescription();
             })).AsDescription();
         var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
-        var lowered = description.Lower();
+        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
         Assert.Equal(0, useCalls);
 
         var execution = Task.Run(() => FlowEngine.ExecuteAsync(description));

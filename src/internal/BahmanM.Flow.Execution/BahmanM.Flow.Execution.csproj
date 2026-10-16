@@ -5,6 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="BahmanM.Flow" />
+    <InternalsVisibleTo Include="BahmanM.Flow.Description.Tests.Unit" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../BahmanM.Flow.Shared/BahmanM.Flow.Shared.csproj" />
     <ProjectReference Include="../BahmanM.Flow.Description/BahmanM.Flow.Description.csproj" />
     <ProjectReference Include="../BahmanM.Flow.Ast/BahmanM.Flow.Ast.csproj" />
