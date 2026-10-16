@@ -1,4 +1,5 @@
 using BahmanM.Flow.Tests.Support;
+using Microsoft.Extensions.Time.Testing;
 using static BahmanM.Flow.Outcome;
 
 namespace BahmanM.Flow.Tests.Integration;
@@ -99,45 +100,55 @@ public class AnyTests
     [Fact]
     public async Task WithTimeout_OnAny_FailsIfNoFlowSucceedsWithinDuration()
     {
-        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var never1 = Flow.Create<string>(async ct =>
         {
+            firstStarted.TrySetResult();
             await Task.Delay(Timeout.InfiniteTimeSpan, ct);
             return "A";
         });
         var never2 = Flow.Create<string>(async ct =>
         {
+            secondStarted.TrySetResult();
             await Task.Delay(Timeout.InfiniteTimeSpan, ct);
             return "B";
         });
 
-        // Act
-        var timedAny = Flow.Any(never1, never2).WithTimeout(TimeSpan.FromMilliseconds(100));
-        var outcome = await FlowEngine.ExecuteAsync(timedAny);
+        var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
+        var execution = FlowEngine.ExecuteAsync(Flow.Any(never1, never2).WithTimeout(TimeSpan.FromMinutes(1)), options);
+        await Task.WhenAll(firstStarted.Task, secondStarted.Task).WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeSpan.FromMinutes(1));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
 
-        // Assert
-        Assert.True(outcome.IsFailure());
-        var exception = outcome switch { Failure<string> f => f.Exception, _ => null };
-        Assert.IsType<TimeoutException>(exception);
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
     }
 
     [Fact]
     public async Task Any_WithTimeoutOnLeaves_DoesNotDisturbWinner()
     {
-        // Arrange
+        var timeProvider = new FakeTimeProvider();
         var fcs = new FlowCompletionSource<string>();
-        var fast = fcs.Flow.WithTimeout(TimeSpan.FromMilliseconds(400));
+        var slowStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var fast = fcs.Flow.WithTimeout(TimeSpan.FromMinutes(2));
         var slowTimesOut = Flow
-            .Create<string>(async ct => { await Task.Delay(Timeout.InfiniteTimeSpan, ct); return "slow"; })
-            .WithTimeout(TimeSpan.FromMilliseconds(100));
+            .Create<string>(async ct =>
+            {
+                slowStarted.TrySetResult();
+                await Task.Delay(Timeout.InfiniteTimeSpan, ct);
+                return "slow";
+            })
+            .WithTimeout(TimeSpan.FromMinutes(1));
 
-        // Act
-        var exec = FlowEngine.ExecuteAsync(Flow.Any(fast, slowTimesOut));
-        await fcs.Started;
+        var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
+        var execution = FlowEngine.ExecuteAsync(Flow.Any(fast, slowTimesOut), options);
+        await Task.WhenAll(fcs.Started, slowStarted.Task).WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeSpan.FromMinutes(1));
         fcs.Succeed("fast");
-        var outcome = await exec;
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
 
-        // Assert
         Assert.Equal(Success("fast"), outcome);
     }
 

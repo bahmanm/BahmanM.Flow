@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using BahmanM.Flow.Tests.Support;
+using Microsoft.Extensions.Time.Testing;
 using static BahmanM.Flow.Outcome;
 
 namespace BahmanM.Flow.Tests.Integration;
@@ -103,26 +104,29 @@ public class WithAsyncResourceDisposalTests
     [Fact]
     public async Task WithResource_Async_Timeout_DisposesInBackground_AndYieldsTimeout()
     {
-        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var probe = new AsyncDisposableProbe(delay: TimeSpan.FromMilliseconds(50));
         var never = Flow.WithResource(
             acquireAsync: () => Task.FromResult(probe),
             use: _ => Flow.Create<int>(async ct =>
             {
+                started.TrySetResult();
                 await Task.Delay(Timeout.InfiniteTimeSpan, ct);
                 return 42;
             }));
 
-        var timed = never.WithTimeout(TimeSpan.FromMilliseconds(60));
+        var timed = never.WithTimeout(TimeSpan.FromMinutes(1));
 
-        // Act
-        var outcome = await FlowEngine.ExecuteAsync(timed);
+        var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
+        var execution = FlowEngine.ExecuteAsync(timed, options);
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeSpan.FromMinutes(1));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
 
-        // Assert timeout surfaced
         var failure = Assert.IsType<Failure<int>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
 
-        // And disposal completes eventually
         await probe.Disposed;
         Assert.True(probe.IsDisposed);
     }
