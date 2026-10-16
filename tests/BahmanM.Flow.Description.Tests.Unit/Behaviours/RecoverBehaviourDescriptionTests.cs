@@ -1,7 +1,7 @@
 using BahmanM.Flow.Description.Serialisation;
 using BahmanM.Flow.Description.Tests.Unit.Support;
 
-namespace BahmanM.Flow.Description.Tests.Unit;
+namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
 public class RecoverBehaviourDescriptionTests
 {
