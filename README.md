@@ -154,7 +154,7 @@ await FlowEngine.ExecuteAsync(onboardingFlow);
   </tr>
   <tr>
     <td>Side-Effects</td><td>➡️</td><td>Contained</td>
-    <td><code>DoOnFailure</code>/<code>DoOnSuccess</code> log/measure without changing outcomes - they cannot control the flow anymore.</td>
+    <td><code>DoOnSuccess</code> changes the outcome to a failure if its callback throws. <code>DoOnFailure</code> suppresses callback exceptions and preserves the original failure.</td>
   </tr>
   <tr>
     <td>Alternatives</td><td>➡️</td><td>Explicit</td>
@@ -272,6 +272,8 @@ A Flow is a **recipe** which is:
 ---
 
 # ![Flow Logo](docs/assets/img/flow-32x32.png) Install
+
+Requires a .NET 10 (`net10.0`) project.
 
 -  .NET CLI: `dotnet add package BahmanM.Flow`
 -  PackageReference: `<PackageReference Include="BahmanM.Flow" Version="x.y.z" />`

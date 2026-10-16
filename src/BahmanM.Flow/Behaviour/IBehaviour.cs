@@ -10,8 +10,7 @@ namespace BahmanM.Flow.Behaviour;
 public interface IBehaviour
 {
     /// <summary>
-    /// A unique string that identifies the type of operation this behaviour represents.
-    /// This is used for diagnostics and observability.
+    /// A string identifying this behaviour in description inspection output.
     /// </summary>
     string OperationType { get; }
 

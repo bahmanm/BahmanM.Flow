@@ -11,7 +11,7 @@ Ready to cook up something more advanced? This document provides practical recip
 **Solution:** Use `Flow.All`. 
 * It's like `Task.WhenAll` for `Flows`. 
 * It runs all `Flows` concurrently and, if they all succeed, returns a `Flow` containing an array of their results. 
-* If any `Flow` fails, the entire operation fails immediately.
+* It waits for every `Flow` to complete. If any fail, the resulting failure contains an `AggregateException` with their exceptions.
 
 ```csharp
 var allUsersFlow = Flow.All(
@@ -27,7 +27,7 @@ var allUsersFlow = Flow.All(
 
 **Solution:** Use `Flow.Any`.
 * It's like `Task.WhenAny`, but it specifically waits for the first `Flow` to succeed.
-* `Flow.Any` will cancel all losing branches as soon as the first success arrives — provided those branches are built from cancellable operations.
+* `Flow.Any` signals cancellation to the losing branches as soon as the first success arrives. They stop promptly only if their operations observe cancellation.
 * Prefer the cancellable `Flow.Create((ct) => Task<T>)` and cancellable operator overloads to enable prompt co‑operative cancellation.
 
 ```csharp
@@ -76,35 +76,25 @@ But it must still provide a fallback value if all else fails.
 
 **Solution:**
 
-Combine `.WithRetry()` and `.WithTimeout()` with `.Recover()`.
-
-This creates a powerful, multi-layered resiliency strategy.
-
-Flow will first attempt the operation.
-
-Then, it will retry on failure.
-
-Finally, it will recover if all retries fail or a timeout occurs.
+For a `Flow.Create` operation, apply retry first and timeout second to give all attempts one shared time budget. Recover afterwards if the operation still fails:
 
 ```csharp
-var superResilientFlow = CreateFlakyAndSlowFlow()
-    .WithTimeout(TimeSpan.FromSeconds(10)) // 1. Enforce a 10-second deadline.
-    .WithRetry(3)                         // 2. Retry up to 3 times on failure.
+var superResilientFlow = Flow.Create(() => CallFlakyAndSlowApi())
+    .WithRetry(maxAttempts: 3)                  // Up to three attempts, including the first.
+    .WithTimeout(TimeSpan.FromSeconds(10))      // One time budget around those attempts.
     .DoOnFailure(ex => _logger.LogError(ex, "The operation ultimately failed."))
-    .Recover(ex => GetDefaultValue());    // 3. If all else fails, recover.
+    .Recover(ex => Flow.Succeed(GetDefaultValue())); // Recover with a fallback flow.
 ```
 
 > [!NOTE]
 > 
 > **Execution Order Matters:**
 >
-> The order in which you apply these behaviours is crucial.
+> For this `Flow.Create` operation, `.WithRetry(...).WithTimeout(...)` puts one timed scope around the retry attempts. Reversing the calls gives each attempt its own timed scope.
 >
-> In the example above, the timeout wraps the entire retry logic.
+> The two-argument `.WithRetry(maxAttempts)` overload does not retry `TimeoutException` by default. If timeout is inside the retry and should itself be retried, use the overload with an explicit non-retryable exception list and omit `TimeoutException` from that list. `maxAttempts` includes the first attempt.
 >
-> This means the 10-second limit applies to the total time for all attempts.
->
-> If you applied `.WithRetry()` first, each attempt would get its own timeout.
+> Behaviour placement depends on the operation. For example, timeout applied after `Select` affects its upstream flow and does not time the `Select` callback. See [behaviour applicability](./behaviours.md#applicability).
 
 ### Racing With Cancellation (End‑to‑End)
 
@@ -159,7 +149,7 @@ var userProfileFlow = Flow.Succeed("user-123")
 Now that you've seen some practical recipes, you can dive deeper into the concepts that power them.
 
 *   Learn to build your own behaviours in **[Behaviours](./behaviours.md)**.
-*   Read the **[Design Rationale](./design-rationale.md)** to understand the "why" behind Flow.
+*   Read the **[Design Rationale](../for-contributors/design-rationale.md)** to understand the "why" behind Flow.
 *   Browse the **[API Blueprint](./api-blueprint.md)** to see all available methods.
 
 ---

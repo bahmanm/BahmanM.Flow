@@ -1,171 +1,59 @@
 # Design Rationale
 
-This section documents the key architectural decisions that shape the Flow API, focusing on the "why" behind the design.
+This guide explains the current structure of Flow and the reasons behind its main API choices.
 
-# 1. The Core Philosophy: Recipe & Chef
+# 1. The Core Architecture: Recipe and Chef
 
-The central architectural pattern is a strict separation of concerns:
+Flow separates declaring a computation from running it. The public API composes a flow through this path:
 
-*   **`IFlow<T>` is the Recipe:** It is a purely declarative, **immutable** data structure representing a sequence of operations. It is an Abstract Syntax Tree (AST) that defines *what* to do, not *how* to do it. Each operation in a `Flow` (e.g., `SucceededFlow`, `SelectFlow`) is a node in this AST.
+`Flow DSL -> Description -> AST -> Interpreter`
 
-*   **`FlowEngine` is the Chef:** It is the interpreter that executes the `IFlow<T>` AST. The engine uses the **Visitor pattern** to traverse the AST, executing each node in a type-safe manner. This provides compile-time safety, ensuring that every possible operation in our Flow "language" is handled by the engine.
+`IFlow<T>` is the public type used by factories and operators. Factories such as `Flow.Create` and operators such as `Select` return description nodes that record the operation and its inputs. These nodes implement the internal `IDescription<T>` interface, whose `Lower()` method creates the corresponding AST node.
 
-*   **Operators are Pure Functions:** All extension methods in `FlowExtensions` (e.g., `.Chain()`, `.Select()`) are pure functions. They take a flow as input and return a **new, decorated `IFlow<T>` instance**, never modifying the original. This guarantees that flow declarations are immutable, reusable, and safe to share.
+`FlowEngine.ExecuteAsync` lowers a description and passes the resulting AST to an interpreter. The interpreter visits each AST node and returns an `Outcome<T>`. This keeps the public API focused on composing and executing flows while the AST and interpreter handle execution details.
 
-### 1a. The Visitor Pattern in Detail
+Composition creates new descriptions, but it does not make captured delegates pure or their state safe to share. Callbacks run according to the operator and execution path; if they capture mutable state, the application remains responsible for its behaviour under repeated or concurrent execution.
 
-To keep the public `IFlow<T>` interface lean, the Visitor pattern is implemented using an `internal` interface:
+## 1a. Runtime-Generated Child Flows
 
-1.  **`public interface IFlow<T>`:** The public-facing interface, which remains a simple, clean marker.
-2.  **`internal interface IVisitableFlow<T>`:** An internal interface that adds an `ExecuteWith(FlowEngine engine)` method.
-3.  **Concrete Flow Types:** All internal AST nodes (e.g., `SucceededFlow<T>`) implement `IVisitableFlow<T>`.
-4.  **`FlowEngine` as the Visitor:** The `FlowEngine` is an instance class with overloaded `Execute(...)` methods for each concrete flow type.
+Some operations return another flow from a callback. `Chain`, `Recover`, and the `use` callback of `WithResource` are examples. Their child flows generally cannot be known while the description is being composed. The callback runs during interpretation, and the returned flow is then lowered and executed.
 
-When `FlowEngine.ExecuteAsync` is called, it casts the public `IFlow<T>` to the internal `IVisitableFlow<T>` and begins the execution. This design provides the static, compile-time safety of the Visitor pattern without polluting the public API, at the cost of a single, controlled cast at the entry point.
+This boundary matters when inspecting a flow: its composed description can show the callback, but it cannot enumerate flows that the callback has not yet produced.
 
-### 1b. The Philosophy: Pragmatism over Purity
+## 1b. Pragmatism over Purity
 
-While Flow is heavily inspired by functional programming concepts, it is not a strict FP framework. 
+Flow draws on functional programming while aiming to remain approachable to C# developers. Its named operators provide familiar ways to compose operations without requiring users to learn functional programming terminology first.
 
-The primary goal is to provide an intuitive, discoverable, and productive API for the typical C# developer.
+For example, `Flow.All` and `Flow.Any` offer explicit ways to combine concurrent flows. The API favours these discoverable operations over requiring callers to express every combination through a more general abstraction.
 
-This means Flow will always favour a design that is **pragmatic and familiar** over one that is theoretically pure but abstract. 
+For a mapping of Flow concepts to functional programming, see [Notes for FP Developers](./for-fp-developers.md).
 
-A good example of this is the approach to concurrency:
+# 2. Execution Options and Description IDs
 
-*   Flow provides `Flow.All` and `Flow.Any`, which are direct conceptual mirrors of `Task.WhenAll` and `Task.WhenAny`. A C# developer will instantly understand what these do.
+Execution-specific options are separate from the flow description. The public `FlowEngine.ExecuteAsync` overload accepts `Execution.Options`, which currently contains a `CancellationToken`. A token only affects operations that observe it.
 
-*   A purist approach might have offered a single, more powerful `Traverse` function. However, that would require users to understand concepts like Applicative Functors, creating a steep learning curve.
+Each internal description node has a string ID generated when that node is constructed. These IDs belong to the internal description model; Flow does not expose public `FlowId` or `OperationId` types or an observer and diagnostic-event API.
 
-The design choice is to provide specific, named solutions to common problems rather than a single, generic tool that requires academic knowledge to use. 
+# 3. The Failure Model
 
-This principle of pragmatism guides the entire API design.
+`Failure<T>` contains an `Exception`, and executing a flow returns either `Success<T>` or `Failure<T>` through `Outcome<T>`. This follows familiar .NET error handling. Use failure for exceptional conditions; represent expected business outcomes in the success value when that makes the domain clearer.
 
-(For those interested, a more detailed mapping of Flow concepts to their functional counterparts can be found in [Notes for FP Developers](./for-fp-developers.md).)
+# 4. Resource Management
 
-# 2. `FlowExecutionOptions`: Decoupling Execution from Declaration
+`Flow.WithResource` accepts an acquisition callback and a `use` callback that receives the acquired resource and returns a flow. The interpreter executes the child flow and disposes the resource when its scope completes. Synchronous and asynchronous disposable resources have corresponding overloads.
 
-All parameters that control a specific execution run (the "how-to-run" instructions) are contained within the `FlowExecutionOptions` object. 
+The acquisition callback determines which resource instance is supplied for an execution. The API does not itself guarantee that separate executions receive distinct instances; resource ownership and sharing remain the caller's responsibility.
 
-This includes the `CancellationToken` and the `IFlowExecutionObserver`. 
+# 5. Built-in Behaviours During Lowering
 
-This approach keeps the `FlowEngine.ExecuteAsync` signature stable and makes the API extensible, as new execution-time options can be added without breaking changes.
+`.WithRetry()` and `.WithTimeout()` add behaviour description nodes. When lowered, each node lowers its source and applies the corresponding strategy to the resulting AST. The strategy changes the operation-specific AST nodes, and the interpreter executes that result.
 
-# 3. The Observer Pattern for Diagnostics
+The effect depends on where the behaviour is placed. For example, retry on `Create` wraps that creation operation, while retry on ordinary operators such as `Select` is a no-op. Timeout can propagate through ordinary operators to their upstream flow. See [Behaviours](../reference/behaviours.md#applicability) for the current cases and resource limits.
 
-To provide visibility into the engine's execution, Flow is designed with a decoupled observer pattern rather than baking diagnostics directly in.
+Custom `.WithBehaviour()` has different timing: the public extension calls `IBehaviour.Apply` during composition and retains the returned flow description. Put work intended for every execution in operators returned by `Apply`; code run directly inside `Apply` runs when the behaviour is composed.
 
-*   **`IFlowExecutionObserver`:** This interface defines a contract for observing the engine's lifecycle. 
+# 6. The `Validate` Operator
 
-_It is designed to be implemented by users to bridge `Flow` events to their chosen diagnostic or logging framework._
+`Validate` inspects a value on the success path. Its predicate receives the value, and its exception factory creates a failure when the predicate returns `false`. A failed upstream flow passes through without invoking the validation predicate.
 
-*   **Multi-Method Interface:** The interface uses specific, discoverable methods (`OnOperationStarted`, `OnFlowSucceeded`, etc.) with default implementations. 
-
-_This provides the best of both worlds: it's easy for users to implement (they only override what they need), and it's extensible for Flow (new methods can be added without breaking existing implementations)._
-
-*   **Interface-Based Events:** The events passed to the observer are defined by a hierarchy of interfaces (`IFlowEvent`, `IOperationEvent`, etc.). 
-
-_This allows for flexible, type-safe pattern matching in observer implementations while decoupling the observer from the concrete event implementation classes._
-
-# 4. Extensible Enumerations: The `FlowOperationTypes` Pattern
-
-To identify the type of operation in a diagnostic event, Flow uses a `string` property (`IOperationEvent.OperationType`).
-
-To provide compile-time safety for built-in operations, Flow additionally provides a `public static class FlowOperationTypes` containing `const string` definitions. 
-
-This is a standard .NET library pattern that provides the safety of an `enum` for known types and the extensibility of a `string` for user-defined custom operations.
-
-# 5. Strongly-Typed IDs
-
-Instead of using primitive `string` types for flow and operation identifiers, Flow uses dedicated `FlowId` and `OperationId` classes. 
-
-This is the best practice that:
-*   Improves type safety throughout the API.
-*   Encapsulates the ID generation logic (`FlowId.Generate()`).
-*   Makes the code more self-documenting.
-
-# 6. The `Failure` Model
-
-A `Failure<T>` in the `Outcome<T>` model always contains an `Exception`. 
-
-This was a deliberate design choice to align with standard .NET idioms. 
-
-"Business-level" failures (e.g., validation errors) should be modeled as a type of `Success<T>` (e.g., `Success<ValidationResult>`), while the `Failure` path is reserved for true, exceptional circumstances that disrupt the normal flow of a computation.
-
-# 7. Resource Management Patterns
-
-The Flow library provides a single, clear pattern for managing resources.
-
-*   **`Flow.WithResource`:** This factory is used for **isolated, operation-scoped resources**. The mandatory `acquire` function makes it explicit that a new resource is created for the scope of the `use` function. The `where TResource : IDisposable` constraint ensures that the resource is properly disposed of by the engine, mirroring the behavior of a standard C# `using` block. It is the correct tool for encapsulated resources, like an `HttpClient` for a single API call.
-
-*   **Shared Resources (Deferred):** The problem of managing resources that must be shared across multiple, independent operations (e.g., a `DbTransaction`) is a more advanced use case. The exploration of a `FlowEnvironment` (`Reader` monad) pattern to solve this has been deferred to a future work item (`dx006`) to keep the core API lean and focused.
-
-# 8. The Behaviour System: AST Rewriting
-
-Operators like `.WithRetry()` and `.WithTimeout()` are fundamentally different from simple operators like `.Select()`. They don't just transform a value; they alter the **execution strategy** of a preceding operation. A naive implementation that simply re-executes the entire upstream flow is dangerous, as it can lead to the re-execution of unintended side-effects (e.g., sending an email multiple times).
-
-To solve this problem correctly while keeping the `FlowEngine` simple, behaviours are implemented using an **AST (Abstract Syntax Tree) Rewriting** approach.
-
-*   **Operators as Rewriters:** When an operator like `.WithRetry()` is called, it does not simply wrap the existing flow in a new node. Instead, it inspects the final node of the upstream flow and returns a *new, rewritten flow* with the behaviour's logic baked directly into the failable operation.
-
-*   **The Visitor Pattern for Rewriting:** This rewriting is implemented internally using a second Visitor pattern.
-    1.  An exhaustive `internal interface IBehaviourStrategy` defines the contract for rewriting, with a method for every `IFlowNode` type. This ensures compile-time safety when new node types are added.
-    2.  A concrete implementation, like `RetryStrategy`, contains the specific logic for how to rewrite failable nodes (`CreateNode`, `ChainNode`) to incorporate retry logic.
-    3.  The public `.WithRetry()` extension method creates a `RetryStrategy` and passes it to the flow's internal `Apply` method, which triggers the Visitor dispatch.
-
-This design keeps the `FlowEngine` completely ignorant of complex behaviours, fulfilling its role as a simple, dumb interpreter.
-
-### 8a. The Pragmatic API for Behaviours: Pure vs. Failable Nodes
-
-A key design question is how execution-altering behaviours should apply to different kinds of operations. Flow takes a pragmatic approach that prioritises developer experience and the Principle of Least Surprise.
-
-*   **Application on Pure Nodes (e.g., `.Select()`): A Deliberate No-Op**
-
-    What should happen when you apply a `.WithRetry()` to a pure, in-memory transformation like `.Select()`? Since the operation cannot fail, retrying it is a logical contradiction.
-
-    While Flow could throw a runtime `InvalidOperationException`, the chosen behaviuor is to make this a **silent no-op**. The operator simply returns an equivalent flow. This is a conscious trade-off that favours a frictionless developer experience. A user might refactor a `Chain` into a `Select` (because the operation was made pure), and they should not be punished by having their code suddenly throw an exception because they forgot to remove a now-redundant `.WithRetry()` call.
-
-*   **Application on Failable Nodes (e.g., `Create`, `Chain`, `WithResource`): Defined Semantic Interaction**
-
-    In contrast, when applied to failable, effectful nodes, these behaviours have powerful and specific semantics defined by the architecture (and captured in the ADRs). For example:
-    -   `.WithTimeout()` wraps the entire operation—including the whole `WithResource` lifecycle—in a timed scope to provide a complete safety net.
-    -   `.WithRetry()` is designed to re-execute the failable operation, including the full re-acquisition of resources when applied to a `WithResource` block.
-
-This two-pronged approach provides both safety and predictability for the built-in execution modifiers where it matters, and forgiveness where it doesn't.
-
-# 9. The `Validate` Operator and Value-Introspection
-
-### 9a. Introduction: A New Class of Operator
-
-The introduction of `.Validate()` marks a new category of operator in the library. While most operators are "State-Reactive," `.Validate()` is "Value-Introspective."
-
-### 9b. State-Reactive vs. Value-Introspective Operators
-
-*   **State-Reactive:** These operators react to the *state* of the flow (`Success` or `Failure`) without needing to inspect the value. `Chain`, `Recover`, and `DoOn...` are the primary examples.
-*   **Value-Introspective:** These operators "look inside" a `Success<T>` outcome to make decisions based on the value `T` itself. `.Validate()` is the first and most important operator in this category.
-
-### 9c. Parallels in Functional Programming
-
-This concept is not unique to `Flow`. In functional libraries like Cats Effect or ZIO, this capability is typically composed from the fundamental `flatMap` primitive or exposed via methods like `.ensure` or `.filterOrFail`. `Flow` makes a deliberate design choice to elevate this common pattern to a named, first-class operator to improve ergonomics, discoverability, and readability for a broader audience.
-
-### 9d. Design Deep Dive: The `Validate` Signature
-
-*   **The Name (`Validate`):** The name `Validate` was chosen because it best describes the developer's *intent* (asserting that the data is in a valid state for the happy path) and encourages positive, declarative predicates (`user.IsAdmin`).
-*   **The Exception Factory (`Func<T, Exception>`):** This is a crucial part of the signature. It avoids the performance overhead of creating an exception on every call and, more importantly, allows for rich, **contextual error messages** by giving the factory access to the value that failed validation.
-
-    ```csharp
-    // Good: The error message can include the specific, problematic value.
-    .Validate(
-        name => name.Length > 3,
-        name => new ArgumentException($"Username '{name}' is too short.")
-    )
-    ```
-
-In addition to the synchronous signature above, Flow also exposes asynchronous and cancellable variants to mirror the rest of the API surface. These variants preserve the exact same outcome semantics; they differ only in how the predicate is evaluated:
-
-```
-IFlow<T> Validate<T>(Func<T, Task<bool>> predicateAsync, Func<T, Exception> exceptionFactory)
-IFlow<T> Validate<T>(Func<T, CancellationToken, Task<bool>> predicateCancellableAsync, Func<T, Exception> exceptionFactory)
-```
-
-Use the cancellable overload when you want the predicate’s evaluation to respect the execution token provided to the engine.
+The synchronous and asynchronous overloads use `Func` delegates. The cancellable asynchronous overload also receives the execution `CancellationToken` so the predicate can observe cancellation.

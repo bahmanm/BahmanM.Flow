@@ -63,14 +63,14 @@ public static class Flow
 public static class FlowExtensions
 {
     // Select (Transform)
-    public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, TOut> operation);
-    public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, Task<TOut>> asyncOperation);
-    public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, CancellationToken, Task<TOut>> asyncOperation);
+    public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Flow.Operations.Select.Sync<TIn, TOut> operation);
+    public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Flow.Operations.Select.Async<TIn, TOut> asyncOperation);
+    public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Flow.Operations.Select.CancellableAsync<TIn, TOut> asyncOperation);
 
     // Chain (Sequence)
-    public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, IFlow<TOut>> operation);
-    public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, Task<IFlow<TOut>>> asyncOperation);
-    public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Func<TIn, CancellationToken, Task<IFlow<TOut>>> asyncOperation);
+    public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Flow.Operations.Chain.Sync<TIn, TOut> operation);
+    public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Flow.Operations.Chain.Async<TIn, TOut> asyncOperation);
+    public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Flow.Operations.Chain.CancellableAsync<TIn, TOut> asyncOperation);
 
     // Validate
     public static IFlow<T> Validate<T>(this IFlow<T> flow, Func<T, bool> predicate, Func<T, Exception> exceptionFactory);
@@ -78,19 +78,21 @@ public static class FlowExtensions
     public static IFlow<T> Validate<T>(this IFlow<T> flow, Func<T, CancellationToken, Task<bool>> predicateCancellableAsync, Func<T, Exception> exceptionFactory);
 
     // Recover
-    public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, IFlow<T>> recover);
-    public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, Task<IFlow<T>>> recover);
+    public static IFlow<T> Recover<T>(this IFlow<T> flow, Flow.Operations.Recover.Sync<T> recover);
+    public static IFlow<T> Recover<T>(this IFlow<T> flow, Flow.Operations.Recover.Async<T> recover);
     public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, CancellationToken, Task<IFlow<T>>> recover);
 
     // Do (Side-effects)
-    public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Action<T> action);
-    public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Func<T, Task> asyncAction);
-    public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Func<T, CancellationToken, Task> asyncAction);
-    public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Action<Exception> action);
-    public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Func<Exception, Task> asyncAction);
-    public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Func<Exception, CancellationToken, Task> asyncAction);
+    public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Flow.Operations.DoOnSuccess.Sync<T> action);
+    public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Flow.Operations.DoOnSuccess.Async<T> asyncAction);
+    public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Flow.Operations.DoOnSuccess.CancellableAsync<T> asyncAction);
+    public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Flow.Operations.DoOnFailure.Sync action);
+    public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Flow.Operations.DoOnFailure.Async asyncAction);
+    public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Flow.Operations.DoOnFailure.CancellableAsync asyncAction);
 }
 ```
+
+`Create`, `WithResource`, and `Validate` use the `Func` delegates shown in their signatures. `Select`, `Chain`, `DoOnSuccess`, `DoOnFailure`, and the synchronous and asynchronous `Recover` overloads use the named delegates under `Flow.Operations`. The cancellable asynchronous `Recover` overload takes a `Func` directly. Delegates with matching parameter and return types are not implicitly interchangeable with these named delegate types.
 
 ### Behaviours (Extensions)
 

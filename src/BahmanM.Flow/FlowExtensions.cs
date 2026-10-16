@@ -11,8 +11,7 @@ namespace BahmanM.Flow;
 public static class FlowExtensions
 {
     /// <summary>
-    /// Performs a synchronous side-effect if the Flow is successful. The original outcome of the Flow is unaffected.
-    /// This operator is the "Bystander" in the Flow; it lets you peek at the value without changing it.
+    /// Performs a synchronous side-effect if the Flow succeeds.
     /// </summary>
     /// <remarks>
     /// If the <paramref name="action"/> itself throws an exception, the Flow will transition to a 'Failure' state.
@@ -33,22 +32,21 @@ public static class FlowExtensions
         new Description.DoOnSuccess.Sync<T>(flow.AsDescription(), action);
 
     /// <summary>
-    /// Performs an asynchronous side-effect if the Flow is successful. The original outcome of the Flow is unaffected.
+    /// Performs an asynchronous side-effect if the Flow succeeds. If the callback throws, the result is a failure.
     /// </summary>
     /// <inheritdoc cref="DoOnSuccess{T}(IFlow{T}, Flow.Operations.DoOnSuccess.Sync{T})"/>
     public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Flow.Operations.DoOnSuccess.Async<T> asyncAction) =>
         new Description.DoOnSuccess.Async<T>(flow.AsDescription(), asyncAction);
 
     /// <summary>
-    /// Performs a cancellable, asynchronous side-effect if the flow is successful. The original outcome of the flow is unaffected.
+    /// Performs a cancellable, asynchronous side-effect if the flow succeeds. If the callback throws, the result is a failure.
     /// </summary>
     /// <inheritdoc cref="DoOnSuccess{T}(IFlow{T}, Flow.Operations.DoOnSuccess.Sync{T})"/>
     public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Flow.Operations.DoOnSuccess.CancellableAsync<T> asyncAction) =>
         new Description.DoOnSuccess.CancellableAsync<T>(flow.AsDescription(), asyncAction);
 
     /// <summary>
-    /// Performs a synchronous side-effect if the Flow has failed. The original failure is unaffected.
-    /// This operator is the "Bystander" for the failure path; it lets you inspect an exception without handling it.
+    /// Performs a synchronous side-effect if the Flow has failed. The original failure is preserved.
     /// </summary>
     /// <remarks>
     /// Any exception thrown by the <paramref name="action"/> itself is ignored to ensure the original failure is preserved.
@@ -69,14 +67,14 @@ public static class FlowExtensions
         new Description.DoOnFailure.Sync<T>(flow.AsDescription(), action);
 
     /// <summary>
-    /// Performs an asynchronous side-effect if the Flow has failed. The original failure is unaffected.
+    /// Performs an asynchronous side-effect if the Flow has failed. Exceptions thrown by the callback are suppressed.
     /// </summary>
     /// <inheritdoc cref="DoOnFailure{T}(IFlow{T}, Flow.Operations.DoOnFailure.Sync)"/>
     public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Flow.Operations.DoOnFailure.Async asyncAction) =>
         new Description.DoOnFailure.Async<T>(flow.AsDescription(), asyncAction);
 
     /// <summary>
-    /// Performs a cancellable, asynchronous side-effect if the flow has failed. The original failure is unaffected.
+    /// Performs a cancellable, asynchronous side-effect if the flow has failed. Exceptions thrown by the callback are suppressed.
     /// </summary>
     /// <inheritdoc cref="DoOnFailure{T}(IFlow{T}, Flow.Operations.DoOnFailure.Sync)"/>
     public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Flow.Operations.DoOnFailure.CancellableAsync asyncAction) =>
@@ -247,9 +245,9 @@ public static class FlowExtensions
     /// Applies a retry policy to the failable operations within a Flow.
     /// </summary>
     /// <remarks>
-    /// This behaviour only affects failable nodes in the Flow, such as those created by <see cref="Flow.Create{T}(Func{T})"/>
-    /// or <see cref="Chain{TIn, TOut}(IFlow{TIn}, Flow.Operations.Chain.Sync{TIn, TOut})"/>. It is a no-op on purely logical operators like <see cref="Select{TIn, TOut}(IFlow{TIn}, Flow.Operations.Select.Sync{TIn, TOut})"/>.
-    /// The retry policy will re-execute the failing operation up to <paramref name="maxAttempts"/> times.
+    /// On supported operations such as <see cref="Flow.Create{T}(Func{T})"/>, this behaviour retries the operation up to
+    /// <paramref name="maxAttempts"/> attempts, including the first. On ordinary operators such as
+    /// <see cref="Select{TIn, TOut}(IFlow{TIn}, Flow.Operations.Select.Sync{TIn, TOut})"/>, it is a no-op and does not propagate to the upstream flow.
     /// </remarks>
     /// <example>
     /// <code>
@@ -282,9 +280,10 @@ public static class FlowExtensions
     /// Applies a timeout policy to the failable operations within a Flow.
     /// </summary>
     /// <remarks>
-    /// This behaviour wraps failable operations in a timed scope. If the operation does not complete within the specified
-    /// <paramref name="duration"/>, it will be cancelled and the Flow will transition to a 'Failure' state with a <see cref="TimeoutException"/>.
-    /// Like other behaviours, it only affects failable nodes.
+    /// This behaviour places supported operations in a timed scope. If an operation does not complete within the specified
+    /// <paramref name="duration"/>, Flow requests cancellation and returns a failure containing a <see cref="TimeoutException"/>.
+    /// Work stops promptly only when the operation observes cancellation. On ordinary operators such as <see cref="Select{TIn, TOut}(IFlow{TIn}, Flow.Operations.Select.Sync{TIn, TOut})"/>,
+    /// timeout propagates to the upstream flow and does not time the operator's own callback.
     /// </remarks>
     /// <example>
     /// <code>
@@ -306,8 +305,8 @@ public static class FlowExtensions
     /// Applies a custom, user-defined behaviour to the Flow. This is the generic entry point for all custom cross-cutting concerns.
     /// </summary>
     /// <remarks>
-    /// Unlike specific behaviours like <see cref="WithRetry{T}(IFlow{T}, int)"/>, which only apply to failable nodes,
-    /// a custom behaviour is applied to every node in the Flow. This allows for implementing universal concerns like logging or auditing.
+    /// The behaviour's <see cref="IBehaviour.Apply{T}(IFlow{T})"/> method is called when this method composes the flow,
+    /// and its returned flow is retained for execution. Put per-execution work in operators returned by <c>Apply</c>.
     /// </remarks>
     /// <example>
     /// <code>
