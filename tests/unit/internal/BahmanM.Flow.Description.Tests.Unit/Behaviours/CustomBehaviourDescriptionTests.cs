@@ -1,5 +1,5 @@
 using BahmanM.Flow.Behaviour;
-using BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description.Rendering;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -18,7 +18,7 @@ public class CustomBehaviourDescriptionTests
         var source = (Flow.Create(() => operation())).AsDescription();
         var description = new Behaviour.Custom.Custom<int>(source, behaviour);
 
-        var text = DescriptionFormatter.Describe(description);
+        var text = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
 
         Assert.NotEqual(source.Id, description.Id);
@@ -109,7 +109,7 @@ public class CustomBehaviourDescriptionTests
         var inner = new Behaviour.Custom.Custom<int>(source, new WrappingBehaviour("Inner", events));
         var outer = new Behaviour.Custom.Custom<int>(inner, new WrappingBehaviour("Outer", events));
 
-        var text = DescriptionFormatter.Describe(outer);
+        var text = Renderer.Describe(outer);
         Assert.Contains("operationType: Test.Outer", text);
         Assert.Contains("operationType: Test.Inner", text);
         Assert.Empty(events);

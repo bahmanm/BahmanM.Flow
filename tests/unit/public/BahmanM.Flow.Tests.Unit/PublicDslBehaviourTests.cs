@@ -1,6 +1,5 @@
 using BahmanM.Flow.Behaviour;
 using BahmanM.Flow.Description;
-using BahmanM.Flow.Description.Serialisation;
 using DescriptionBehaviour = BahmanM.Flow.Description.Behaviour;
 using DoOnSuccess = BahmanM.Flow.Description.DoOnSuccess;
 using Primitive = BahmanM.Flow.Description.Primitive;
@@ -22,7 +21,7 @@ public class PublicDslBehaviourTests
         Assert.IsType<DoOnSuccess.Sync<int>>(description.CachedResultDescription);
         Assert.Equal(1, behaviour.ApplyCount);
 
-        var rendered = DescriptionFormatter.Describe(description);
+        var rendered = flow.Describe();
         Assert.Contains("CustomBehaviour<int>", rendered);
         Assert.Contains("operationType: test.counting", rendered);
         Assert.Contains("source: Succeed<int>", rendered);
@@ -108,7 +107,7 @@ public class PublicDslBehaviourTests
             .WithRetry(3, typeof(InvalidOperationException))
             .WithTimeout(duration);
 
-        var rendered = DescriptionFormatter.Describe(Assert.IsAssignableFrom<IDescription<int>>(flow));
+        var rendered = flow.Describe();
 
         Assert.True(rendered.IndexOf("Timeout<int>", StringComparison.Ordinal) < rendered.IndexOf("Retry<int>", StringComparison.Ordinal));
         Assert.True(rendered.IndexOf("Retry<int>", StringComparison.Ordinal) < rendered.IndexOf("CustomBehaviour<int>", StringComparison.Ordinal));

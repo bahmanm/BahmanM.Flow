@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description.Rendering;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -23,7 +23,7 @@ public class AsyncChainAndRecoverDescriptionTests
         var description = (((Flow.Succeed(41)).AsDescription()).Chain(operation)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var callbackCallsBeforeExecution = callbackCalls;
         var childCallsBeforeExecution = childCalls;
@@ -112,7 +112,7 @@ public class AsyncChainAndRecoverDescriptionTests
         var options = new Execution.Options(cancellationTokenSource.Token);
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = Renderer.Describe(description);
         var outcome = await FlowEngine.ExecuteAsync(description, options);
         Flow.Operations.Chain.CancellableAsync<int, int> expectedOperation = async (value, _) =>
         {
@@ -197,7 +197,7 @@ public class AsyncChainAndRecoverDescriptionTests
         var description = (((Flow.Fail<int>(expectedException)).AsDescription()).Recover(recover)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var callbackCallsBeforeExecution = callbackCalls;
         var childCallsBeforeExecution = childCalls;
@@ -281,7 +281,7 @@ public class AsyncChainAndRecoverDescriptionTests
         var options = new Execution.Options(cancellationTokenSource.Token);
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(failed);
+        var descriptionText = Renderer.Describe(failed);
         var outcome = await FlowEngine.ExecuteAsync(failed, options);
         var successOutcome = await FlowEngine.ExecuteAsync(succeeded, options);
         Func<Exception, CancellationToken, Task<IFlow<int>>> expectedRecover = async (_, _) =>

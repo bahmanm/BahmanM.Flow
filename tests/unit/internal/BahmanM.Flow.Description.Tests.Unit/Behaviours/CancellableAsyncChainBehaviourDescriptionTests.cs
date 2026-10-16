@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description.Rendering;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -45,7 +45,7 @@ public class CancellableAsyncChainBehaviourDescriptionTests
         var options = new Execution.Options(cancellation.Token);
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (upstreamExecutions, callbackExecutions, childAttempts);
         var outcome = await FlowEngine.ExecuteAsync(description, options);
@@ -81,7 +81,7 @@ public class CancellableAsyncChainBehaviourDescriptionTests
         var description = (((((Flow.Succeed(1)).AsDescription()).Chain(operation)).AsDescription()).WithTimeout(TimeSpan.FromMilliseconds(300))).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var callbackExecutionsAfterLowering = callbackExecutions;
         var execution = FlowEngine.ExecuteAsync(description);
@@ -164,7 +164,7 @@ public class CancellableAsyncChainBehaviourDescriptionTests
         var description = ((chain).WithTimeout(TimeSpan.FromMilliseconds(400))).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (upstreamExecutions, callbackExecutions, childExecutions);
         var execution = FlowEngine.ExecuteAsync(description);

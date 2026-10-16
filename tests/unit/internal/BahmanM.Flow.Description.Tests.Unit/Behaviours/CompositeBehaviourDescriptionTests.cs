@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description.Rendering;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -26,7 +26,7 @@ public class CompositeBehaviourDescriptionTests
         var description = ((all).WithRetry(3)).AsDescription();
 
         // Act
-        var text = DescriptionFormatter.Describe(description);
+        var text = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (firstExecutions, secondExecutions);
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -64,7 +64,7 @@ public class CompositeBehaviourDescriptionTests
         var description = ((any).WithRetry(3)).AsDescription();
 
         // Act
-        var text = DescriptionFormatter.Describe(description);
+        var text = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (firstExecutions, secondExecutions);
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -111,7 +111,7 @@ public class CompositeBehaviourDescriptionTests
         var description = ((all).WithTimeout(TimeSpan.FromMilliseconds(300))).AsDescription();
 
         // Act
-        var text = DescriptionFormatter.Describe(description);
+        var text = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var startedAfterLowering = startedCount;
         var execution = FlowEngine.ExecuteAsync(description);
@@ -160,7 +160,7 @@ public class CompositeBehaviourDescriptionTests
         var description = ((any).WithTimeout(TimeSpan.FromMilliseconds(300))).AsDescription();
 
         // Act
-        var text = DescriptionFormatter.Describe(description);
+        var text = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var startsAfterLowering = startedCount;
         var execution = FlowEngine.ExecuteAsync(description);

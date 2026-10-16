@@ -1,4 +1,4 @@
-namespace BahmanM.Flow.Description.Serialisation;
+namespace BahmanM.Flow.Description.Rendering;
 
 internal static class TypeFormatter
 {

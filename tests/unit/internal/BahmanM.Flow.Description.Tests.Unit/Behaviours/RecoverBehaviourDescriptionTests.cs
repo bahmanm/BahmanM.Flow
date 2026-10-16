@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description.Rendering;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -39,7 +39,7 @@ public class RecoverBehaviourDescriptionTests
         var description = ((recover).WithRetry(3)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (sourceExecutions, callbackExecutions, fallbackExecutions);
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -103,7 +103,7 @@ public class RecoverBehaviourDescriptionTests
         var description = ((recover).WithTimeout(timeout)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (sourceExecutions, callbackExecutions, fallbackExecutions);
         var execution = FlowEngine.ExecuteAsync(description);

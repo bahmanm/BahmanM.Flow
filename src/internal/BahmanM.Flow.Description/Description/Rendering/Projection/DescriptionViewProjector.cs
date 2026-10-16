@@ -1,4 +1,7 @@
-namespace BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description;
+using BahmanM.Flow.Description.Rendering;
+
+namespace BahmanM.Flow.Description.Rendering.Projection;
 
 internal sealed class DescriptionViewProjector : IDescriptionVisitor<DescriptionView>
 {

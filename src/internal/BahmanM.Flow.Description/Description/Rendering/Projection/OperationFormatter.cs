@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
+using BahmanM.Flow.Description.Rendering;
 
-namespace BahmanM.Flow.Description.Serialisation;
+namespace BahmanM.Flow.Description.Rendering.Projection;
 
 internal static class OperationFormatter
 {

@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description.Rendering;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -22,7 +22,7 @@ public class ChainAndRecoverDescriptionTests
         var description = (((Flow.Succeed(41)).AsDescription()).Chain(operation)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var callbackCallsBeforeExecution = callbackCalls;
         var childCallsBeforeExecution = childCalls;
@@ -103,7 +103,7 @@ public class ChainAndRecoverDescriptionTests
         var description = (((Flow.Fail<int>(expectedException)).AsDescription()).Recover(recover)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var callbackCallsBeforeExecution = callbackCalls;
         var childCallsBeforeExecution = childCalls;
