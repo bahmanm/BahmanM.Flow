@@ -1,10 +1,14 @@
+using Microsoft.Extensions.Time.Testing;
+
+using static BahmanM.Flow.Outcome;
+
 namespace BahmanM.Flow.Tests.Integration;
 
 public class WithTimeoutTests
 {
-    // Simone de Beauvoir (1908–1986) was a French writer, intellectual, existentialist philosopher,
-    // political activist, feminist, and social theorist.
     private const string SimoneDeBeauvoir = "Simone de Beauvoir";
+    private static readonly TimeSpan TimeoutDuration = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(1);
 
     public class NonFailableFlowsTheoryData : TheoryData<IFlow<string>>
     {
@@ -13,7 +17,7 @@ public class WithTimeoutTests
             Add(Flow.Succeed("succeeded"));
             Add(Flow.Fail<string>(new Exception("dummy")));
             Add(Flow.Succeed("s").Select(_ => "selected"));
-            Add(Flow.Succeed("s").Select<string,string>(async _ =>
+            Add(Flow.Succeed("s").Select<string, string>(async _ =>
             {
                 await Task.Yield();
                 return "async selected";
@@ -25,19 +29,13 @@ public class WithTimeoutTests
         }
     }
 
-
     [Theory]
     [ClassData(typeof(NonFailableFlowsTheoryData))]
     public async Task WithTimeout_OnNonFailableNodes_IsANoOpAndPreservesOutcome(IFlow<string> nonFailableFlow)
     {
-        // Arrange
         var originalFlow = nonFailableFlow;
-        var timeout = TimeSpan.FromMilliseconds(50);
+        var resultFlow = originalFlow.WithTimeout(TimeoutDuration);
 
-        // Act
-        var resultFlow = originalFlow.WithTimeout(timeout);
-
-        // Assert
         Assert.Equal(
             await FlowEngine.ExecuteAsync(originalFlow),
             await FlowEngine.ExecuteAsync(resultFlow));
@@ -46,175 +44,274 @@ public class WithTimeoutTests
     [Fact]
     public async Task WithTimeout_WhenOperationExceedsDuration_FailsWithTimeoutException()
     {
-        // Arrange
-        var flow = Flow.Create<string>(async () =>
-        {
-            await Task.Delay(Timeout.InfiniteTimeSpan);
-            return SimoneDeBeauvoir;
-        });
+        var timeProvider = new FakeTimeProvider();
+        var timedFlow = CreateNeverCompletingFlow().WithTimeout(TimeoutDuration);
+        var execution = FlowEngine.ExecuteAsync(timedFlow, CreateOptions(timeProvider));
 
-        var timedFlow = flow.WithTimeout(TimeSpan.Zero);
+        Assert.False(execution.IsCompleted);
 
-        // Act
-        var outcome = await FlowEngine.ExecuteAsync(timedFlow);
+        timeProvider.Advance(TimeoutDuration);
 
-        // Assert
-        Assert.True(outcome.IsFailure());
-        var exception = outcome switch
-        {
-            Failure<string> f => f.Exception,
-            _ => null
-        };
-        Assert.IsType<TimeoutException>(exception);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
     }
 
     [Fact]
     public async Task WithTimeout_WhenOperationCompletesWithinDuration_Succeeds()
     {
-        // Arrange
-        var flow = Flow.Create<string>(async () =>
+        var timeProvider = new FakeTimeProvider();
+        var operationStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completion = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var flow = Flow.Create<string>(_ =>
         {
-            await Task.Yield();
-            return SimoneDeBeauvoir;
-        });
+            operationStarted.TrySetResult();
+            return completion.Task;
+        }).WithTimeout(TimeoutDuration);
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
 
-        var timedFlow = flow.WithTimeout(TimeSpan.FromSeconds(2));
+        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeSpan.FromSeconds(30));
+        completion.SetResult(SimoneDeBeauvoir);
 
-        // Act
-        var outcome = await FlowEngine.ExecuteAsync(timedFlow);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
 
-        // Assert
-        Assert.True(outcome.IsSuccess());
-        Assert.Equal(SimoneDeBeauvoir, outcome.GetOrElse("fallback"));
+        Assert.Equal(Success(SimoneDeBeauvoir), outcome);
     }
 
     [Fact]
     public async Task WithTimeout_WhenAsyncChainExceedsDuration_FailsWithTimeoutException()
     {
-        // Arrange
-        var flow = Flow.Succeed("start").Chain(async _ =>
+        var timeProvider = new FakeTimeProvider();
+        var flow = Flow.Succeed("start").Chain(async (string _, CancellationToken cancellationToken) =>
         {
-            await Task.Delay(Timeout.InfiniteTimeSpan);
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
             return Flow.Succeed(SimoneDeBeauvoir);
         });
+        var execution = FlowEngine.ExecuteAsync(flow.WithTimeout(TimeoutDuration), CreateOptions(timeProvider));
 
-        var timedFlow = flow.WithTimeout(TimeSpan.Zero);
+        Assert.False(execution.IsCompleted);
 
-        // Act
-        var outcome = await FlowEngine.ExecuteAsync(timedFlow);
+        timeProvider.Advance(TimeoutDuration);
 
-        // Assert
-        Assert.True(outcome.IsFailure());
-        Assert.IsType<TimeoutException>(outcome switch { Failure<string> f => f.Exception, _ => null });
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
     }
 
     [Fact]
     public async Task WithTimeout_WhenSyncOperationExceedsDuration_FailsWithTimeoutException()
     {
-        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        using var operationStarted = new ManualResetEventSlim();
+        using var releaseOperation = new ManualResetEventSlim();
         var flow = Flow.Create<string>(() =>
         {
-            Thread.Sleep(TimeSpan.FromMilliseconds(80));
+            operationStarted.Set();
+            releaseOperation.Wait();
             return SimoneDeBeauvoir;
-        });
+        }).WithTimeout(TimeoutDuration);
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
 
-        var timedFlow = flow.WithTimeout(TimeSpan.Zero);
+        try
+        {
+            Assert.True(operationStarted.Wait(TimeSpan.FromSeconds(5)));
+            timeProvider.Advance(TimeoutDuration);
 
-        // Act
-        var outcome = await FlowEngine.ExecuteAsync(timedFlow);
-
-        // Assert
-        Assert.True(outcome.IsFailure());
-        Assert.IsType<TimeoutException>(outcome switch { Failure<string> f => f.Exception, _ => null });
+            var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+            var failure = Assert.IsType<Failure<string>>(outcome);
+            Assert.IsType<TimeoutException>(failure.Exception);
+        }
+        finally
+        {
+            releaseOperation.Set();
+        }
     }
 
     [Fact]
     public async Task WithRetryThenWithTimeout_WhenRetriesSucceedWithinTimeout_Succeeds()
     {
-        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var firstDelayStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondDelayStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var attempts = 0;
-        var flow = Flow.Create<string>(async () =>
+        var flow = Flow.Create<string>(async cancellationToken =>
         {
             attempts++;
-            await Task.Yield();
             if (attempts < 3)
             {
-                throw new InvalidOperationException("Flaky");
+                var delay = Task.Delay(RetryDelay, timeProvider, cancellationToken);
+                (attempts == 1 ? firstDelayStarted : secondDelayStarted).TrySetResult();
+                await delay;
+                throw new InvalidOperationException($"Attempt {attempts} failed");
             }
+
             return SimoneDeBeauvoir;
         });
+        var execution = FlowEngine.ExecuteAsync(
+            flow.WithRetry(3).WithTimeout(TimeoutDuration),
+            CreateOptions(timeProvider));
 
-        // Total time will be ~60ms (3 * 20ms). Timeout is 400ms.
-        var resilientFlow = flow.WithRetry(3).WithTimeout(TimeSpan.FromMilliseconds(400));
+        await firstDelayStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(RetryDelay);
+        await secondDelayStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(RetryDelay);
 
-        // Act
-        var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
 
-        // Assert
         Assert.Equal(3, attempts);
-        Assert.True(outcome.IsSuccess());
+        Assert.Equal(Success(SimoneDeBeauvoir), outcome);
     }
 
     [Fact]
     public async Task WithTimeoutThenWithRetry_WhenFirstAttemptTimesOut_DoesNotRetry()
     {
-        // Arrange
+        var timeProvider = new FakeTimeProvider();
         var attempts = 0;
-        var flow = Flow.Create<string>(async () =>
+        var flow = Flow.Create<string>(async cancellationToken =>
         {
-            attempts += 1;
-            await Task.Delay(Timeout.InfiniteTimeSpan);
+            attempts++;
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
             return SimoneDeBeauvoir;
         });
+        var execution = FlowEngine.ExecuteAsync(
+            flow.WithTimeout(TimeoutDuration).WithRetry(3),
+            CreateOptions(timeProvider));
 
-        // Timeout is 20ms, so the first attempt will fail.
-        // Since the default policy for WithRetry is to not retry on TimeoutException, the retry should NOT happen
-        var resilientFlow = flow.WithTimeout(TimeSpan.Zero).WithRetry(3);
+        timeProvider.Advance(TimeoutDuration);
 
-        // Act
-        var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
 
-        // Assert
         Assert.Equal(1, attempts);
-        Assert.True(outcome.IsFailure());
-        Assert.IsType<TimeoutException>(outcome switch { Failure<string> f => f.Exception, _ => null });
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
     }
 
     [Fact]
     public async Task WithRetryThenWithTimeout_WhenRetriesExceedTimeout_FailsWithTimeoutException()
     {
-        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var secondAttemptStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var attempts = 0;
-        var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var flow = Flow.Create<string>(async () =>
+        var flow = Flow.Create<string>(async cancellationToken =>
         {
             attempts++;
             if (attempts == 1)
-            {
-                await Task.Yield();
                 throw new InvalidOperationException("Attempt 1 failed");
-            }
+
             if (attempts == 2)
-            {
-                secondStarted.TrySetResult();
-                await Task.Delay(Timeout.InfiniteTimeSpan);
-                throw new InvalidOperationException("unreachable");
-            }
-            await Task.Yield();
-            throw new InvalidOperationException($"Attempt {attempts} failed");
+                secondAttemptStarted.TrySetResult();
+
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            throw new InvalidOperationException("Unreachable");
         });
+        var execution = FlowEngine.ExecuteAsync(
+            flow.WithRetry(5).WithTimeout(TimeoutDuration),
+            CreateOptions(timeProvider));
 
-        var resilientFlow = flow.WithRetry(5)
-                               .WithTimeout(TimeSpan.FromMilliseconds(100));
+        await secondAttemptStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeoutDuration);
 
-        // Act
-        var task = FlowEngine.ExecuteAsync(resilientFlow);
-        await secondStarted.Task;
-        var outcome = await task;
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
 
-        // Assert
         Assert.True(attempts >= 2);
-        Assert.True(outcome.IsFailure());
-        Assert.IsType<TimeoutException>(outcome switch { Failure<string> f => f.Exception, _ => null });
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
     }
+
+    [Fact]
+    public async Task WithTimeoutInsideAny_PreservesExecutionTimeProvider()
+    {
+        var timeProvider = new FakeTimeProvider();
+        var flow = Flow.Any(CreateNeverCompletingFlow().WithTimeout(TimeoutDuration));
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+
+        Assert.False(execution.IsCompleted);
+
+        timeProvider.Advance(TimeoutDuration);
+
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        var aggregate = Assert.IsType<AggregateException>(failure.Exception);
+        Assert.Contains(aggregate.InnerExceptions, exception => exception is TimeoutException);
+    }
+
+    [Fact]
+    public async Task WithTimeoutInsideAll_PreservesExecutionTimeProvider()
+    {
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var flow = Flow.All(CreateNeverCompletingFlow(started).WithTimeout(TimeoutDuration), Flow.Succeed("ready"));
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+
+        var failure = Assert.IsType<Failure<string[]>>(outcome);
+        var aggregate = Assert.IsType<AggregateException>(failure.Exception);
+        Assert.Contains(aggregate.InnerExceptions, exception => exception is TimeoutException);
+    }
+
+    [Fact]
+    public async Task WithTimeoutInChainReturnedFlow_PreservesExecutionTimeProvider()
+    {
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var flow = Flow.Succeed("start").Chain(_ => CreateNeverCompletingFlow(started).WithTimeout(TimeoutDuration));
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+    }
+
+    [Fact]
+    public async Task WithTimeoutInRecoveredFlow_PreservesExecutionTimeProvider()
+    {
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var flow = Flow.Fail<string>(new InvalidOperationException("trigger recovery"))
+            .Recover(_ => CreateNeverCompletingFlow(started).WithTimeout(TimeoutDuration));
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+    }
+
+    [Fact]
+    public async Task WithTimeoutInResourceFlow_PreservesExecutionTimeProvider()
+    {
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var flow = Flow.WithResource(
+            acquire: () => new CancellationTokenSource(),
+            use: _ => CreateNeverCompletingFlow(started).WithTimeout(TimeoutDuration));
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+    }
+
+    private static Execution.Options CreateOptions(TimeProvider timeProvider) =>
+        new(CancellationToken.None) { TimeProvider = timeProvider };
+
+    private static IFlow<string> CreateNeverCompletingFlow(TaskCompletionSource? started = null) =>
+        Flow.Create<string>(async cancellationToken =>
+        {
+            started?.TrySetResult();
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            return SimoneDeBeauvoir;
+        });
 }

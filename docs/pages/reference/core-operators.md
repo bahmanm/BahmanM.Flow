@@ -127,6 +127,37 @@ This is an important distinction to remember:
 
 Flow supports co-operative cancellation throughout the Flow. `FlowEngine` provides a `CancellationToken` via execution options and operators that have cancellable overloads will observe that token.
 
+### Controlling time in tests
+
+`Execution.Options.TimeProvider` controls the clock used by Flow's time-based behaviours, including `.WithTimeout()`. It defaults to `TimeProvider.System`, so ordinary executions need no changes. In tests, add `Microsoft.Extensions.TimeProvider.Testing` as a test dependency and use its `FakeTimeProvider` to advance timeout time without waiting for wall-clock time.
+
+```csharp
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using BahmanM.Flow;
+using Microsoft.Extensions.Time.Testing;
+
+var timeProvider = new FakeTimeProvider();
+var operationStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+var flow = Flow.Create<string>(async ct =>
+{
+    operationStarted.TrySetResult();
+    await Task.Delay(Timeout.InfiniteTimeSpan, ct);
+    return "completed";
+}).WithTimeout(TimeSpan.FromMinutes(1));
+
+var execution = FlowEngine.ExecuteAsync(
+    flow,
+    new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider });
+
+await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+timeProvider.Advance(TimeSpan.FromMinutes(1));
+var outcome = await execution; // Failure<string> containing a TimeoutException
+```
+
+The provider controls Flow's timeout timer; it does not change delays or other clock use inside your operation. Pass a provider to that code separately if it also needs controllable time. Timeout cancellation remains co-operative, so operations should observe the supplied cancellation token.
+
 ---
 
 ## What's Next?

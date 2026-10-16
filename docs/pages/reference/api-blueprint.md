@@ -115,5 +115,9 @@ public static class FlowEngine
     public static Task<Outcome<T>> ExecuteAsync<T>(IFlow<T> flow, Options options);
 }
 
-public sealed record Options(CancellationToken CancellationToken);
+public sealed record Options(CancellationToken CancellationToken)
+{
+    // Defaults to TimeProvider.System; controls Flow's time-based behaviours.
+    public TimeProvider TimeProvider { get; init; }
+}
 ```

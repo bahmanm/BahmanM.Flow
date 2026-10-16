@@ -1,72 +1,94 @@
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Time.Testing;
 
 namespace BahmanM.Flow.Tests.Integration;
 
 public class WithTimeoutOnCompositesCancellationTests
 {
+    private static readonly TimeSpan TimeoutDuration = TimeSpan.FromMinutes(1);
+
     [Fact]
     public async Task WithTimeout_OnAny_CancelsBranches_OnTimeout()
     {
-        // Arrange
+        var timeProvider = new FakeTimeProvider();
         var sideEffects = new ConcurrentBag<string>();
+        var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstToken = CancellationToken.None;
+        var secondToken = CancellationToken.None;
         var slow1 = Flow.Create<string>(async ct =>
         {
-            await Task.Delay(200, ct);
+            firstToken = ct;
+            firstStarted.TrySetResult();
+            await Task.Delay(Timeout.InfiniteTimeSpan, ct);
             sideEffects.Add("slow1 completed");
             return "slow1";
         });
 
         var slow2 = Flow.Create<string>(async ct =>
         {
-            await Task.Delay(220, ct);
+            secondToken = ct;
+            secondStarted.TrySetResult();
+            await Task.Delay(Timeout.InfiniteTimeSpan, ct);
             sideEffects.Add("slow2 completed");
             return "slow2";
         });
 
-        var timedAny = Flow.Any(slow1, slow2).WithTimeout(TimeSpan.FromMilliseconds(100));
+        var execution = FlowEngine.ExecuteAsync(
+            Flow.Any(slow1, slow2).WithTimeout(TimeoutDuration),
+            CreateOptions(timeProvider));
+        await Task.WhenAll(firstStarted.Task, secondStarted.Task).WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
 
-        // Act
-        var outcome = await FlowEngine.ExecuteAsync(timedAny);
-        // Give enough time for slow branches to either be cancelled (desired) or complete (buggy behaviour)
-        await Task.Delay(300);
-
-        // Assert (desired): timeout AND no side-effects because branches were cancelled
-        Assert.True(outcome.IsFailure());
-        var exception = outcome switch { Failure<string> f => f.Exception, _ => null };
-        Assert.IsType<TimeoutException>(exception);
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+        Assert.True(firstToken.IsCancellationRequested);
+        Assert.True(secondToken.IsCancellationRequested);
         Assert.Empty(sideEffects);
     }
 
     [Fact]
     public async Task WithTimeout_OnAll_CancelsRemaining_OnTimeout()
     {
-        // Arrange
+        var timeProvider = new FakeTimeProvider();
         var sideEffects = new ConcurrentBag<string>();
+        var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstToken = CancellationToken.None;
+        var secondToken = CancellationToken.None;
         var slow1 = Flow.Create<string>(async ct =>
         {
-            await Task.Delay(200, ct);
+            firstToken = ct;
+            firstStarted.TrySetResult();
+            await Task.Delay(Timeout.InfiniteTimeSpan, ct);
             sideEffects.Add("slow1 completed");
             return "slow1";
         });
 
         var slow2 = Flow.Create<string>(async ct =>
         {
-            await Task.Delay(220, ct);
+            secondToken = ct;
+            secondStarted.TrySetResult();
+            await Task.Delay(Timeout.InfiniteTimeSpan, ct);
             sideEffects.Add("slow2 completed");
             return "slow2";
         });
 
-        var timedAll = Flow.All(slow1, slow2).WithTimeout(TimeSpan.FromMilliseconds(100));
+        var execution = FlowEngine.ExecuteAsync(
+            Flow.All(slow1, slow2).WithTimeout(TimeoutDuration),
+            CreateOptions(timeProvider));
+        await Task.WhenAll(firstStarted.Task, secondStarted.Task).WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
 
-        // Act
-        var outcome = await FlowEngine.ExecuteAsync(timedAll);
-        // Allow time for wrongly-un-cancelled work to complete if it were still running
-        await Task.Delay(300);
-
-        // Assert: timeout AND no side-effects because branches were cancelled
-        Assert.True(outcome.IsFailure());
-        var exception = outcome switch { Failure<string[]> f => f.Exception, _ => null };
-        Assert.IsType<TimeoutException>(exception);
+        var failure = Assert.IsType<Failure<string[]>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+        Assert.True(firstToken.IsCancellationRequested);
+        Assert.True(secondToken.IsCancellationRequested);
         Assert.Empty(sideEffects);
     }
+
+    private static Execution.Options CreateOptions(TimeProvider timeProvider) =>
+        new(CancellationToken.None) { TimeProvider = timeProvider };
 }

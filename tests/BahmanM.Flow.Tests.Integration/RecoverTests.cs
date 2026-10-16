@@ -1,4 +1,5 @@
 using static BahmanM.Flow.Outcome;
+using Microsoft.Extensions.Time.Testing;
 
 namespace BahmanM.Flow.Tests.Integration;
 
@@ -178,18 +179,22 @@ public class RecoverTests
     [Fact]
     public async Task Recover_AfterTimeout_ExecutesAndReturnsNewFlow()
     {
-        // Arrange
-        var initialFlow = Flow.Create(async () =>
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var initialFlow = Flow.Create<int>(async cancellationToken =>
         {
-            await Task.Delay(TimeSpan.FromSeconds(2)); // Will timeout
+            started.TrySetResult();
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
             return 10;
-        }).WithTimeout(TimeSpan.FromMilliseconds(40));
+        }).WithTimeout(TimeSpan.FromMinutes(1));
         var recoveredFlow = initialFlow.Recover(_ => Task.FromResult(Flow.Succeed(88)));
 
-        // Act
-        var outcome = await FlowEngine.ExecuteAsync(recoveredFlow);
+        var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
+        var execution = FlowEngine.ExecuteAsync(recoveredFlow, options);
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        timeProvider.Advance(TimeSpan.FromMinutes(1));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
 
-        // Assert
         Assert.Equal(Success(88), outcome);
     }
 
