@@ -289,7 +289,7 @@ public class ValidateTests
         // Arrange
         var predicateEx = new InvalidOperationException("predicate crashed");
         var flow = Flow.Succeed(1)
-            .Validate(async (_, _) => {
+            .Validate(async (x, _) => {
                 ArgumentOutOfRangeException.ThrowIfNegative(x);
                 await Task.Yield(); throw predicateEx; }, _ => new Exception("unused"));
 
