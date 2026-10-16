@@ -27,7 +27,7 @@ var allUsersFlow = Flow.All(
 
 **Solution:** Use `Flow.Any`.
 * It's like `Task.WhenAny`, but it specifically waits for the first `Flow` to succeed.
-* `Flow.Any` will cancel all losing branches as soon as the first success arrives — provided those branches are built from cancellable operations.
+* `Flow.Any` signals cancellation to the losing branches as soon as the first success arrives. They stop promptly only if their operations observe cancellation.
 * Prefer the cancellable `Flow.Create((ct) => Task<T>)` and cancellable operator overloads to enable prompt co‑operative cancellation.
 
 ```csharp

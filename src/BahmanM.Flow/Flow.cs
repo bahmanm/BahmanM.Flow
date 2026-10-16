@@ -93,8 +93,8 @@ public static class Flow
     /// </summary>
     /// <remarks>
     /// If all Flows succeed, the resulting Flow will succeed with an array of their values.
-    /// If any Flow fails, the composite Flow will fail. The execution behaviour depends on the <see cref="FlowEngine"/>,
-    /// which may wait for all Flows to complete and return an <see cref="AggregateException"/>.
+    /// The engine waits for all Flows to complete. If any fail, the composite Flow fails with an
+    /// <see cref="AggregateException"/> containing their exceptions.
     /// </remarks>
     /// <example>
     /// <code>
