@@ -99,11 +99,12 @@ var safeUserFlow = userFlow
 
 ### `.DoOn...()`
 
-This is the **Bystander**.
+These operators let you perform a side-effect when the flow succeeds or fails. Their exception behaviour differs:
 
-It lets you perform a side-effect without changing the result.
+* If a `DoOnSuccess` callback throws, the flow becomes a failure with that exception.
+* If a `DoOnFailure` callback throws, Flow suppresses that exception and keeps the original failure.
 
-Like a bystander on the sidelines, it lets you peek inside the Flow as it passes by to perform an action (like logging), and then lets the original outcome continue on its way, untouched.
+The synchronous, asynchronous, and cancellable asynchronous variants follow these same outcome rules.
 
 ```csharp
 var observedFlow = userFlow

@@ -11,7 +11,7 @@ Ready to cook up something more advanced? This document provides practical recip
 **Solution:** Use `Flow.All`. 
 * It's like `Task.WhenAll` for `Flows`. 
 * It runs all `Flows` concurrently and, if they all succeed, returns a `Flow` containing an array of their results. 
-* If any `Flow` fails, the entire operation fails immediately.
+* It waits for every `Flow` to complete. If any fail, the resulting failure contains an `AggregateException` with their exceptions.
 
 ```csharp
 var allUsersFlow = Flow.All(
