@@ -49,70 +49,43 @@ Good examples include:
 *   A caching strategy with custom invalidation logic.
 
 
-# Example: A Simple Circuit Breaker
+# Example: Count Failures Across Executions
 
-Let's build a simple circuit breaker from scratch. The goal: create a behaviour that will "trip" (stop executing a Flow) after 3 consecutive failures.
-
-### Step 1: The State
-
-First, we need a simple class to hold the state of our circuit breaker. This object will be shared and managed by our application.
+A custom behaviour can attach callbacks that update shared state as a flow executes. Here, a thread-safe counter records each failed execution.
 
 ```csharp
-public class CircuitBreakerState
+public sealed class FailureCounter
 {
-    public int ConsecutiveFailures { get; private set; }
+    private int _failures;
 
-    public bool IsTripped(int failureThreshold) => ConsecutiveFailures >= failureThreshold;
+    public int Failures => Volatile.Read(ref _failures);
 
-    public void RecordFailure() => ConsecutiveFailures++;
+    public void RecordFailure() => Interlocked.Increment(ref _failures);
+}
 
-    public void RecordSuccess() => ConsecutiveFailures = 0;
+public sealed class FailureCountingBehaviour(FailureCounter counter) : IBehaviour
+{
+    public string OperationType => "Flow.FailureCounter";
+
+    public IFlow<T> Apply<T>(IFlow<T> originalFlow) =>
+        originalFlow.DoOnFailure(_ => counter.RecordFailure());
 }
 ```
 
-### Step 2: The Behaviour
-
-Let's implement the `IBehaviour` interface now.
+Apply the behaviour once, then execute the resulting flow. The attached callback updates the counter on each failed execution:
 
 ```csharp
-public class CircuitBreakerBehaviour(CircuitBreakerState state, int failureThreshold = 3) : IBehaviour
-{
-    // This gives our custom behaviour a unique name for diagnostics.
-    public string OperationType => "Flow.CircuitBreaker";
+var counter = new FailureCounter();
+var observedFlow = GetUserFromApiFlow(123)
+    .WithBehaviour(new FailureCountingBehaviour(counter));
 
-    // This is where the magic happens.
-    public IFlow<T> Apply<T>(IFlow<T> originalFlow)
-    {
-        // 1. Check the state BEFORE doing anything.
-        if (state.IsTripped(failureThreshold))
-        {
-            // If the circuit is open, immediately return a failed Flow.
-            return Flow.Fail<T>(new Exception("Circuit breaker is open."));
-        }
+await FlowEngine.ExecuteAsync(observedFlow);
+await FlowEngine.ExecuteAsync(observedFlow);
 
-        // 2. If the circuit is closed, decorate the original Flow with our logic.
-        return originalFlow
-            .DoOnSuccess(_ => state.RecordSuccess())      // On success, reset the counter.
-            .DoOnFailure(_ => state.RecordFailure());     // On failure, increment it.
-    }
-}
+Console.WriteLine($"Failures: {counter.Failures}");
 ```
 
-### Step 3: Using Your New Behaviour
-
-Now you can plug your custom behaviour into any Flow with the generic `.WithBehaviour()` operator.
-
-```csharp
-// Create an instance of your behaviour, along with its state.
-var circuitBreaker = new CircuitBreakerBehaviour(new CircuitBreakerState());
-
-// Now, apply it to any flow.
-var resilientFlow = GetUserFromFlakyApiFlow(123)
-    .WithBehaviour(circuitBreaker);
-
-// When this flow is executed, the circuit breaker will do its job.
-var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
-```
+`WithBehaviour` calls `Apply` when the flow is composed and retains its result. Put per-execution work in the returned flow's operators; a state check performed directly in `Apply` will not run again on later executions of the composed flow.
 
 ---
 
