@@ -87,15 +87,15 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
 
     public IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node)
     {
-        Func<CancellationToken, Task<T>> newOperation = async ct =>
+        Func<Execution.Options, Task<T>> newOperation = async options =>
         {
             Exception lastException = null!;
             for (var i = 0; i < _maxAttempts; i++)
             {
-                ct.ThrowIfCancellationRequested();
+                options.CancellationToken.ThrowIfCancellationRequested();
                 try
                 {
-                    return await node.Operation(ct);
+                    return await node.Operation(options);
                 }
                 catch (Exception ex)
                 {
@@ -125,8 +125,8 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.CancellableAsync<TIn, TOut> node)
     {
-        Flow.Operations.Chain.CancellableAsync<TIn, TOut> newOperation = async (value, cancellationToken) =>
-            (await node.Operation(value, cancellationToken)).AsNode().Apply(this);
+        Func<TIn, Execution.Options, Task<IFlow<TOut>>> newOperation = async (value, options) =>
+            (await node.Operation(value, options)).AsNode().Apply(this);
         return node with { Operation = newOperation };
     }
 }

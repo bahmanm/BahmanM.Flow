@@ -20,7 +20,7 @@ internal class CancellableAsync(Ast.IInterpreter interpreter, Options options)
                 return Outcome.Failure<TOut>(new TaskCanceledException());
             }
 
-            var nextFlow = (await node.Operation(success.Value, options.CancellationToken)).AsNode();
+            var nextFlow = (await node.Operation(success.Value, options)).AsNode();
             return await nextFlow.Accept(interpreter);
         }
         catch (Exception ex)
