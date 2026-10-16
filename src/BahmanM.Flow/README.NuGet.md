@@ -4,6 +4,8 @@ Composable workflows for .NET with structured concurrency: cancellation and time
 
 ## Install
 
+Requires a .NET 10 (`net10.0`) project.
+
 -  .NET CLI: `dotnet add package BahmanM.Flow`
 -  PackageReference: `<PackageReference Include="BahmanM.Flow" Version="x.y.z" />`
 

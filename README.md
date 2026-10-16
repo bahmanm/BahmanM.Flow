@@ -273,6 +273,8 @@ A Flow is a **recipe** which is:
 
 # ![Flow Logo](docs/assets/img/flow-32x32.png) Install
 
+Requires a .NET 10 (`net10.0`) project.
+
 -  .NET CLI: `dotnet add package BahmanM.Flow`
 -  PackageReference: `<PackageReference Include="BahmanM.Flow" Version="x.y.z" />`
 -  NuGet page: https://www.nuget.org/packages/BahmanM.Flow/
