@@ -14,6 +14,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         Func<Execution.Options, Task<T>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
+                options.TimeProvider,
                 options.CancellationToken,
                 _ => Task.Run(() => node.Operation()));
         return new Ast.Create.CancellableAsync<T>(newOperation);
@@ -24,6 +25,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         Func<Execution.Options, Task<T>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
+                options.TimeProvider,
                 options.CancellationToken,
                 _ => node.Operation());
         return new Ast.Create.CancellableAsync<T>(newOperation);
@@ -34,6 +36,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         Func<Execution.Options, Task<T>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
+                options.TimeProvider,
                 options.CancellationToken,
                 childScopeToken => node.Operation(options with { CancellationToken = childScopeToken }));
         return new Ast.Create.CancellableAsync<T>(newOperation);
@@ -72,6 +75,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         {
             var nextFlow = await TimedScope.ExecuteAsync(
                 duration,
+                options.TimeProvider,
                 options.CancellationToken,
                 _ => Task.Run(() => node.Operation(value)));
             return nextFlow.AsNode().Apply(this);
@@ -85,6 +89,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         {
             var nextFlow = await TimedScope.ExecuteAsync(
                 duration,
+                options.TimeProvider,
                 options.CancellationToken,
                 _ => node.Operation(value));
             return nextFlow.AsNode().Apply(this);
@@ -98,6 +103,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         {
             var nextFlow = await TimedScope.ExecuteAsync(
                 duration,
+                options.TimeProvider,
                 options.CancellationToken,
                 childScopeToken => node.Operation(value, options with { CancellationToken = childScopeToken }));
             return nextFlow.AsNode().Apply(this);
@@ -119,6 +125,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         Func<Execution.Options, Task<T[]>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
+                options.TimeProvider,
                 options.CancellationToken,
                 childScopeToken => FlowEngine
                     .ExecuteAsync(node, options with { CancellationToken = childScopeToken })
@@ -131,6 +138,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         Func<Execution.Options, Task<T>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
+                options.TimeProvider,
                 options.CancellationToken,
                 childScopeToken => FlowEngine
                     .ExecuteAsync(node, options with { CancellationToken = childScopeToken })
@@ -152,6 +160,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         Func<Execution.Options, Task<T>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
+                options.TimeProvider,
                 options.CancellationToken,
                 childScopeToken => FlowEngine
                     .ExecuteAsync(node, options with { CancellationToken = childScopeToken })
@@ -164,6 +173,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         Func<Execution.Options, Task<T>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
+                options.TimeProvider,
                 options.CancellationToken,
                 childScopeToken => FlowEngine
                     .ExecuteAsync(node, options with { CancellationToken = childScopeToken })
@@ -176,6 +186,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
         Func<Execution.Options, Task<T>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
+                options.TimeProvider,
                 options.CancellationToken,
                 childScopeToken => FlowEngine
                     .ExecuteAsync(node, options with { CancellationToken = childScopeToken })

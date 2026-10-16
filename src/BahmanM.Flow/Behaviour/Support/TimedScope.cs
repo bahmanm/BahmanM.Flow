@@ -4,28 +4,45 @@ internal static class TimedScope
 {
     public static async Task<T> ExecuteAsync<T>(
         TimeSpan thisScopeTimeout,
+        TimeProvider timeProvider,
         CancellationToken parentScopeToken,
         Func<CancellationToken, Task<T>> work)
     {
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
         using var childScopeCts = CancellationTokenSource.CreateLinkedTokenSource(parentScopeToken);
         var childScopeToken = childScopeCts.Token;
         var workTask = StartWork(work, childScopeToken);
 
-        var timeoutExpiryTask = Task.Delay(thisScopeTimeout);
-        var parentScopeCancellationTask = Task.Delay(Timeout.InfiniteTimeSpan, parentScopeToken);
+        using var timeoutWaitCts = new CancellationTokenSource();
+        var timeoutExpiryTask = Task.Delay(thisScopeTimeout, timeProvider, timeoutWaitCts.Token);
+        var parentScopeCancellation = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var parentScopeCancellationRegistration = parentScopeToken.Register(
+            static state => ((TaskCompletionSource<bool>)state!).TrySetResult(true),
+            parentScopeCancellation);
 
-        var firstCompletedTask = await Task.WhenAny(workTask, timeoutExpiryTask, parentScopeCancellationTask).ConfigureAwait(false);
+        try
+        {
+            var firstCompletedTask = await Task.WhenAny(
+                workTask,
+                timeoutExpiryTask,
+                parentScopeCancellation.Task).ConfigureAwait(false);
 
-        if (firstCompletedTask == workTask)
-            return await workTask.ConfigureAwait(false);
+            if (firstCompletedTask == workTask)
+                return await workTask.ConfigureAwait(false);
 
-        TryCancel(childScopeCts);
+            TryCancel(childScopeCts);
 
-        if (firstCompletedTask == parentScopeCancellationTask)
-            throw new TaskCanceledException();
+            if (firstCompletedTask == parentScopeCancellation.Task)
+                throw new TaskCanceledException();
 
-        workTask.ObserveFaults();
-        throw new TimeoutException($"The operation has timed out after {thisScopeTimeout}.");
+            workTask.ObserveFaults();
+            throw new TimeoutException($"The operation has timed out after {thisScopeTimeout}.");
+        }
+        finally
+        {
+            timeoutWaitCts.Cancel();
+        }
     }
 
     private static Task<T> StartWork<T>(Func<CancellationToken, Task<T>> w, CancellationToken ct)

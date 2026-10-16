@@ -12,7 +12,7 @@ internal class Any(Ast.IInterpreter interpreter, Options options)
         internal static async Task<Outcome<T>> ExecuteAsync(Ast.Primitive.Any<T> node, Options options)
         {
             using var cts = CreateLinkedCts(options);
-            var childInterpreter = CreateChildInterpreter(cts);
+            var childInterpreter = CreateChildInterpreter(options, cts);
             var tasks = StartAll(node, childInterpreter);
 
             var (success, failures) = await DrainUntilFirstSuccess(tasks, cts);
@@ -22,8 +22,8 @@ internal class Any(Ast.IInterpreter interpreter, Options options)
         private static CancellationTokenSource CreateLinkedCts(Options options) =>
             CancellationTokenSource.CreateLinkedTokenSource(options.CancellationToken);
 
-        private static Execution.Interpreter CreateChildInterpreter(CancellationTokenSource cts) =>
-            new(new Options(cts.Token));
+        private static Execution.Interpreter CreateChildInterpreter(Options options, CancellationTokenSource cts) =>
+            new(options with { CancellationToken = cts.Token });
 
         private static List<Task<Outcome<T>>> StartAll(Ast.Primitive.Any<T> node, Ast.IInterpreter child) =>
             node.Flows
