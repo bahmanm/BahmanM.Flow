@@ -30,7 +30,7 @@ For a mapping of Flow concepts to functional programming, see [Notes for FP Deve
 
 # 2. Execution Options and Description IDs
 
-Execution-specific options are separate from the flow description. The public `FlowEngine.ExecuteAsync` overload accepts `Execution.Options`, which currently contains a `CancellationToken`. A token only affects operations that observe it.
+Execution-specific options are separate from the flow description. The public `FlowEngine.ExecuteAsync` overload accepts `Execution.Options`, which contains a `CancellationToken` and a `TimeProvider`. The provider defaults to `TimeProvider.System` and controls Flow's time-based behaviours, such as timeout scheduling. A cancellation token only affects operations that observe it; the provider does not control time used inside user callbacks.
 
 Each internal description node has a string ID generated when that node is constructed. These IDs belong to the internal description model; Flow does not expose public `FlowId` or `OperationId` types or an observer and diagnostic-event API.
 
