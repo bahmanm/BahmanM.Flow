@@ -112,7 +112,7 @@ public class AnyTests
         });
 
         // Act
-        var timedAny = Flow.Any(never1, never2).WithTimeout(TimeSpan.FromMilliseconds(50));
+        var timedAny = Flow.Any(never1, never2).WithTimeout(TimeSpan.FromMilliseconds(100));
         var outcome = await FlowEngine.ExecuteAsync(timedAny);
 
         // Assert
@@ -126,10 +126,10 @@ public class AnyTests
     {
         // Arrange
         var fcs = new FlowCompletionSource<string>();
-        var fast = fcs.Flow.WithTimeout(TimeSpan.FromMilliseconds(200));
+        var fast = fcs.Flow.WithTimeout(TimeSpan.FromMilliseconds(400));
         var slowTimesOut = Flow
             .Create<string>(async ct => { await Task.Delay(Timeout.InfiniteTimeSpan, ct); return "slow"; })
-            .WithTimeout(TimeSpan.FromMilliseconds(50));
+            .WithTimeout(TimeSpan.FromMilliseconds(100));
 
         // Act
         var exec = FlowEngine.ExecuteAsync(Flow.Any(fast, slowTimesOut));

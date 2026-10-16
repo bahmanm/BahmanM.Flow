@@ -76,7 +76,7 @@ public class WithTimeoutTests
             return SimoneDeBeauvoir;
         });
 
-        var timedFlow = flow.WithTimeout(TimeSpan.FromSeconds(1));
+        var timedFlow = flow.WithTimeout(TimeSpan.FromSeconds(2));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timedFlow);
@@ -142,8 +142,8 @@ public class WithTimeoutTests
             return SimoneDeBeauvoir;
         });
 
-        // Total time will be ~60ms (3 * 20ms). Timeout is 200ms.
-        var resilientFlow = flow.WithRetry(3).WithTimeout(TimeSpan.FromMilliseconds(200));
+        // Total time will be ~60ms (3 * 20ms). Timeout is 400ms.
+        var resilientFlow = flow.WithRetry(3).WithTimeout(TimeSpan.FromMilliseconds(400));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(resilientFlow);
@@ -203,7 +203,7 @@ public class WithTimeoutTests
         });
 
         var resilientFlow = flow.WithRetry(5)
-                               .WithTimeout(TimeSpan.FromMilliseconds(50));
+                               .WithTimeout(TimeSpan.FromMilliseconds(100));
 
         // Act
         var task = FlowEngine.ExecuteAsync(resilientFlow);

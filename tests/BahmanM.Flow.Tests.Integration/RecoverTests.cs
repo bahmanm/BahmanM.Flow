@@ -183,7 +183,7 @@ public class RecoverTests
         {
             await Task.Delay(TimeSpan.FromSeconds(2)); // Will timeout
             return 10;
-        }).WithTimeout(TimeSpan.FromMilliseconds(20));
+        }).WithTimeout(TimeSpan.FromMilliseconds(40));
         var recoveredFlow = initialFlow.Recover(_ => Task.FromResult(Flow.Succeed(88)));
 
         // Act

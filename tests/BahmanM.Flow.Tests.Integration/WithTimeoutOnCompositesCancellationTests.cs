@@ -23,7 +23,7 @@ public class WithTimeoutOnCompositesCancellationTests
             return "slow2";
         });
 
-        var timedAny = Flow.Any(slow1, slow2).WithTimeout(TimeSpan.FromMilliseconds(50));
+        var timedAny = Flow.Any(slow1, slow2).WithTimeout(TimeSpan.FromMilliseconds(100));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timedAny);
@@ -56,7 +56,7 @@ public class WithTimeoutOnCompositesCancellationTests
             return "slow2";
         });
 
-        var timedAll = Flow.All(slow1, slow2).WithTimeout(TimeSpan.FromMilliseconds(50));
+        var timedAll = Flow.All(slow1, slow2).WithTimeout(TimeSpan.FromMilliseconds(100));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timedAll);

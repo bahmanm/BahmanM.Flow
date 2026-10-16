@@ -2,133 +2,154 @@ namespace BahmanM.Flow.Description.Tests.Unit.Support;
 
 internal static class DescriptionFlowBuilder
 {
-    internal static Description.IDescription<T> Succeed<T>(T value) => new Description.Primitive.Succeed<T>(value);
+    internal static IDescription<T> Succeed<T>(T value) => new Primitive.Succeed<T>(value);
 
-    internal static Description.IDescription<T> Fail<T>(Exception exception) => new Description.Primitive.Fail<T>(exception);
+    internal static IDescription<T> Fail<T>(Exception exception) => new Primitive.Fail<T>(exception);
 
-    internal static Description.IDescription<T[]> All<T>(params Description.IDescription<T>[] flows) =>
-        new Description.Primitive.All<T>(flows);
+    internal static IDescription<T[]> All<T>(params IDescription<T>[] flows) =>
+        new Primitive.All<T>(flows);
 
-    internal static Description.IDescription<T> Any<T>(params Description.IDescription<T>[] flows) =>
-        new Description.Primitive.Any<T>(flows);
+    internal static IDescription<T> Any<T>(params IDescription<T>[] flows) =>
+        new Primitive.Any<T>(flows);
 
-    internal static Description.IDescription<T> Create<T>(Flow.Operations.Create.Sync<T> operation) =>
-        new Description.Create.Sync<T>(operation);
+    internal static IDescription<T> Create<T>(Flow.Operations.Create.Sync<T> operation) =>
+        new Create.Sync<T>(operation);
 
-    internal static Description.IDescription<T> Create<T>(Flow.Operations.Create.Async<T> operation) =>
-        new Description.Create.Async<T>(operation);
+    internal static IDescription<T> Create<T>(Flow.Operations.Create.Async<T> operation) =>
+        new Create.Async<T>(operation);
 
-    internal static Description.IDescription<T> Create<T>(Flow.Operations.Create.CancellableAsync<T> operation) =>
-        new Description.Create.CancellableAsync<T>(operation);
+    internal static IDescription<T> Create<T>(Flow.Operations.Create.CancellableAsync<T> operation) =>
+        new Create.CancellableAsync<T>(operation);
 
-    internal static Description.IDescription<TOut> Select<TIn, TOut>(
-        Description.IDescription<TIn> upstream,
+    internal static IDescription<T> Retry<T>(
+        IDescription<T> source,
+        int maxAttempts) =>
+        new Behaviour.Retry.Retry<T>(source, maxAttempts, [typeof(TimeoutException)]);
+
+    internal static IDescription<T> Retry<T>(
+        IDescription<T> source,
+        int maxAttempts,
+        params Type[] nonRetryableExceptions) =>
+        new Behaviour.Retry.Retry<T>(source, maxAttempts, nonRetryableExceptions);
+
+    internal static IDescription<T> Timeout<T>(
+        IDescription<T> source,
+        TimeSpan duration) =>
+        new Behaviour.Timeout.Timeout<T>(source, duration);
+
+    internal static IDescription<T> WithBehaviour<T>(
+        IDescription<T> source,
+        BahmanM.Flow.Behaviour.IBehaviour behaviour) =>
+        new Behaviour.Custom.Custom<T>(source, behaviour);
+
+    internal static IDescription<TOut> Select<TIn, TOut>(
+        IDescription<TIn> upstream,
         Flow.Operations.Select.Sync<TIn, TOut> operation) =>
-        new Description.Select.Sync<TIn, TOut>(upstream, operation);
+        new Select.Sync<TIn, TOut>(upstream, operation);
 
-    internal static Description.IDescription<TOut> Select<TIn, TOut>(
-        Description.IDescription<TIn> upstream,
+    internal static IDescription<TOut> Select<TIn, TOut>(
+        IDescription<TIn> upstream,
         Flow.Operations.Select.Async<TIn, TOut> operation) =>
-        new Description.Select.Async<TIn, TOut>(upstream, operation);
+        new Select.Async<TIn, TOut>(upstream, operation);
 
-    internal static Description.IDescription<TOut> Select<TIn, TOut>(
-        Description.IDescription<TIn> upstream,
+    internal static IDescription<TOut> Select<TIn, TOut>(
+        IDescription<TIn> upstream,
         Flow.Operations.Select.CancellableAsync<TIn, TOut> operation) =>
-        new Description.Select.CancellableAsync<TIn, TOut>(upstream, operation);
+        new Select.CancellableAsync<TIn, TOut>(upstream, operation);
 
-    internal static Description.IDescription<T> Validate<T>(
-        Description.IDescription<T> upstream,
+    internal static IDescription<T> Validate<T>(
+        IDescription<T> upstream,
         Func<T, bool> predicate,
         Func<T, Exception> exceptionFactory) =>
-        new Description.Validate.Sync<T>(upstream, predicate, exceptionFactory);
+        new Validate.Sync<T>(upstream, predicate, exceptionFactory);
 
-    internal static Description.IDescription<T> Validate<T>(
-        Description.IDescription<T> upstream,
+    internal static IDescription<T> Validate<T>(
+        IDescription<T> upstream,
         Func<T, Task<bool>> predicate,
         Func<T, Exception> exceptionFactory) =>
-        new Description.Validate.Async<T>(upstream, predicate, exceptionFactory);
+        new Validate.Async<T>(upstream, predicate, exceptionFactory);
 
-    internal static Description.IDescription<T> Validate<T>(
-        Description.IDescription<T> upstream,
+    internal static IDescription<T> Validate<T>(
+        IDescription<T> upstream,
         Func<T, CancellationToken, Task<bool>> predicate,
         Func<T, Exception> exceptionFactory) =>
-        new Description.Validate.CancellableAsync<T>(upstream, predicate, exceptionFactory);
+        new Validate.CancellableAsync<T>(upstream, predicate, exceptionFactory);
 
-    internal static Description.IDescription<T> DoOnSuccess<T>(
-        Description.IDescription<T> upstream,
+    internal static IDescription<T> DoOnSuccess<T>(
+        IDescription<T> upstream,
         Flow.Operations.DoOnSuccess.Sync<T> action) =>
-        new Description.DoOnSuccess.Sync<T>(upstream, action);
+        new DoOnSuccess.Sync<T>(upstream, action);
 
-    internal static Description.IDescription<T> DoOnSuccess<T>(
-        Description.IDescription<T> upstream,
+    internal static IDescription<T> DoOnSuccess<T>(
+        IDescription<T> upstream,
         Flow.Operations.DoOnSuccess.Async<T> action) =>
-        new Description.DoOnSuccess.Async<T>(upstream, action);
+        new DoOnSuccess.Async<T>(upstream, action);
 
-    internal static Description.IDescription<T> DoOnSuccess<T>(
-        Description.IDescription<T> upstream,
+    internal static IDescription<T> DoOnSuccess<T>(
+        IDescription<T> upstream,
         Flow.Operations.DoOnSuccess.CancellableAsync<T> action) =>
-        new Description.DoOnSuccess.CancellableAsync<T>(upstream, action);
+        new DoOnSuccess.CancellableAsync<T>(upstream, action);
 
-    internal static Description.IDescription<T> DoOnFailure<T>(
-        Description.IDescription<T> upstream,
+    internal static IDescription<T> DoOnFailure<T>(
+        IDescription<T> upstream,
         Flow.Operations.DoOnFailure.Sync action) =>
-        new Description.DoOnFailure.Sync<T>(upstream, action);
+        new DoOnFailure.Sync<T>(upstream, action);
 
-    internal static Description.IDescription<T> DoOnFailure<T>(
-        Description.IDescription<T> upstream,
+    internal static IDescription<T> DoOnFailure<T>(
+        IDescription<T> upstream,
         Flow.Operations.DoOnFailure.Async action) =>
-        new Description.DoOnFailure.Async<T>(upstream, action);
+        new DoOnFailure.Async<T>(upstream, action);
 
-    internal static Description.IDescription<T> DoOnFailure<T>(
-        Description.IDescription<T> upstream,
+    internal static IDescription<T> DoOnFailure<T>(
+        IDescription<T> upstream,
         Flow.Operations.DoOnFailure.CancellableAsync action) =>
-        new Description.DoOnFailure.CancellableAsync<T>(upstream, action);
+        new DoOnFailure.CancellableAsync<T>(upstream, action);
 
-    internal static Description.IDescription<TOut> Chain<TIn, TOut>(
-        Description.IDescription<TIn> upstream,
+    internal static IDescription<TOut> Chain<TIn, TOut>(
+        IDescription<TIn> upstream,
         Flow.Operations.Chain.Sync<TIn, TOut> operation) =>
-        new Description.Chain.Sync<TIn, TOut>(upstream, operation);
+        new Chain.Sync<TIn, TOut>(upstream, operation);
 
-    internal static Description.IDescription<TOut> Chain<TIn, TOut>(
-        Description.IDescription<TIn> upstream,
+    internal static IDescription<TOut> Chain<TIn, TOut>(
+        IDescription<TIn> upstream,
         Flow.Operations.Chain.Async<TIn, TOut> operation) =>
-        new Description.Chain.Async<TIn, TOut>(upstream, operation);
+        new Chain.Async<TIn, TOut>(upstream, operation);
 
-    internal static Description.IDescription<TOut> Chain<TIn, TOut>(
-        Description.IDescription<TIn> upstream,
+    internal static IDescription<TOut> Chain<TIn, TOut>(
+        IDescription<TIn> upstream,
         Flow.Operations.Chain.CancellableAsync<TIn, TOut> operation) =>
-        new Description.Chain.CancellableAsync<TIn, TOut>(upstream, operation);
+        new Chain.CancellableAsync<TIn, TOut>(upstream, operation);
 
-    internal static Description.IDescription<T> Recover<T>(
-        Description.IDescription<T> source,
+    internal static IDescription<T> Recover<T>(
+        IDescription<T> source,
         Flow.Operations.Recover.Sync<T> recover) =>
-        new Description.Recover.Sync<T>(source, recover);
+        new Recover.Sync<T>(source, recover);
 
-    internal static Description.IDescription<T> Recover<T>(
-        Description.IDescription<T> source,
+    internal static IDescription<T> Recover<T>(
+        IDescription<T> source,
         Flow.Operations.Recover.Async<T> recover) =>
-        new Description.Recover.Async<T>(source, recover);
+        new Recover.Async<T>(source, recover);
 
-    internal static Description.IDescription<T> Recover<T>(
-        Description.IDescription<T> source,
+    internal static IDescription<T> Recover<T>(
+        IDescription<T> source,
         Func<Exception, CancellationToken, Task<IFlow<T>>> recover) =>
-        new Description.Recover.CancellableAsync<T>(source, recover);
+        new Recover.CancellableAsync<T>(source, recover);
 
-    internal static Description.IDescription<T> WithResource<TResource, T>(
+    internal static IDescription<T> WithResource<TResource, T>(
         Func<TResource> acquire,
         Func<TResource, IFlow<T>> use)
         where TResource : IDisposable =>
-        new Description.Resource.WithResource<TResource, T>(acquire, use);
+        new Resource.WithResource<TResource, T>(acquire, use);
 
-    internal static Description.IDescription<T> WithResource<TResource, T>(
+    internal static IDescription<T> WithResource<TResource, T>(
         Func<Task<TResource>> acquireAsync,
         Func<TResource, IFlow<T>> use)
         where TResource : IAsyncDisposable =>
-        new Description.Resource.WithResourceAsync<TResource, T>(acquireAsync, use);
+        new Resource.WithResourceAsync<TResource, T>(acquireAsync, use);
 
-    internal static Description.IDescription<T> WithResource<TResource, T>(
+    internal static IDescription<T> WithResource<TResource, T>(
         Func<CancellationToken, Task<TResource>> acquireAsync,
         Func<TResource, IFlow<T>> use)
         where TResource : IAsyncDisposable =>
-        new Description.Resource.WithResourceCancellableAsync<TResource, T>(acquireAsync, use);
+        new Resource.WithResourceCancellableAsync<TResource, T>(acquireAsync, use);
 }

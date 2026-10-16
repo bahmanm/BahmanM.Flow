@@ -46,7 +46,7 @@ public class README_Behavior_Enrichment
         // Arrange
         var slowService = new SlowService(delay: TimeSpan.FromMilliseconds(100));
         var timeoutFlow = slowService.GetValueFlow()
-            .WithTimeout(TimeSpan.FromMilliseconds(20));
+            .WithTimeout(TimeSpan.FromMilliseconds(40));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timeoutFlow);

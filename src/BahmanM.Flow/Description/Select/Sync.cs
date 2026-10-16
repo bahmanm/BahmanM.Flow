@@ -1,5 +1,3 @@
-using BahmanM.Flow.Description.Serialisation;
-
 namespace BahmanM.Flow.Description.Select;
 
 internal sealed record Sync<TIn, TOut>(
