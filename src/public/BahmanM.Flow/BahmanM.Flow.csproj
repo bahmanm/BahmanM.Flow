@@ -29,12 +29,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="README.NuGet.md" Pack="true" PackagePath="" />
-    <None Include="../../docs/assets/img/**" Pack="true" PackagePath="docs/assets/img/%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="../../../README.NuGet.md" Pack="true" PackagePath="" />
+    <None Include="../../../docs/assets/img/**" Pack="true" PackagePath="docs/assets/img/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../BahmanM.Flow.Abstractions/BahmanM.Flow.Abstractions.csproj" />
+    <ProjectReference Include="../../internal/BahmanM.Flow.Shared/BahmanM.Flow.Shared.csproj" />
+    <ProjectReference Include="../../internal/BahmanM.Flow.Description/BahmanM.Flow.Description.csproj" />
+    <ProjectReference Include="../../internal/BahmanM.Flow.Execution/BahmanM.Flow.Execution.csproj" />
   </ItemGroup>
 
 </Project>

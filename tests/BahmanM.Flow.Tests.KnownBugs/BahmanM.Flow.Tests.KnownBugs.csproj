@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BahmanM.Flow.Tests.Support\BahmanM.Flow.Tests.Support.csproj" />
-    <ProjectReference Include="..\..\src\BahmanM.Flow\BahmanM.Flow.csproj" />
+    <ProjectReference Include="..\..\src\public\BahmanM.Flow\BahmanM.Flow.csproj" />
   </ItemGroup>
 
 </Project>

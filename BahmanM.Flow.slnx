@@ -3,7 +3,12 @@
     <Project Path="examples/ShouldIGoOutside/ShouldIGoOutside.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/BahmanM.Flow/BahmanM.Flow.csproj" />
+    <Project Path="src/public/BahmanM.Flow/BahmanM.Flow.csproj" />
+    <Project Path="src/public/BahmanM.Flow.Abstractions/BahmanM.Flow.Abstractions.csproj" />
+    <Project Path="src/internal/BahmanM.Flow.Shared/BahmanM.Flow.Shared.csproj" />
+    <Project Path="src/internal/BahmanM.Flow.Description/BahmanM.Flow.Description.csproj" />
+    <Project Path="src/internal/BahmanM.Flow.Ast/BahmanM.Flow.Ast.csproj" />
+    <Project Path="src/internal/BahmanM.Flow.Execution/BahmanM.Flow.Execution.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/BahmanM.Flow.Description.Tests.Unit/BahmanM.Flow.Description.Tests.Unit.csproj" />

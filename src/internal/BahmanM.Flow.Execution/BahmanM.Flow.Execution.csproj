@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../BahmanM.Flow.Shared/BahmanM.Flow.Shared.csproj" />
+    <ProjectReference Include="../BahmanM.Flow.Description/BahmanM.Flow.Description.csproj" />
+    <ProjectReference Include="../BahmanM.Flow.Ast/BahmanM.Flow.Ast.csproj" />
+  </ItemGroup>
+
+</Project>
