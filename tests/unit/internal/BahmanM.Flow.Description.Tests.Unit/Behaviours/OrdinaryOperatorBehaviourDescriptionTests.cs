@@ -98,9 +98,9 @@ public class OrdinaryOperatorBehaviourDescriptionTests
         Assert.IsAssignableFrom<Ast.INode<int>>(lowered);
 
         var execution = FlowEngine.ExecuteAsync(description);
-        await sourceStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
-        await sourceCancelled.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await sourceStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        await sourceCancelled.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(outcome).Exception);
         Assert.Equal(1, sourceCalls);
@@ -129,11 +129,11 @@ public class OrdinaryOperatorBehaviourDescriptionTests
         var description = (((((Flow.Create(() => 42)).AsDescription()).Select(select)).AsDescription()).WithTimeout(timeout)).AsDescription();
 
         var execution = FlowEngine.ExecuteAsync(description);
-        await selectStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        await Task.Delay(timeout + timeout);
+        await selectStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        await Task.Delay(timeout + timeout, TestContext.Current.CancellationToken);
         var executionRemainsPending = !execution.IsCompleted;
         releaseSelect.TrySetResult();
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.True(executionRemainsPending);
         Assert.Equal(CancellationToken.None, selectToken);

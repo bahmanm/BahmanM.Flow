@@ -86,11 +86,11 @@ public class TimeoutDescriptionTests
         var invocationCountBeforeExecution = invocationCount;
         var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
         var execution = FlowEngine.ExecuteAsync(description, options);
-        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         timeProvider.Advance(timeout);
         var outcome = await execution;
         operationCompletion.SetResult(42);
-        await operationFinished.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await operationFinished.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Contains("Timeout<int>", descriptionText);
@@ -122,7 +122,7 @@ public class TimeoutDescriptionTests
         var execution = FlowEngine.ExecuteAsync(
             description,
             new Execution.Options(externalCancellation.Token));
-        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         await externalCancellation.CancelAsync();
         var outcome = await execution;
 
@@ -150,7 +150,7 @@ public class TimeoutDescriptionTests
 
         var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
         var execution = FlowEngine.ExecuteAsync(description, options);
-        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         timeProvider.Advance(timeout);
         var outcome = await execution;
 
@@ -189,15 +189,15 @@ public class TimeoutDescriptionTests
         var secondOptions = new Execution.Options(CancellationToken.None) { TimeProvider = secondTimeProvider };
         var firstExecution = FlowEngine.ExecuteAsync(lowered, firstOptions);
         var secondExecution = FlowEngine.ExecuteAsync(lowered, secondOptions);
-        await Task.WhenAll(started[0].Task, started[1].Task).WaitAsync(TimeSpan.FromSeconds(2));
+        await Task.WhenAll(started[0].Task, started[1].Task).WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         firstTimeProvider.Advance(timeout);
-        var firstOutcome = await firstExecution.WaitAsync(TimeSpan.FromSeconds(2));
+        var firstOutcome = await firstExecution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(firstOutcome).Exception);
         Assert.False(secondExecution.IsCompleted);
 
         completion[1].SetResult(42);
-        var secondOutcome = await secondExecution.WaitAsync(TimeSpan.FromSeconds(2));
+        var secondOutcome = await secondExecution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.Equal(42, Assert.IsType<Success<int>>(secondOutcome).Value);
         Assert.Equal(2, invocationCount);
@@ -265,9 +265,9 @@ public class TimeoutDescriptionTests
         {
             var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
             var execution = FlowEngine.ExecuteAsync(description, options);
-            await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
             timeProvider.Advance(timeout);
-            var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
+            var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
             Assert.Equal(1, attempts);
             Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(outcome).Exception);

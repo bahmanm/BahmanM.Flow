@@ -115,9 +115,9 @@ public class CompositeBehaviourDescriptionTests
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var startedAfterLowering = startedCount;
         var execution = FlowEngine.ExecuteAsync(description);
-        await started.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         var outcome = await execution;
-        await cancelled.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await cancelled.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Contains("Timeout<int[]>", text);
@@ -164,9 +164,9 @@ public class CompositeBehaviourDescriptionTests
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var startsAfterLowering = startedCount;
         var execution = FlowEngine.ExecuteAsync(description);
-        await bothStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await bothStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         var outcome = await execution;
-        await bothCancelled.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await bothCancelled.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Contains("Timeout<int>", text);
@@ -210,7 +210,7 @@ public class CompositeBehaviourDescriptionTests
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         Assert.False(loserStarted.Task.IsCompleted);
         var outcome = await FlowEngine.ExecuteAsync(description);
-        await loserCancelled.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await loserCancelled.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);

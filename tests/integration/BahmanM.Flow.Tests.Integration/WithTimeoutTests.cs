@@ -52,7 +52,7 @@ public class WithTimeoutTests
 
         timeProvider.Advance(TimeoutDuration);
 
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
     }
@@ -70,11 +70,11 @@ public class WithTimeoutTests
         }).WithTimeout(TimeoutDuration);
         var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
 
-        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeSpan.FromSeconds(30));
         completion.SetResult(SimoneDeBeauvoir);
 
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.Equal(Success(SimoneDeBeauvoir), outcome);
     }
@@ -94,7 +94,7 @@ public class WithTimeoutTests
 
         timeProvider.Advance(TimeoutDuration);
 
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
     }
@@ -115,10 +115,10 @@ public class WithTimeoutTests
 
         try
         {
-            Assert.True(operationStarted.Wait(TimeSpan.FromSeconds(5)));
+            Assert.True(operationStarted.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
             timeProvider.Advance(TimeoutDuration);
 
-            var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+            var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             var failure = Assert.IsType<Failure<string>>(outcome);
             Assert.IsType<TimeoutException>(failure.Exception);
         }
@@ -152,12 +152,12 @@ public class WithTimeoutTests
             flow.WithRetry(3).WithTimeout(TimeoutDuration),
             CreateOptions(timeProvider));
 
-        await firstDelayStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await firstDelayStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(RetryDelay);
-        await secondDelayStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await secondDelayStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(RetryDelay);
 
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.Equal(3, attempts);
         Assert.Equal(Success(SimoneDeBeauvoir), outcome);
@@ -180,7 +180,7 @@ public class WithTimeoutTests
 
         timeProvider.Advance(TimeoutDuration);
 
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.Equal(1, attempts);
         var failure = Assert.IsType<Failure<string>>(outcome);
@@ -209,10 +209,10 @@ public class WithTimeoutTests
             flow.WithRetry(5).WithTimeout(TimeoutDuration),
             CreateOptions(timeProvider));
 
-        await secondAttemptStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await secondAttemptStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeoutDuration);
 
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.True(attempts >= 2);
         var failure = Assert.IsType<Failure<string>>(outcome);
@@ -230,7 +230,7 @@ public class WithTimeoutTests
 
         timeProvider.Advance(TimeoutDuration);
 
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         var failure = Assert.IsType<Failure<string>>(outcome);
         var aggregate = Assert.IsType<AggregateException>(failure.Exception);
         Assert.Contains(aggregate.InnerExceptions, exception => exception is TimeoutException);
@@ -244,9 +244,9 @@ public class WithTimeoutTests
         var flow = Flow.All(CreateNeverCompletingFlow(started).WithTimeout(TimeoutDuration), Flow.Succeed("ready"));
         var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
 
-        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeoutDuration);
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         var failure = Assert.IsType<Failure<string[]>>(outcome);
         var aggregate = Assert.IsType<AggregateException>(failure.Exception);
@@ -261,9 +261,9 @@ public class WithTimeoutTests
         var flow = Flow.Succeed("start").Chain(_ => CreateNeverCompletingFlow(started).WithTimeout(TimeoutDuration));
         var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
 
-        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeoutDuration);
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
@@ -278,9 +278,9 @@ public class WithTimeoutTests
             .Recover(_ => CreateNeverCompletingFlow(started).WithTimeout(TimeoutDuration));
         var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
 
-        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeoutDuration);
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
@@ -296,9 +296,9 @@ public class WithTimeoutTests
             use: _ => CreateNeverCompletingFlow(started).WithTimeout(TimeoutDuration));
         var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
 
-        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeoutDuration);
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);

@@ -161,7 +161,7 @@ public class WithResourceDescriptionTests
         var description = (Flow.WithResource<AsyncResource, int>(_ => Task.FromResult(resource), _ => (Flow.Create(token => Task.FromCanceled<int>(token))).AsDescription())).AsDescription();
 
         var outcome = await FlowEngine.ExecuteAsync(description, new Execution.Options(cancellation.Token));
-        await resource.Disposed.WaitAsync(TimeSpan.FromSeconds(5));
+        await resource.Disposed.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.IsAssignableFrom<OperationCanceledException>(Assert.IsType<Failure<int>>(outcome).Exception);
         Assert.True(resource.IsDisposed);

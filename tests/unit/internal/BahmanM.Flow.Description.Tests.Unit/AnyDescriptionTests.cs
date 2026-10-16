@@ -62,7 +62,7 @@ public class AnyDescriptionTests
         var execution = FlowEngine.ExecuteAsync(description);
         try
         {
-            await bothStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await bothStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         }
         finally
         {
@@ -70,7 +70,7 @@ public class AnyDescriptionTests
         }
 
         var actual = await execution;
-        await loserCancelled.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await loserCancelled.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         var expected = await FlowEngine.ExecuteAsync(expectedFlow);
 
         // Assert

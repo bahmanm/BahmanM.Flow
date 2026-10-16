@@ -85,8 +85,8 @@ public class CancellableAsyncChainBehaviourDescriptionTests
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var callbackExecutionsAfterLowering = callbackExecutions;
         var execution = FlowEngine.ExecuteAsync(description);
-        await callbackStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
+        await callbackStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Contains("Timeout<int>", descriptionText);
@@ -119,9 +119,9 @@ public class CancellableAsyncChainBehaviourDescriptionTests
         var execution = FlowEngine.ExecuteAsync(
             description,
             new Execution.Options(cancellation.Token));
-        await callbackStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await callbackStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         await cancellation.CancelAsync();
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.IsAssignableFrom<OperationCanceledException>(Assert.IsType<Failure<int>>(outcome).Exception);
@@ -168,8 +168,8 @@ public class CancellableAsyncChainBehaviourDescriptionTests
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (upstreamExecutions, callbackExecutions, childExecutions);
         var execution = FlowEngine.ExecuteAsync(description);
-        await childStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
+        await childStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Contains("Timeout<int>", descriptionText);
@@ -214,9 +214,9 @@ public class CancellableAsyncChainBehaviourDescriptionTests
         var execution = FlowEngine.ExecuteAsync(
             description,
             new Execution.Options(cancellation.Token));
-        await childStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await childStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         await cancellation.CancelAsync();
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.IsAssignableFrom<OperationCanceledException>(Assert.IsType<Failure<int>>(outcome).Exception);

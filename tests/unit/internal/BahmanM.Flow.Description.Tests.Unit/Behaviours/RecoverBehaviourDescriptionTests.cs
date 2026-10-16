@@ -107,13 +107,13 @@ public class RecoverBehaviourDescriptionTests
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (sourceExecutions, callbackExecutions, fallbackExecutions);
         var execution = FlowEngine.ExecuteAsync(description);
-        await sourceStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        await fallbackStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        await Task.Delay(timeout + timeout);
+        await sourceStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        await fallbackStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        await Task.Delay(timeout + timeout, TestContext.Current.CancellationToken);
         var executionRemainsPendingDuringFallback = !execution.IsCompleted;
         releaseFallback.TrySetResult();
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
-        await fallbackCompleted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        await fallbackCompleted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Contains("Timeout<int>", descriptionText);

@@ -165,9 +165,9 @@ public class CustomBehaviourDescriptionTests
         var description = new Behaviour.Custom.Custom<int>((Flow.Succeed(1)).AsDescription(), behaviour);
 
         var execution = FlowEngine.ExecuteAsync(description, new Execution.Options(cancellation.Token));
-        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         await cancellation.CancelAsync();
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.Equal(1, behaviour.ApplyCalls);
         Assert.Equal(cancellation.Token, receivedToken);

@@ -93,10 +93,10 @@ public class SyncChainBehaviourDescriptionTests
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (upstreamExecutions, callbackExecutions, childExecutions);
         var execution = FlowEngine.ExecuteAsync(description);
-        await childStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await childStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         var outcome = await execution;
         releaseChild.Set();
-        await childCompleted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await childCompleted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Contains("Timeout<int>", descriptionText);

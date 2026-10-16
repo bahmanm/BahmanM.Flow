@@ -49,7 +49,7 @@ public class AllDescriptionTests
         var execution = FlowEngine.ExecuteAsync(description);
         try
         {
-            await allStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await allStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         }
         finally
         {

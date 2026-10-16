@@ -37,9 +37,9 @@ public class WithTimeoutOnCompositesCancellationTests
         var execution = FlowEngine.ExecuteAsync(
             Flow.Any(slow1, slow2).WithTimeout(TimeoutDuration),
             CreateOptions(timeProvider));
-        await Task.WhenAll(firstStarted.Task, secondStarted.Task).WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.WhenAll(firstStarted.Task, secondStarted.Task).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeoutDuration);
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
@@ -78,9 +78,9 @@ public class WithTimeoutOnCompositesCancellationTests
         var execution = FlowEngine.ExecuteAsync(
             Flow.All(slow1, slow2).WithTimeout(TimeoutDuration),
             CreateOptions(timeProvider));
-        await Task.WhenAll(firstStarted.Task, secondStarted.Task).WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.WhenAll(firstStarted.Task, secondStarted.Task).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeoutDuration);
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         var failure = Assert.IsType<Failure<string[]>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);

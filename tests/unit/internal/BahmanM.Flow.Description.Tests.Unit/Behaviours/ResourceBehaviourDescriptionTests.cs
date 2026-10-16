@@ -79,9 +79,9 @@ public class ResourceBehaviourDescriptionTests
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
 
         var execution = FlowEngine.ExecuteAsync(description);
-        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
-        await resource.DisposalStarted.WaitAsync(TimeSpan.FromSeconds(2));
+        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        await resource.DisposalStarted.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.Contains("Timeout<int>", text);
         Assert.Contains("WithResource.Sync<SyncResource, int>", text);
@@ -89,7 +89,7 @@ public class ResourceBehaviourDescriptionTests
         Assert.Equal((1, 1, false), (acquireCalls, useCalls, resource.IsDisposed));
 
         resource.ReleaseDisposal();
-        await resource.Disposed.WaitAsync(TimeSpan.FromSeconds(2));
+        await resource.Disposed.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         Assert.True(resource.IsDisposed);
     }
 
@@ -117,16 +117,16 @@ public class ResourceBehaviourDescriptionTests
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
 
         var execution = FlowEngine.ExecuteAsync(description);
-        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
-        await resource.DisposalStarted.WaitAsync(TimeSpan.FromSeconds(2));
+        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        await resource.DisposalStarted.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(outcome).Exception);
         Assert.Equal(1, useCalls);
         Assert.False(resource.IsDisposed);
 
         resource.ReleaseDisposal();
-        await resource.Disposed.WaitAsync(TimeSpan.FromSeconds(2));
+        await resource.Disposed.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         Assert.True(resource.IsDisposed);
     }
 
@@ -157,9 +157,9 @@ public class ResourceBehaviourDescriptionTests
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
 
         var execution = FlowEngine.ExecuteAsync(description);
-        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
-        await resource.DisposalStarted.WaitAsync(TimeSpan.FromSeconds(2));
+        await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        await resource.DisposalStarted.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.Contains("WithResource.CancellableAsync<AsyncResource, int>", text);
         Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(outcome).Exception);
@@ -169,7 +169,7 @@ public class ResourceBehaviourDescriptionTests
         Assert.False(resource.IsDisposed);
 
         resource.ReleaseDisposal();
-        await resource.Disposed.WaitAsync(TimeSpan.FromSeconds(2));
+        await resource.Disposed.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         Assert.True(resource.IsDisposed);
     }
 
@@ -201,8 +201,8 @@ public class ResourceBehaviourDescriptionTests
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
 
         var execution = FlowEngine.ExecuteAsync(description);
-        await acquireStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
+        await acquireStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.Contains("Timeout<int>", text);
         Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(outcome).Exception);
@@ -210,7 +210,7 @@ public class ResourceBehaviourDescriptionTests
         Assert.Equal(0, useCalls);
 
         releaseAcquire.TrySetResult();
-        await resource.Disposed.WaitAsync(TimeSpan.FromSeconds(2));
+        await resource.Disposed.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         Assert.True(acquisitionCompleted);
         Assert.Equal(1, useCalls);
         Assert.True(resource.IsDisposed);
@@ -252,9 +252,9 @@ public class ResourceBehaviourDescriptionTests
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
 
         var execution = FlowEngine.ExecuteAsync(description);
-        await acquireStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
-        await acquireCancelled.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await acquireStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        await acquireCancelled.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(outcome).Exception);
         Assert.True(acquireToken.IsCancellationRequested);
@@ -284,12 +284,12 @@ public class ResourceBehaviourDescriptionTests
         Assert.Equal(0, useCalls);
 
         var execution = Task.Run(() => FlowEngine.ExecuteAsync(description));
-        await acquireStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
-        await Task.Delay(TimeoutDuration + TimeoutDuration);
+        await acquireStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
+        await Task.Delay(TimeoutDuration + TimeoutDuration, TestContext.Current.CancellationToken);
         Assert.False(execution.IsCompleted);
 
         releaseAcquire.TrySetResult();
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
         Assert.Equal(Outcome.Success(42), outcome);

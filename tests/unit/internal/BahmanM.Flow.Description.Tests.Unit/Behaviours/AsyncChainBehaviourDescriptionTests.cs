@@ -96,17 +96,17 @@ public class AsyncChainBehaviourDescriptionTests
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (upstreamExecutions, callbackExecutions, childExecutions);
         var execution = FlowEngine.ExecuteAsync(description);
-        await childStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await childStarted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         Outcome<int> outcome;
         try
         {
-            outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
+            outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         }
         finally
         {
             releaseChild.TrySetResult();
         }
-        await childCompleted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await childCompleted.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Contains("Timeout<int>", descriptionText);

@@ -118,9 +118,9 @@ public class AnyTests
 
         var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
         var execution = FlowEngine.ExecuteAsync(Flow.Any(never1, never2).WithTimeout(TimeSpan.FromMinutes(1)), options);
-        await Task.WhenAll(firstStarted.Task, secondStarted.Task).WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.WhenAll(firstStarted.Task, secondStarted.Task).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeSpan.FromMinutes(1));
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
@@ -144,10 +144,10 @@ public class AnyTests
 
         var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
         var execution = FlowEngine.ExecuteAsync(Flow.Any(fast, slowTimesOut), options);
-        await Task.WhenAll(fcs.Started, slowStarted.Task).WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.WhenAll(fcs.Started, slowStarted.Task).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeSpan.FromMinutes(1));
         fcs.Succeed("fast");
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.Equal(Success("fast"), outcome);
     }

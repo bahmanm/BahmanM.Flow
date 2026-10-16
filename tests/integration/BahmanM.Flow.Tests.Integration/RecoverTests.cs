@@ -191,9 +191,9 @@ public class RecoverTests
 
         var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
         var execution = FlowEngine.ExecuteAsync(recoveredFlow, options);
-        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeSpan.FromMinutes(1));
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.Equal(Success(88), outcome);
     }

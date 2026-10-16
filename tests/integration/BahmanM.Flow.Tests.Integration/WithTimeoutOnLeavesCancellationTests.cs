@@ -24,9 +24,9 @@ public class WithTimeoutOnLeavesCancellationTests
         }).WithTimeout(TimeoutDuration);
 
         var execution = FlowEngine.ExecuteAsync(leaf, CreateOptions(timeProvider));
-        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeoutDuration);
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
@@ -51,9 +51,9 @@ public class WithTimeoutOnLeavesCancellationTests
         }).WithTimeout(TimeoutDuration);
 
         var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
-        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeoutDuration);
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
@@ -80,9 +80,9 @@ public class WithTimeoutOnLeavesCancellationTests
         }).WithTimeout(TimeoutDuration);
 
         var execution = FlowEngine.ExecuteAsync(leaf, options);
-        await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         await cts.CancelAsync();
-        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5));
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TaskCanceledException>(failure.Exception);
