@@ -1,14 +1,12 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace BahmanM.Flow.Description.Serialisation;
+namespace BahmanM.Flow.Description.Formatting;
 
-// Temporary plain-text rendering for the initial Description slice. Replace this and its helpers with ISerialiser for text and JSON output.
-internal static class DescriptionFormatter
+internal sealed class PlainTextFormatter : IFormatter
 {
-    internal static string Describe<T>(IDescription<T> description)
+    public string Format(DescriptionView view)
     {
-        var view = description.Accept(new DescriptionViewProjector());
         var output = new StringBuilder();
         Append(view, output, string.Empty, isRoot: true, includeLabel: true);
         return output.ToString().TrimEnd();
@@ -25,9 +23,7 @@ internal static class DescriptionFormatter
             output.Append(prefix).Append("└── ");
 
         if (includeLabel)
-        {
             output.Append(FormatOperatorName(view)).Append(" [node: ").Append(ShortId(view.Id)).AppendLine("]");
-        }
 
         var entries = view.Fields
             .Select(field => (Label: $"{field.Label}: {field.Value}", Source: (DescriptionView?)null))

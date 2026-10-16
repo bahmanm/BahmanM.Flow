@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description.Formatting;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -28,7 +28,7 @@ public class WithResourceDescriptionTests
             () => resource,
             acquired => Flow.Create(() => acquired.Value));
 
-        var text = DescriptionFormatter.Describe(description);
+        var text = DescriptionFormatting.Describe(description);
         Assert.IsType<Ast.Resource.WithResource<SyncResource, int>>(description.Lower(FacadeBehaviourStrategyFactory.Instance));
         Assert.Contains("WithResource.Sync<SyncResource, int>", text);
         Assert.Contains("acquire: lambda() -> SyncResource", text);
@@ -97,7 +97,7 @@ public class WithResourceDescriptionTests
             () => Task.FromResult(resource),
             acquired => Flow.Succeed(acquired.Value));
 
-        var text = DescriptionFormatter.Describe(description);
+        var text = DescriptionFormatting.Describe(description);
         var lowered = Assert.IsType<Ast.Resource.WithResourceAsync<AsyncResource, int>>(description.Lower(FacadeBehaviourStrategyFactory.Instance));
         var beforeExecution = (acquireCalls, useCalls, resource.IsDisposed);
         var outcome = await FlowEngine.ExecuteAsync(description);

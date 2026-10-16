@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description.Formatting;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -33,7 +33,7 @@ public class OrdinaryOperatorBehaviourDescriptionTests
         var wrapped = Wrap(source, kind, variant, () => operatorCalls++);
         var description = ((wrapped).WithRetry(maxAttempts: 3)).AsDescription();
 
-        var text = DescriptionFormatter.Describe(description);
+        var text = DescriptionFormatting.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         Assert.Contains("Retry<int>", text);
         Assert.Contains(OperatorLabel(kind, variant), text);
@@ -89,7 +89,7 @@ public class OrdinaryOperatorBehaviourDescriptionTests
         var wrapped = Wrap(source, kind, variant, () => operatorCalls++, token => operatorToken = token);
         var description = ((wrapped).WithTimeout(TimeSpan.FromMilliseconds(300))).AsDescription();
 
-        var text = DescriptionFormatter.Describe(description);
+        var text = DescriptionFormatting.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         Assert.Contains("Timeout<int>", text);
         Assert.Contains(OperatorLabel(kind, variant), text);

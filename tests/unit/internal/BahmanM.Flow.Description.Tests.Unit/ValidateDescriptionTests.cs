@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description.Formatting;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -23,7 +23,7 @@ public class ValidateDescriptionTests
         var description = (((Flow.Succeed(42)).AsDescription()).Validate(predicate, exceptionFactory)).AsDescription();
 
         // Act
-        _ = DescriptionFormatter.Describe(description);
+        _ = DescriptionFormatting.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var predicateCallsBeforeExecution = predicateCalls;
         var factoryCallsBeforeExecution = factoryCalls;
@@ -50,7 +50,7 @@ public class ValidateDescriptionTests
         var description = (((Flow.Succeed(0)).AsDescription()).Validate(_ => false, _ => expected)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = DescriptionFormatting.Describe(description);
         var outcome = await FlowEngine.ExecuteAsync(description);
         var expectedOutcome = await FlowEngine.ExecuteAsync(
             Flow.Succeed(0).Validate(_ => false, _ => expected));
@@ -102,7 +102,7 @@ public class ValidateDescriptionTests
         var description = (((Flow.Succeed(42)).AsDescription()).Validate(predicate, exceptionFactory)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = DescriptionFormatting.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var predicateCallsBeforeExecution = predicateCalls;
         var factoryCallsBeforeExecution = factoryCalls;
@@ -137,7 +137,7 @@ public class ValidateDescriptionTests
         var description = (((Flow.Succeed(42)).AsDescription()).Validate(predicate, _ => new InvalidOperationException("unused"))).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = DescriptionFormatting.Describe(description);
         var outcome = await FlowEngine.ExecuteAsync(description, new Execution.Options(cancellationTokenSource.Token));
         var expected = await FlowEngine.ExecuteAsync(
             Flow.Succeed(42).Validate(

@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description.Formatting;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -64,7 +64,7 @@ public class RetryDescriptionTests
             : (Flow.Succeed(42)).AsDescription();
         var description = ((source).WithRetry(maxAttempts: 3)).AsDescription();
 
-        var text = DescriptionFormatter.Describe(description);
+        var text = DescriptionFormatting.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var outcome = await FlowEngine.ExecuteAsync(description);
 
@@ -94,7 +94,7 @@ public class RetryDescriptionTests
         excludedExceptions[0] = typeof(InvalidOperationException);
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = DescriptionFormatting.Describe(description);
         var invocationCountAfterInspection = invocationCount;
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var invocationCountAfterLowering = invocationCount;
@@ -180,7 +180,7 @@ public class RetryDescriptionTests
         var description = (((Flow.Create(() => operation())).AsDescription()).WithRetry(maxAttempts: 3)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = DescriptionFormatting.Describe(description);
         var outcome = await FlowEngine.ExecuteAsync(description);
 
         // Assert
@@ -203,7 +203,7 @@ public class RetryDescriptionTests
         var description = ((source).WithRetry(3, typeof(TimeoutException))).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = DescriptionFormatting.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var outcome = await FlowEngine.ExecuteAsync(description);
 

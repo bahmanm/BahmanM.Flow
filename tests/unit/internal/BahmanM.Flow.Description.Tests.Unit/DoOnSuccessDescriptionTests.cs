@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description.Formatting;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -17,7 +17,7 @@ public class DoOnSuccessDescriptionTests
         var description = (((Flow.Succeed(42)).AsDescription()).DoOnSuccess(action)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = DescriptionFormatting.Describe(description);
         var callsBeforeExecution = actionCalls;
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -85,7 +85,7 @@ public class DoOnSuccessDescriptionTests
         var description = (((Flow.Succeed(42)).AsDescription()).DoOnSuccess(action)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = DescriptionFormatting.Describe(description);
         var actionCallsBeforeExecution = actionCalls;
         var outcome = await FlowEngine.ExecuteAsync(description);
         var expected = await FlowEngine.ExecuteAsync(

@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description.Formatting;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -20,7 +20,7 @@ public class ResourceBehaviourDescriptionTests
         var description = ((descriptionSource).WithRetry(maxAttempts: 3)).AsDescription();
         var expected = expectedSource.WithRetry(maxAttempts: 3);
 
-        var text = DescriptionFormatter.Describe(description);
+        var text = DescriptionFormatting.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
 
         Assert.Contains("Retry<int>", text);
@@ -73,7 +73,7 @@ public class ResourceBehaviourDescriptionTests
             })).AsDescription();
         var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
-        var text = DescriptionFormatter.Describe(description);
+        var text = DescriptionFormatting.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         Assert.Equal((0, 0, false), (acquireCalls, useCalls, resource.IsDisposed));
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
@@ -151,7 +151,7 @@ public class ResourceBehaviourDescriptionTests
             }, _ => (Flow.Create(cancellationToken => operation(cancellationToken))).AsDescription())).AsDescription();
         var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
-        var text = DescriptionFormatter.Describe(description);
+        var text = DescriptionFormatting.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         Assert.Equal(CancellationToken.None, acquireToken);
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
@@ -194,7 +194,7 @@ public class ResourceBehaviourDescriptionTests
             })).AsDescription();
         var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
-        var text = DescriptionFormatter.Describe(description);
+        var text = DescriptionFormatting.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         Assert.False(acquisitionCompleted);
         Assert.Equal(0, useCalls);

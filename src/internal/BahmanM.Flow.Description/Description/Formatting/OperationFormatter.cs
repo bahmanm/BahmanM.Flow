@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace BahmanM.Flow.Description.Serialisation;
+namespace BahmanM.Flow.Description.Formatting;
 
 internal static class OperationFormatter
 {

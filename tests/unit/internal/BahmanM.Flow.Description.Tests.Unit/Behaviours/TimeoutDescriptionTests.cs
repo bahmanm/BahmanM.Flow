@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description.Formatting;
 using Microsoft.Extensions.Time.Testing;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
@@ -16,7 +16,7 @@ public class TimeoutDescriptionTests
             : (Flow.Succeed(42)).AsDescription();
         var description = ((source).WithTimeout(TimeSpan.Zero)).AsDescription();
 
-        var text = DescriptionFormatter.Describe(description);
+        var text = DescriptionFormatting.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var outcome = await FlowEngine.ExecuteAsync(description);
 
@@ -43,7 +43,7 @@ public class TimeoutDescriptionTests
         var description = ((source).WithTimeout(duration)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = DescriptionFormatting.Describe(description);
         var invocationCountAfterInspection = invocationCount;
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var invocationCountAfterLowering = invocationCount;
@@ -81,7 +81,7 @@ public class TimeoutDescriptionTests
         var description = (((Flow.Create(() => operation())).AsDescription()).WithTimeout(timeout)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = DescriptionFormatting.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var invocationCountBeforeExecution = invocationCount;
         var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };

@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Serialisation;
+using BahmanM.Flow.Description.Formatting;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -39,7 +39,7 @@ public class AsyncChainBehaviourDescriptionTests
         var description = ((chain).WithRetry(3)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = DescriptionFormatting.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (upstreamExecutions, callbackExecutions, childAttempts);
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -92,7 +92,7 @@ public class AsyncChainBehaviourDescriptionTests
         var description = ((chain).WithTimeout(TimeSpan.FromMilliseconds(500))).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatter.Describe(description);
+        var descriptionText = DescriptionFormatting.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (upstreamExecutions, callbackExecutions, childExecutions);
         var execution = FlowEngine.ExecuteAsync(description);

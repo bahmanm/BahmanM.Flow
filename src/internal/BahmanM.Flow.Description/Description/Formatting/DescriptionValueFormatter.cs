@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace BahmanM.Flow.Description.Serialisation;
+namespace BahmanM.Flow.Description.Formatting;
 
 internal static class DescriptionValueFormatter
 {

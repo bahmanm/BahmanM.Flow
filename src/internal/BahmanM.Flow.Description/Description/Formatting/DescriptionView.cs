@@ -1,4 +1,4 @@
-namespace BahmanM.Flow.Description.Serialisation;
+namespace BahmanM.Flow.Description.Formatting;
 
 internal sealed record DescriptionView(
     string OperatorName,
