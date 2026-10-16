@@ -30,21 +30,21 @@ public static class FlowExtensions
     /// <param name="action">The synchronous action to perform on the successful value.</param>
     /// <returns>A new <see cref="IFlow{T}"/> that includes the side-effect operation.</returns>
     public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Flow.Operations.DoOnSuccess.Sync<T> action) =>
-        new Ast.DoOnSuccess.Sync<T>(flow, action);
+        new Description.DoOnSuccess.Sync<T>(flow.AsDescription(), action);
 
     /// <summary>
     /// Performs an asynchronous side-effect if the Flow is successful. The original outcome of the Flow is unaffected.
     /// </summary>
     /// <inheritdoc cref="DoOnSuccess{T}(IFlow{T}, Flow.Operations.DoOnSuccess.Sync{T})"/>
     public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Flow.Operations.DoOnSuccess.Async<T> asyncAction) =>
-        new Ast.DoOnSuccess.Async<T>(flow, asyncAction);
+        new Description.DoOnSuccess.Async<T>(flow.AsDescription(), asyncAction);
 
     /// <summary>
     /// Performs a cancellable, asynchronous side-effect if the flow is successful. The original outcome of the flow is unaffected.
     /// </summary>
     /// <inheritdoc cref="DoOnSuccess{T}(IFlow{T}, Flow.Operations.DoOnSuccess.Sync{T})"/>
     public static IFlow<T> DoOnSuccess<T>(this IFlow<T> flow, Flow.Operations.DoOnSuccess.CancellableAsync<T> asyncAction) =>
-        new Ast.DoOnSuccess.CancellableAsync<T>(flow, asyncAction);
+        new Description.DoOnSuccess.CancellableAsync<T>(flow.AsDescription(), asyncAction);
 
     /// <summary>
     /// Performs a synchronous side-effect if the Flow has failed. The original failure is unaffected.
@@ -66,21 +66,21 @@ public static class FlowExtensions
     /// <param name="action">The synchronous action to perform on the exception.</param>
     /// <returns>A new <see cref="IFlow{T}"/> that includes the side-effect operation.</returns>
     public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Flow.Operations.DoOnFailure.Sync action) =>
-        new Ast.DoOnFailure.Sync<T>(flow, action);
+        new Description.DoOnFailure.Sync<T>(flow.AsDescription(), action);
 
     /// <summary>
     /// Performs an asynchronous side-effect if the Flow has failed. The original failure is unaffected.
     /// </summary>
     /// <inheritdoc cref="DoOnFailure{T}(IFlow{T}, Flow.Operations.DoOnFailure.Sync)"/>
     public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Flow.Operations.DoOnFailure.Async asyncAction) =>
-        new Ast.DoOnFailure.Async<T>(flow, asyncAction);
+        new Description.DoOnFailure.Async<T>(flow.AsDescription(), asyncAction);
 
     /// <summary>
     /// Performs a cancellable, asynchronous side-effect if the flow has failed. The original failure is unaffected.
     /// </summary>
     /// <inheritdoc cref="DoOnFailure{T}(IFlow{T}, Flow.Operations.DoOnFailure.Sync)"/>
     public static IFlow<T> DoOnFailure<T>(this IFlow<T> flow, Flow.Operations.DoOnFailure.CancellableAsync asyncAction) =>
-        new Ast.DoOnFailure.CancellableAsync<T>(flow, asyncAction);
+        new Description.DoOnFailure.CancellableAsync<T>(flow.AsDescription(), asyncAction);
 
     /// <summary>
     /// Transforms the successful value of a Flow into a new value. This is the "Transformer" operator.
@@ -103,21 +103,21 @@ public static class FlowExtensions
     /// <param name="operation">A synchronous function to transform the value.</param>
     /// <returns>A new <see cref="IFlow{TOut}"/> that, upon execution, will apply the transformation to the source Flow's successful result.</returns>
     public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Flow.Operations.Select.Sync<TIn, TOut> operation) =>
-        new Ast.Select.Sync<TIn, TOut>(flow, operation);
+        new Description.Select.Sync<TIn, TOut>(flow.AsDescription(), operation);
 
     /// <summary>
     /// Transforms the successful value of a Flow into a new value using an asynchronous operation.
     /// </summary>
     /// <inheritdoc cref="Select{TIn, TOut}(IFlow{TIn}, Flow.Operations.Select.Sync{TIn, TOut})"/>
     public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Flow.Operations.Select.Async<TIn, TOut> asyncOperation) =>
-        new Ast.Select.Async<TIn, TOut>(flow, asyncOperation);
+        new Description.Select.Async<TIn, TOut>(flow.AsDescription(), asyncOperation);
 
     /// <summary>
     /// Transforms the successful value of a flow into a new value using a cancellable, asynchronous operation.
     /// </summary>
     /// <inheritdoc cref="Select{TIn, TOut}(IFlow{TIn}, Flow.Operations.Select.Sync{TIn, TOut})"/>
     public static IFlow<TOut> Select<TIn, TOut>(this IFlow<TIn> flow, Flow.Operations.Select.CancellableAsync<TIn, TOut> asyncOperation) =>
-        new Ast.Select.CancellableAsync<TIn, TOut>(flow, asyncOperation);
+        new Description.Select.CancellableAsync<TIn, TOut>(flow.AsDescription(), asyncOperation);
 
     /// <summary>
     /// Sequentially composes the source Flow with a subsequent Flow. This is the "Sequencer" operator,
@@ -148,21 +148,21 @@ public static class FlowExtensions
     /// <param name="operation">A function that takes the successful result of the source Flow and returns the next <see cref="IFlow{TOut}"/> to execute.</param>
     /// <returns>An <see cref="IFlow{TOut}"/> that, upon execution, will take the successful result of the source Flow and pass it to the <paramref name="operation"/> function to determine the next Flow to execute.</returns>
     public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Flow.Operations.Chain.Sync<TIn, TOut> operation) =>
-        new Ast.Chain.Sync<TIn, TOut>(flow, operation);
+        new Description.Chain.Sync<TIn, TOut>(flow.AsDescription(), operation);
 
     /// <summary>
     /// Sequentially composes the source Flow with a subsequent Flow produced by an asynchronous operation.
     /// </summary>
     /// <inheritdoc cref="Chain{TIn, TOut}(IFlow{TIn}, Flow.Operations.Chain.Sync{TIn, TOut})"/>
     public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Flow.Operations.Chain.Async<TIn, TOut> asyncOperation) =>
-        new Ast.Chain.Async<TIn, TOut>(flow, asyncOperation);
+        new Description.Chain.Async<TIn, TOut>(flow.AsDescription(), asyncOperation);
 
     /// <summary>
     /// Sequentially composes the source flow with a subsequent flow produced by a cancellable, asynchronous operation.
     /// </summary>
     /// <inheritdoc cref="Chain{TIn, TOut}(IFlow{TIn}, Flow.Operations.Chain.Sync{TIn, TOut})"/>
     public static IFlow<TOut> Chain<TIn, TOut>(this IFlow<TIn> flow, Flow.Operations.Chain.CancellableAsync<TIn, TOut> asyncOperation) =>
-        new Ast.Chain.CancellableAsync<TIn, TOut>(flow, asyncOperation);
+        new Description.Chain.CancellableAsync<TIn, TOut>(flow.AsDescription(), asyncOperation);
 
     /// <summary>
     /// Enforces a business rule on the successful value of a Flow. This is the "Gatekeeper" operator.
@@ -187,21 +187,21 @@ public static class FlowExtensions
     /// <param name="exceptionFactory">A function that produces an exception if the predicate is false.</param>
     /// <returns>A new <see cref="IFlow{T}"/> that includes the validation logic.</returns>
     public static IFlow<T> Validate<T>(this IFlow<T> flow, Func<T, bool> predicate, Func<T, Exception> exceptionFactory) =>
-        new Ast.Validate.Sync<T>(flow, predicate, exceptionFactory);
+        new Description.Validate.Sync<T>(flow.AsDescription(), predicate, exceptionFactory);
 
     /// <summary>
     /// Enforces a business rule on the successful value of a Flow using an asynchronous predicate.
     /// </summary>
     /// <inheritdoc cref="Validate{T}(IFlow{T}, Func{T, bool}, Func{T, Exception})"/>
     public static IFlow<T> Validate<T>(this IFlow<T> flow, Func<T, Task<bool>> predicateAsync, Func<T, Exception> exceptionFactory) =>
-        new Ast.Validate.Async<T>(flow, predicateAsync, exceptionFactory);
+        new Description.Validate.Async<T>(flow.AsDescription(), predicateAsync, exceptionFactory);
 
     /// <summary>
     /// Enforces a business rule on the successful value of a flow using a cancellable, asynchronous predicate.
     /// </summary>
     /// <inheritdoc cref="Validate{T}(IFlow{T}, Func{T, bool}, Func{T, Exception})"/>
     public static IFlow<T> Validate<T>(this IFlow<T> flow, Func<T, CancellationToken, Task<bool>> predicateCancellableAsync, Func<T, Exception> exceptionFactory) =>
-        new Ast.Validate.CancellableAsync<T>(flow, predicateCancellableAsync, exceptionFactory);
+        new Description.Validate.CancellableAsync<T>(flow.AsDescription(), predicateCancellableAsync, exceptionFactory);
 
     /// <summary>
     /// Rescues a failed Flow by providing a new Flow to execute. This is the "Safety Net" operator.
@@ -227,21 +227,21 @@ public static class FlowExtensions
     /// <param name="recover">A function that takes the exception from the failed Flow and returns a new Flow to execute.</param>
     /// <returns>A new <see cref="IFlow{T}"/> that includes the recovery logic.</returns>
     public static IFlow<T> Recover<T>(this IFlow<T> flow, Flow.Operations.Recover.Sync<T> recover) =>
-        new Ast.Recover.Sync<T>(flow, recover);
+        new Description.Recover.Sync<T>(flow.AsDescription(), recover);
 
     /// <summary>
     /// Rescues a failed Flow by providing a new Flow to execute, using an asynchronous recovery function.
     /// </summary>
     /// <inheritdoc cref="Recover{T}(IFlow{T}, Flow.Operations.Recover.Sync{T})"/>
     public static IFlow<T> Recover<T>(this IFlow<T> flow, Flow.Operations.Recover.Async<T> recover) =>
-        new Ast.Recover.Async<T>(flow, recover);
+        new Description.Recover.Async<T>(flow.AsDescription(), recover);
 
     /// <summary>
     /// Rescues a failed Flow by providing a new Flow to execute, using a cancellable, asynchronous recovery function.
     /// </summary>
     /// <inheritdoc cref="Recover{T}(IFlow{T}, Flow.Operations.Recover.Sync{T})"/>
     public static IFlow<T> Recover<T>(this IFlow<T> flow, Func<Exception, CancellationToken, Task<IFlow<T>>> recover) =>
-        new Ast.Recover.CancellableAsync<T>(flow, recover);
+        new Description.Recover.CancellableAsync<T>(flow.AsDescription(), recover);
 
     /// <summary>
     /// Applies a retry policy to the failable operations within a Flow.
@@ -265,8 +265,7 @@ public static class FlowExtensions
     /// <returns>A new <see cref="IFlow{T}"/> with the retry behaviour applied.</returns>
     public static IFlow<T> WithRetry<T>(this IFlow<T> flow, int maxAttempts, params Type[] nonRetryableExceptions)
     {
-        var strategy = new RetryStrategy(maxAttempts, nonRetryableExceptions);
-        return flow.AsNode().Apply(strategy);
+        return new Description.Behaviour.Retry.Retry<T>(flow.AsDescription(), maxAttempts, nonRetryableExceptions);
     }
 
     /// <summary>
@@ -300,8 +299,7 @@ public static class FlowExtensions
     /// <returns>A new <see cref="IFlow{T}"/> with the timeout behaviour applied.</returns>
     public static IFlow<T> WithTimeout<T>(this IFlow<T> flow, TimeSpan duration)
     {
-        var strategy = new TimeoutStrategy(duration);
-        return flow.AsNode().Apply(strategy);
+        return new Description.Behaviour.Timeout.Timeout<T>(flow.AsDescription(), duration);
     }
 
     /// <summary>
@@ -333,7 +331,8 @@ public static class FlowExtensions
     /// <returns>A new <see cref="IFlow{T}"/> with the custom behaviour applied.</returns>
     public static IFlow<T> WithBehaviour<T>(this IFlow<T> flow, IBehaviour behaviour)
     {
-        var strategy = new CustomBehaviourStrategy(behaviour);
-        return flow.AsNode().Apply(strategy);
+        var source = flow.AsDescription();
+        var cachedResultDescription = behaviour.Apply(flow.AsNode()).AsDescription();
+        return new Description.Behaviour.Custom.Custom<T>(source, behaviour, cachedResultDescription);
     }
 }

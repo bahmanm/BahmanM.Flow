@@ -28,7 +28,7 @@ public class WithTimeoutTests
 
     [Theory]
     [ClassData(typeof(NonFailableFlowsTheoryData))]
-    public void WithTimeout_OnNonFailableNodes_IsANoOp(IFlow<string> nonFailableFlow)
+    public async Task WithTimeout_OnNonFailableNodes_IsANoOpAndPreservesOutcome(IFlow<string> nonFailableFlow)
     {
         // Arrange
         var originalFlow = nonFailableFlow;
@@ -38,7 +38,9 @@ public class WithTimeoutTests
         var resultFlow = originalFlow.WithTimeout(timeout);
 
         // Assert
-        Assert.Equal(originalFlow, resultFlow);
+        Assert.Equal(
+            await FlowEngine.ExecuteAsync(originalFlow),
+            await FlowEngine.ExecuteAsync(resultFlow));
     }
 
     [Fact]
