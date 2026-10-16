@@ -24,7 +24,7 @@ public class ValidateDescriptionTests
 
         // Act
         _ = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var predicateCallsBeforeExecution = predicateCalls;
         var factoryCallsBeforeExecution = factoryCalls;
 
@@ -60,7 +60,7 @@ public class ValidateDescriptionTests
         Assert.Contains("exceptionFactory: lambda(int) -> Exception", descriptionText);
         Assert.Equal(expectedOutcome, outcome);
         Assert.Same(expected, Assert.IsType<Failure<int>>(outcome).Exception);
-        Assert.IsType<Ast.Validate.Sync<int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
+        Assert.IsType<Ast.Validate.Sync<int>>(description.Lower(FacadeBehaviourStrategyFactory.Instance));
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public class ValidateDescriptionTests
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var predicateCallsBeforeExecution = predicateCalls;
         var factoryCallsBeforeExecution = factoryCalls;
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -151,7 +151,7 @@ public class ValidateDescriptionTests
         Assert.Equal(cancellationTokenSource.Token, observedToken);
         Assert.Contains("Validate.CancellableAsync<int>", descriptionText);
         Assert.Contains("predicate: lambda(int, CancellationToken) -> Task<bool>", descriptionText);
-        Assert.IsType<Ast.Validate.CancellableAsync<int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
+        Assert.IsType<Ast.Validate.CancellableAsync<int>>(description.Lower(FacadeBehaviourStrategyFactory.Instance));
     }
 
     [Fact]

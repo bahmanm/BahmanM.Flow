@@ -17,7 +17,7 @@ public class TimeoutDescriptionTests
         var description = ((source).WithTimeout(TimeSpan.Zero)).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var outcome = await FlowEngine.ExecuteAsync(description);
 
         Assert.Contains("Timeout<int>", text);
@@ -45,7 +45,7 @@ public class TimeoutDescriptionTests
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
         var invocationCountAfterInspection = invocationCount;
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var invocationCountAfterLowering = invocationCount;
         var outcome = await FlowEngine.ExecuteAsync(description);
 
@@ -82,7 +82,7 @@ public class TimeoutDescriptionTests
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var invocationCountBeforeExecution = invocationCount;
         var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
         var execution = FlowEngine.ExecuteAsync(description, options);
@@ -183,7 +183,7 @@ public class TimeoutDescriptionTests
         };
         var timeout = TimeSpan.FromMinutes(1);
         var description = (((Flow.Create(token => operation(token))).AsDescription()).WithTimeout(timeout)).AsDescription();
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
 
         var firstOptions = new Execution.Options(CancellationToken.None) { TimeProvider = firstTimeProvider };
         var secondOptions = new Execution.Options(CancellationToken.None) { TimeProvider = secondTimeProvider };

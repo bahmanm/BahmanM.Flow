@@ -19,7 +19,7 @@ public class CustomBehaviourDescriptionTests
         var description = new Behaviour.Custom.Custom<int>(source, behaviour);
 
         var text = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
 
         Assert.NotEqual(source.Id, description.Id);
         Assert.Contains("CustomBehaviour<int>", text);
@@ -48,10 +48,10 @@ public class CustomBehaviourDescriptionTests
         var behaviour = new FailSecondApplicationBehaviour(new InvalidOperationException("second application"));
         var description = new Behaviour.Custom.Custom<int>((Flow.Create(() => operation())).AsDescription(), behaviour);
         Assert.Equal(0, behaviour.ApplyCalls);
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         Assert.Equal(1, behaviour.ApplyCalls);
         var first = await FlowEngine.ExecuteAsync(lowered);
-        var secondLowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var secondLowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var second = await FlowEngine.ExecuteAsync(secondLowered);
 
         Assert.Equal(Outcome.Success(42), first);
@@ -65,7 +65,7 @@ public class CustomBehaviourDescriptionTests
     {
         var behaviour = new DescriptionSourceBehaviour();
         var description = new Behaviour.Custom.Custom<int>((Flow.Succeed(42)).AsDescription(), behaviour);
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
 
         Assert.True(behaviour.ReceivedAstNode);
         var outcome = await FlowEngine.ExecuteAsync(lowered);
@@ -83,8 +83,8 @@ public class CustomBehaviourDescriptionTests
         var behaviour = new RecordingBehaviour(
             "Test.Concurrent",
             () => Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(2))));
-        var firstLowering = Task.Run(() => new Behaviour.Custom.Custom<int>((Flow.Create(() => operation())).AsDescription(), behaviour).Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
-        var secondLowering = Task.Run(() => new Behaviour.Custom.Custom<int>((Flow.Create(() => operation())).AsDescription(), behaviour).Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
+        var firstLowering = Task.Run(() => new Behaviour.Custom.Custom<int>((Flow.Create(() => operation())).AsDescription(), behaviour).Lower(FacadeBehaviourStrategyFactory.Instance));
+        var secondLowering = Task.Run(() => new Behaviour.Custom.Custom<int>((Flow.Create(() => operation())).AsDescription(), behaviour).Lower(FacadeBehaviourStrategyFactory.Instance));
         var loweredFlows = await Task.WhenAll(firstLowering, secondLowering);
         var outcomes = await Task.WhenAll(
             FlowEngine.ExecuteAsync(loweredFlows[0]),
@@ -113,7 +113,7 @@ public class CustomBehaviourDescriptionTests
         Assert.Contains("operationType: Test.Outer", text);
         Assert.Contains("operationType: Test.Inner", text);
         Assert.Empty(events);
-        var lowered = outer.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = outer.Lower(FacadeBehaviourStrategyFactory.Instance);
         Assert.Equal(new[] { "Inner.Apply", "Outer.Apply" }, events);
 
         var outcome = await FlowEngine.ExecuteAsync(lowered);
@@ -131,7 +131,7 @@ public class CustomBehaviourDescriptionTests
         var behaviour = new RecordingBehaviour("Test.Throwing", () => throw expectedException);
         var description = new Behaviour.Custom.Custom<int>((Flow.Succeed(42)).AsDescription(), behaviour);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
+        var exception = Assert.Throws<InvalidOperationException>(() => description.Lower(FacadeBehaviourStrategyFactory.Instance));
 
         Assert.Same(expectedException, exception);
         Assert.Equal(1, behaviour.ApplyCalls);

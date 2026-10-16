@@ -22,7 +22,7 @@ public class DoOnFailureDescriptionTests
         Assert.Same(expected, observed);
         Assert.Equal(expectedOutcome, outcome);
         Assert.Same(expected, Assert.IsType<Failure<int>>(outcome).Exception);
-        Assert.IsType<Ast.DoOnFailure.Sync<int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
+        Assert.IsType<Ast.DoOnFailure.Sync<int>>(description.Lower(FacadeBehaviourStrategyFactory.Instance));
     }
 
     [Fact]
@@ -89,7 +89,7 @@ public class DoOnFailureDescriptionTests
         Assert.Same(expectedException, Assert.IsType<Failure<int>>(outcome).Exception);
         Assert.Contains("DoOnFailure.Async<int>", descriptionText);
         Assert.Contains("action: lambda(Exception) -> Task", descriptionText);
-        Assert.IsType<Ast.DoOnFailure.Async<int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
+        Assert.IsType<Ast.DoOnFailure.Async<int>>(description.Lower(FacadeBehaviourStrategyFactory.Instance));
     }
 
     [Fact]
@@ -119,6 +119,6 @@ public class DoOnFailureDescriptionTests
         Assert.Equal(expected, outcome);
         Assert.Same(expectedException, Assert.IsType<Failure<int>>(outcome).Exception);
         Assert.Equal(cancellationTokenSource.Token, observedToken);
-        Assert.IsType<Ast.DoOnFailure.CancellableAsync<int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
+        Assert.IsType<Ast.DoOnFailure.CancellableAsync<int>>(description.Lower(FacadeBehaviourStrategyFactory.Instance));
     }
 }

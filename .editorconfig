@@ -1,0 +1,13 @@
+root = true
+
+[src/internal/BahmanM.Flow.Ast/**/*.cs]
+resharper_check_namespace_highlighting = none
+
+[src/internal/BahmanM.Flow.Description/**/*.cs]
+resharper_check_namespace_highlighting = none
+
+[src/internal/BahmanM.Flow.Execution/**/*.cs]
+resharper_check_namespace_highlighting = none
+
+[src/public/BahmanM.Flow.Abstractions/**/*.cs]
+resharper_check_namespace_highlighting = none

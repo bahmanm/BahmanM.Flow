@@ -40,7 +40,7 @@ public class RecoverBehaviourDescriptionTests
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (sourceExecutions, callbackExecutions, fallbackExecutions);
         var outcome = await FlowEngine.ExecuteAsync(description);
 
@@ -104,7 +104,7 @@ public class RecoverBehaviourDescriptionTests
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (sourceExecutions, callbackExecutions, fallbackExecutions);
         var execution = FlowEngine.ExecuteAsync(description);
         await sourceStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));

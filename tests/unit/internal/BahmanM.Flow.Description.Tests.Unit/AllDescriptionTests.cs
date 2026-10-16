@@ -20,7 +20,7 @@ public class AllDescriptionTests
             Assert.IsType<Success<int[]>>(actual).Value);
         Assert.Equal(new[] { 2, 1 }, Assert.IsType<Success<int[]>>(actual).Value);
 
-        var lowered = Assert.IsType<Ast.Primitive.All<int>>(description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance));
+        var lowered = Assert.IsType<Ast.Primitive.All<int>>(description.Lower(FacadeBehaviourStrategyFactory.Instance));
         Assert.Equal(new[] { 2, 1 }, lowered.Flows
             .Select(flow => Assert.IsType<Ast.Primitive.Succeed<int>>(flow).Value));
     }

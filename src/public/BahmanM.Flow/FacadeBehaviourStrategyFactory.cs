@@ -9,9 +9,9 @@ internal sealed class FacadeBehaviourStrategyFactory : IBehaviourStrategyFactory
     internal static FacadeBehaviourStrategyFactory Instance { get; } = new();
 
     public IBehaviourStrategy CreateRetry(int maxAttempts, Type[] nonRetryableExceptions) =>
-        new Behaviour.RetryStrategy(maxAttempts, nonRetryableExceptions);
+        new RetryStrategy(maxAttempts, nonRetryableExceptions);
 
-    public IBehaviourStrategy CreateTimeout(TimeSpan duration) => new Behaviour.TimeoutStrategy(duration);
+    public IBehaviourStrategy CreateTimeout(TimeSpan duration) => new TimeoutStrategy(duration);
 
     public INode<T> CreateRecoverSync<T>(IFlow<T> source, Operations.Recover.Sync<T> recover) =>
         new Ast.Recover.Sync<T>(source, error => recover(error));

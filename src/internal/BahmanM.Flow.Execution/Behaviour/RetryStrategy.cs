@@ -42,7 +42,7 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
 
     public IFlow<T> ApplyTo<T>(Ast.Create.Sync<T> node)
     {
-        BahmanM.Flow.Shared.Operations.Create.Sync<T> newOperation = () =>
+        Shared.Operations.Create.Sync<T> newOperation = () =>
         {
             Exception lastException = null!;
             for (var i = 0; i < _maxAttempts; i++)
@@ -65,7 +65,7 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
 
     public IFlow<T> ApplyTo<T>(Ast.Create.Async<T> node)
     {
-        BahmanM.Flow.Shared.Operations.Create.Async<T> newOperation = async () =>
+        Shared.Operations.Create.Async<T> newOperation = async () =>
         {
             Exception lastException = null!;
             for (var i = 0; i < _maxAttempts; i++)
@@ -88,7 +88,7 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
 
     public IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node)
     {
-        Func<Execution.Options, Task<T>> newOperation = async options =>
+        Func<Options, Task<T>> newOperation = async options =>
         {
             Exception lastException = null!;
             for (var i = 0; i < _maxAttempts; i++)
@@ -112,21 +112,21 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Sync<TIn, TOut> node)
     {
-        BahmanM.Flow.Shared.Operations.Chain.Sync<TIn,TOut> newOperation = (value) =>
+        Shared.Operations.Chain.Sync<TIn,TOut> newOperation = (value) =>
             node.Operation(value).AsNode(BehaviourStrategyFactory.Instance).Apply(this);
         return node with { Operation = newOperation };
     }
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Async<TIn, TOut> node)
     {
-        BahmanM.Flow.Shared.Operations.Chain.Async<TIn, TOut> newOperation = async (value) =>
+        Shared.Operations.Chain.Async<TIn, TOut> newOperation = async (value) =>
             (await node.Operation(value)).AsNode(BehaviourStrategyFactory.Instance).Apply(this);
         return node with { Operation = newOperation };
     }
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.CancellableAsync<TIn, TOut> node)
     {
-        Func<TIn, Execution.Options, Task<IFlow<TOut>>> newOperation = async (value, options) =>
+        Func<TIn, Options, Task<IFlow<TOut>>> newOperation = async (value, options) =>
             (await node.Operation(value, options)).AsNode(BehaviourStrategyFactory.Instance).Apply(this);
         return node with { Operation = newOperation };
     }

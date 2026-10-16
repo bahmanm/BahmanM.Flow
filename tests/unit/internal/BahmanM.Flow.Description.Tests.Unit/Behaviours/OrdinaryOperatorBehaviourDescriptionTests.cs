@@ -34,7 +34,7 @@ public class OrdinaryOperatorBehaviourDescriptionTests
         var description = ((wrapped).WithRetry(maxAttempts: 3)).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         Assert.Contains("Retry<int>", text);
         Assert.Contains(OperatorLabel(kind, variant), text);
         Assert.Equal(0, sourceCalls);
@@ -90,7 +90,7 @@ public class OrdinaryOperatorBehaviourDescriptionTests
         var description = ((wrapped).WithTimeout(TimeSpan.FromMilliseconds(300))).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         Assert.Contains("Timeout<int>", text);
         Assert.Contains(OperatorLabel(kind, variant), text);
         Assert.Equal(0, sourceCalls);

@@ -12,7 +12,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<T> ApplyTo<T>(Ast.Create.Sync<T> node)
     {
-        Func<Execution.Options, Task<T>> newOperation = options =>
+        Func<Options, Task<T>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
                 options.TimeProvider,
@@ -23,7 +23,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<T> ApplyTo<T>(Ast.Create.Async<T> node)
     {
-        Func<Execution.Options, Task<T>> newOperation = options =>
+        Func<Options, Task<T>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
                 options.TimeProvider,
@@ -34,7 +34,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<T> ApplyTo<T>(Ast.Create.CancellableAsync<T> node)
     {
-        Func<Execution.Options, Task<T>> newOperation = options =>
+        Func<Options, Task<T>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
                 options.TimeProvider,
@@ -72,7 +72,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Sync<TIn, TOut> node)
     {
-        Func<TIn, Execution.Options, Task<IFlow<TOut>>> newOperation = async (value, options) =>
+        Func<TIn, Options, Task<IFlow<TOut>>> newOperation = async (value, options) =>
         {
             var nextFlow = await TimedScope.ExecuteAsync(
                 duration,
@@ -86,7 +86,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.Async<TIn, TOut> node)
     {
-        Func<TIn, Execution.Options, Task<IFlow<TOut>>> newOperation = async (value, options) =>
+        Func<TIn, Options, Task<IFlow<TOut>>> newOperation = async (value, options) =>
         {
             var nextFlow = await TimedScope.ExecuteAsync(
                 duration,
@@ -100,7 +100,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<TOut> ApplyTo<TIn, TOut>(Ast.Chain.CancellableAsync<TIn, TOut> node)
     {
-        Func<TIn, Execution.Options, Task<IFlow<TOut>>> newOperation = async (value, options) =>
+        Func<TIn, Options, Task<IFlow<TOut>>> newOperation = async (value, options) =>
         {
             var nextFlow = await TimedScope.ExecuteAsync(
                 duration,
@@ -123,7 +123,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<T[]> ApplyTo<T>(Ast.Primitive.All<T> node)
     {
-        Func<Execution.Options, Task<T[]>> newOperation = options =>
+        Func<Options, Task<T[]>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
                 options.TimeProvider,
@@ -136,7 +136,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<T> ApplyTo<T>(Ast.Primitive.Any<T> node)
     {
-        Func<Execution.Options, Task<T>> newOperation = options =>
+        Func<Options, Task<T>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
                 options.TimeProvider,
@@ -158,7 +158,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResource<TResource, T> node) where TResource : IDisposable
     {
-        Func<Execution.Options, Task<T>> newOperation = options =>
+        Func<Options, Task<T>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
                 options.TimeProvider,
@@ -171,7 +171,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResourceAsync<TResource, T> node) where TResource : IAsyncDisposable
     {
-        Func<Execution.Options, Task<T>> newOperation = options =>
+        Func<Options, Task<T>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
                 options.TimeProvider,
@@ -184,7 +184,7 @@ internal class TimeoutStrategy(TimeSpan duration) : IBehaviourStrategy
 
     public IFlow<T> ApplyTo<TResource, T>(Ast.Resource.WithResourceCancellableAsync<TResource, T> node) where TResource : IAsyncDisposable
     {
-        Func<Execution.Options, Task<T>> newOperation = options =>
+        Func<Options, Task<T>> newOperation = options =>
             TimedScope.ExecuteAsync(
                 duration,
                 options.TimeProvider,

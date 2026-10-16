@@ -17,7 +17,7 @@ public class RetryDescriptionTests
         };
         var description = (((Flow.Create(() => operation())).AsDescription()).WithRetry(maxAttempts: 3, typeof(TimeoutException))).AsDescription();
 
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         Assert.Equal(0, attempts);
         Assert.IsType<Ast.Create.Async<int>>(lowered);
 
@@ -42,7 +42,7 @@ public class RetryDescriptionTests
         };
         var description = (((Flow.Create(cancellationToken => operation(cancellationToken))).AsDescription()).WithRetry(maxAttempts: 3, typeof(TimeoutException))).AsDescription();
 
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         Assert.Equal(0, attempts);
         Assert.IsType<Ast.Create.CancellableAsync<int>>(lowered);
 
@@ -65,7 +65,7 @@ public class RetryDescriptionTests
         var description = ((source).WithRetry(maxAttempts: 3)).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var outcome = await FlowEngine.ExecuteAsync(description);
 
         Assert.Contains("Retry<int>", text);
@@ -96,7 +96,7 @@ public class RetryDescriptionTests
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
         var invocationCountAfterInspection = invocationCount;
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var invocationCountAfterLowering = invocationCount;
         var outcome = await FlowEngine.ExecuteAsync(description);
 
@@ -204,7 +204,7 @@ public class RetryDescriptionTests
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
-        var lowered = description.Lower(BahmanM.Flow.FacadeBehaviourStrategyFactory.Instance);
+        var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var outcome = await FlowEngine.ExecuteAsync(description);
 
         // Assert
