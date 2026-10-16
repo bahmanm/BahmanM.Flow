@@ -13,9 +13,9 @@ public class PublicDslBehaviourTests
 
         var flow = source.WithBehaviour(behaviour);
 
-        var description = Assert.IsType<Description.Behaviour.Custom.Custom<int>>(flow);
+        var description = Assert.IsType<Behaviour.Custom.Custom<int>>(flow);
         Assert.Same(source, description.Source);
-        Assert.IsType<Description.DoOnSuccess.Sync<int>>(description.CachedResultDescription);
+        Assert.IsType<DoOnSuccess.Sync<int>>(description.CachedResultDescription);
         Assert.Equal(1, behaviour.ApplyCount);
 
         var rendered = DescriptionFormatter.Describe(description);
@@ -55,7 +55,7 @@ public class PublicDslBehaviourTests
             return 42;
         }).WithRetry(3);
 
-        var description = Assert.IsType<Description.Behaviour.Retry.Retry<int>>(flow);
+        var description = Assert.IsType<Behaviour.Retry.Retry<int>>(flow);
         Assert.Equal(3, description.MaxAttempts);
         Assert.Contains(typeof(TimeoutException), description.NonRetryableExceptions);
         Assert.Equal(new Success<int>(42), await FlowEngine.ExecuteAsync(flow));
@@ -79,8 +79,8 @@ public class PublicDslBehaviourTests
         var source = Flow.Create(() => 42);
         var flow = source.WithBehaviour(new IdentityBehaviour());
 
-        var description = Assert.IsType<Description.Behaviour.Custom.Custom<int>>(flow);
-        Assert.IsType<Description.ExistingFlow<int>>(description.CachedResultDescription);
+        var description = Assert.IsType<Behaviour.Custom.Custom<int>>(flow);
+        Assert.IsType<ExistingFlow<int>>(description.CachedResultDescription);
         Assert.Equal(new Success<int>(42), await FlowEngine.ExecuteAsync(flow));
     }
 
@@ -89,8 +89,8 @@ public class PublicDslBehaviourTests
     {
         var flow = Flow.Create(() => 1).WithBehaviour(new ReplacementBehaviour<int>(42));
 
-        var description = Assert.IsType<Description.Behaviour.Custom.Custom<int>>(flow);
-        Assert.IsType<Description.Primitive.Succeed<int>>(description.CachedResultDescription);
+        var description = Assert.IsType<Behaviour.Custom.Custom<int>>(flow);
+        Assert.IsType<Primitive.Succeed<int>>(description.CachedResultDescription);
         Assert.Equal(new Success<int>(42), await FlowEngine.ExecuteAsync(flow));
     }
 
@@ -104,7 +104,7 @@ public class PublicDslBehaviourTests
             .WithRetry(3, typeof(InvalidOperationException))
             .WithTimeout(duration);
 
-        var rendered = DescriptionFormatter.Describe(Assert.IsAssignableFrom<Description.IDescription<int>>(flow));
+        var rendered = DescriptionFormatter.Describe(Assert.IsAssignableFrom<IDescription<int>>(flow));
 
         Assert.True(rendered.IndexOf("Timeout<int>", StringComparison.Ordinal) < rendered.IndexOf("Retry<int>", StringComparison.Ordinal));
         Assert.True(rendered.IndexOf("Retry<int>", StringComparison.Ordinal) < rendered.IndexOf("CustomBehaviour<int>", StringComparison.Ordinal));
@@ -145,7 +145,7 @@ public class PublicDslBehaviourTests
         public string OperationType => "test.replacement";
         public IFlow<TResult> Apply<TResult>(IFlow<TResult> originalFlow) =>
             typeof(TResult) == typeof(T)
-                ? (IFlow<TResult>)(object)Flow.Succeed(value)
+                ? (IFlow<TResult>)Flow.Succeed(value)
                 : throw new InvalidOperationException("Unexpected flow type.");
     }
 }

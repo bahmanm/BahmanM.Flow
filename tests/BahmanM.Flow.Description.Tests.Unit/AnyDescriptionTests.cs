@@ -52,7 +52,7 @@ public class AnyDescriptionTests
                 throw;
             }
         };
-        var description = (Flow.Any((Flow.Create<int>(cancellationToken => winner(cancellationToken))).AsDescription(), (Flow.Create<int>(cancellationToken => loser(cancellationToken))).AsDescription())).AsDescription();
+        var description = (Flow.Any((Flow.Create(cancellationToken => winner(cancellationToken))).AsDescription(), (Flow.Create(cancellationToken => loser(cancellationToken))).AsDescription())).AsDescription();
         var expectedFlow = Flow.Any(
             Flow.Create(cancellationToken => winner(cancellationToken)),
             Flow.Create(cancellationToken => loser(cancellationToken)));

@@ -42,7 +42,7 @@ public class AllDescriptionTests
             return value;
         };
 
-        var description = (Flow.All((Flow.Create<int>(() => CreateOperation(1)())).AsDescription(), (Flow.Create<int>(() => CreateOperation(2)())).AsDescription())).AsDescription();
+        var description = (Flow.All((Flow.Create(() => CreateOperation(1)())).AsDescription(), (Flow.Create(() => CreateOperation(2)())).AsDescription())).AsDescription();
 
         // Act
         Assert.Equal(0, startedCount);
@@ -75,7 +75,7 @@ public class AllDescriptionTests
             await releaseSecond.Task;
             throw secondException;
         };
-        var description = (Flow.All((Flow.Fail<int>(firstException)).AsDescription(), (Flow.Create<int>(() => secondFlow())).AsDescription())).AsDescription();
+        var description = (Flow.All((Flow.Fail<int>(firstException)).AsDescription(), (Flow.Create(() => secondFlow())).AsDescription())).AsDescription();
 
         // Act
         var execution = FlowEngine.ExecuteAsync(description);

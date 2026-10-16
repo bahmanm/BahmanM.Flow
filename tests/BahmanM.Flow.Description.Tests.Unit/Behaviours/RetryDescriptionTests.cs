@@ -15,7 +15,7 @@ public class RetryDescriptionTests
                 throw new InvalidOperationException("try again");
             return 42;
         };
-        var description = (((Flow.Create<int>(() => operation())).AsDescription()).WithRetry(maxAttempts: 3, typeof(TimeoutException))).AsDescription();
+        var description = (((Flow.Create(() => operation())).AsDescription()).WithRetry(maxAttempts: 3, typeof(TimeoutException))).AsDescription();
 
         var lowered = description.Lower();
         Assert.Equal(0, attempts);
@@ -40,7 +40,7 @@ public class RetryDescriptionTests
                 throw new InvalidOperationException("try again");
             return 42;
         };
-        var description = (((Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription()).WithRetry(maxAttempts: 3, typeof(TimeoutException))).AsDescription();
+        var description = (((Flow.Create(cancellationToken => operation(cancellationToken))).AsDescription()).WithRetry(maxAttempts: 3, typeof(TimeoutException))).AsDescription();
 
         var lowered = description.Lower();
         Assert.Equal(0, attempts);
@@ -89,7 +89,7 @@ public class RetryDescriptionTests
             return 42;
         };
         var excludedExceptions = new[] { typeof(TimeoutException) };
-        var source = (Flow.Create<int>(() => operation())).AsDescription();
+        var source = (Flow.Create(() => operation())).AsDescription();
         var description = ((source).WithRetry(3, excludedExceptions)).AsDescription();
         excludedExceptions[0] = typeof(InvalidOperationException);
 
@@ -124,7 +124,7 @@ public class RetryDescriptionTests
                 throw new InvalidOperationException("try again");
             return 42;
         };
-        var description = (((Flow.Create<int>(() => descriptionOperation())).AsDescription()).WithRetry(maxAttempts: 3, typeof(TimeoutException))).AsDescription();
+        var description = (((Flow.Create(() => descriptionOperation())).AsDescription()).WithRetry(maxAttempts: 3, typeof(TimeoutException))).AsDescription();
 
         var existingInvocationCount = 0;
         Flow.Operations.Create.Sync<int> existingOperation = () =>
@@ -156,7 +156,7 @@ public class RetryDescriptionTests
             invocationCount++;
             throw exception;
         };
-        var description = (((Flow.Create<int>(() => operation())).AsDescription()).WithRetry(maxAttempts: 3, typeof(TimeoutException))).AsDescription();
+        var description = (((Flow.Create(() => operation())).AsDescription()).WithRetry(maxAttempts: 3, typeof(TimeoutException))).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -177,7 +177,7 @@ public class RetryDescriptionTests
             invocationCount++;
             throw exception;
         };
-        var description = (((Flow.Create<int>(() => operation())).AsDescription()).WithRetry(maxAttempts: 3)).AsDescription();
+        var description = (((Flow.Create(() => operation())).AsDescription()).WithRetry(maxAttempts: 3)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);

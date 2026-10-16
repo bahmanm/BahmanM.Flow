@@ -14,7 +14,7 @@ public class DoOnFailureTests
         // Arrange
         var actionCalled = false;
         Exception? capturedException = null;
-        Flow.Operations.DoOnFailure.CancellableAsync onFailure = async (ex, token) =>
+        Flow.Operations.DoOnFailure.CancellableAsync onFailure = async (ex, _) =>
         {
             await Task.Yield();
             actionCalled = true;

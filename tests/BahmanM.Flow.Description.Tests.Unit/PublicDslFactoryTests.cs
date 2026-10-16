@@ -7,7 +7,7 @@ public class PublicDslFactoryTests
     {
         var flow = Flow.Succeed("hello");
 
-        Assert.IsType<Description.Primitive.Succeed<string>>(flow);
+        Assert.IsType<Primitive.Succeed<string>>(flow);
         Assert.Equal(new Success<string>("hello"), await FlowEngine.ExecuteAsync(flow));
     }
 
@@ -17,7 +17,7 @@ public class PublicDslFactoryTests
         var exception = new InvalidOperationException("failure");
         var flow = Flow.Fail<string>(exception);
 
-        Assert.IsType<Description.Primitive.Fail<string>>(flow);
+        Assert.IsType<Primitive.Fail<string>>(flow);
         Assert.Same(exception, Assert.IsType<Failure<string>>(await FlowEngine.ExecuteAsync(flow)).Exception);
     }
 
@@ -27,7 +27,7 @@ public class PublicDslFactoryTests
         var invocationCount = 0;
         var flow = Flow.Create(() => ++invocationCount);
 
-        Assert.IsType<Description.Create.Sync<int>>(flow);
+        Assert.IsType<Create.Sync<int>>(flow);
         Assert.Equal(0, invocationCount);
         Assert.Equal(new Success<int>(1), await FlowEngine.ExecuteAsync(flow));
         Assert.Equal(1, invocationCount);
@@ -37,9 +37,9 @@ public class PublicDslFactoryTests
     public async Task CreateAsync_UsesDescription_AndDefersOperationUntilPublicExecution()
     {
         var invocationCount = 0;
-        var flow = Flow.Create<int>(() => Task.FromResult(++invocationCount));
+        var flow = Flow.Create(() => Task.FromResult(++invocationCount));
 
-        Assert.IsType<Description.Create.Async<int>>(flow);
+        Assert.IsType<Create.Async<int>>(flow);
         Assert.Equal(0, invocationCount);
         Assert.Equal(new Success<int>(1), await FlowEngine.ExecuteAsync(flow));
         Assert.Equal(1, invocationCount);
@@ -50,13 +50,13 @@ public class PublicDslFactoryTests
     {
         using var cancellationTokenSource = new CancellationTokenSource();
         var observedToken = CancellationToken.None;
-        var flow = Flow.Create<int>(token =>
+        var flow = Flow.Create(token =>
         {
             observedToken = token;
             return Task.FromResult(1);
         });
 
-        Assert.IsType<Description.Create.CancellableAsync<int>>(flow);
+        Assert.IsType<Create.CancellableAsync<int>>(flow);
         Assert.Equal(CancellationToken.None, observedToken);
         Assert.Equal(new Success<int>(1), await FlowEngine.ExecuteAsync(flow, new(cancellationTokenSource.Token)));
         Assert.Equal(cancellationTokenSource.Token, observedToken);
@@ -69,7 +69,7 @@ public class PublicDslFactoryTests
         var second = Flow.Create(() => 2);
         var flow = Flow.All(first, second);
 
-        var description = Assert.IsType<Description.Primitive.All<int>>(flow);
+        var description = Assert.IsType<Primitive.All<int>>(flow);
         Assert.Same(first, description.Flows[0]);
         Assert.Same(second, description.Flows[1]);
         var outcome = Assert.IsType<Success<int[]>>(await FlowEngine.ExecuteAsync(flow));
@@ -83,7 +83,7 @@ public class PublicDslFactoryTests
         var second = Flow.Succeed(2);
         var flow = Flow.Any(first, second);
 
-        var description = Assert.IsType<Description.Primitive.Any<int>>(flow);
+        var description = Assert.IsType<Primitive.Any<int>>(flow);
         Assert.Same(first, description.Flows[0]);
         Assert.Same(second, description.Flows[1]);
         Assert.Equal(new Success<int>(2), await FlowEngine.ExecuteAsync(flow));
@@ -107,7 +107,7 @@ public class PublicDslFactoryTests
                 return Flow.Succeed("used");
             });
 
-        Assert.IsType<Description.Resource.WithResource<TestResource, string>>(flow);
+        Assert.IsType<Resource.WithResource<TestResource, string>>(flow);
         Assert.Equal((0, 0, 0), (acquired, used, disposed));
         Assert.Equal(new Success<string>("used"), await FlowEngine.ExecuteAsync(flow));
         Assert.Equal((1, 1, 1), (acquired, used, disposed));
@@ -131,7 +131,7 @@ public class PublicDslFactoryTests
                 return Flow.Succeed("used");
             });
 
-        Assert.IsType<Description.Resource.WithResourceAsync<TestAsyncResource, string>>(flow);
+        Assert.IsType<Resource.WithResourceAsync<TestAsyncResource, string>>(flow);
         Assert.Equal((0, 0, 0), (acquired, used, disposed));
         Assert.Equal(new Success<string>("used"), await FlowEngine.ExecuteAsync(flow));
         Assert.Equal((1, 1, 1), (acquired, used, disposed));
@@ -158,7 +158,7 @@ public class PublicDslFactoryTests
                 return Flow.Succeed("used");
             });
 
-        Assert.IsType<Description.Resource.WithResourceCancellableAsync<TestAsyncResource, string>>(flow);
+        Assert.IsType<Resource.WithResourceCancellableAsync<TestAsyncResource, string>>(flow);
         Assert.Equal((0, 0, 0), (acquired, used, disposed));
         Assert.Equal(new Success<string>("used"), await FlowEngine.ExecuteAsync(flow, new(cancellationTokenSource.Token)));
         Assert.Equal(cancellationTokenSource.Token, observedToken);

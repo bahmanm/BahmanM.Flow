@@ -42,7 +42,7 @@ public class DescriptionSerialisationTests
             invocationCount++;
             return 2;
         };
-        var description = (Flow.All((Flow.Create<int>(() => first())).AsDescription(), (Flow.Create<int>(() => second())).AsDescription())).AsDescription();
+        var description = (Flow.All((Flow.Create(() => first())).AsDescription(), (Flow.Create(() => second())).AsDescription())).AsDescription();
 
         // Act
         var result = DescriptionFormatter.Describe(description);
@@ -70,7 +70,7 @@ public class DescriptionSerialisationTests
             invocationCount++;
             return 2;
         };
-        var description = (Flow.Any((Flow.Create<int>(() => first())).AsDescription(), (Flow.Create<int>(() => second())).AsDescription())).AsDescription();
+        var description = (Flow.Any((Flow.Create(() => first())).AsDescription(), (Flow.Create(() => second())).AsDescription())).AsDescription();
 
         // Act
         var result = DescriptionFormatter.Describe(description);

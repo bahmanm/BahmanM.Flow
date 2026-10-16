@@ -9,7 +9,7 @@ public class CreateDescriptionTests
         // Arrange
         var invocationCount = 0;
         Flow.Operations.Create.Sync<int> operation = () => ++invocationCount;
-        var description = (Flow.Create<int>(() => operation())).AsDescription();
+        var description = (Flow.Create(() => operation())).AsDescription();
 
         // Act
         var invocationCountBeforeExecution = invocationCount;
@@ -28,7 +28,7 @@ public class CreateDescriptionTests
         // Arrange
         var invocationCount = 0;
         Flow.Operations.Create.Async<int> operation = () => Task.FromResult(++invocationCount);
-        var description = (Flow.Create<int>(() => operation())).AsDescription();
+        var description = (Flow.Create(() => operation())).AsDescription();
 
         // Act
         var invocationCountBeforeExecution = invocationCount;
@@ -47,7 +47,7 @@ public class CreateDescriptionTests
         // Arrange
         var exception = new InvalidOperationException("async failure");
         Flow.Operations.Create.Async<int> operation = () => Task.FromException<int>(exception);
-        var description = (Flow.Create<int>(() => operation())).AsDescription();
+        var description = (Flow.Create(() => operation())).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -67,7 +67,7 @@ public class CreateDescriptionTests
             observedToken = cancellationToken;
             return Task.FromResult(1);
         };
-        var description = (Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription();
+        var description = (Flow.Create(cancellationToken => operation(cancellationToken))).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description, new Execution.Options(cancellationTokenSource.Token));
@@ -90,7 +90,7 @@ public class CreateDescriptionTests
             invocationCount++;
             return Task.FromResult(1);
         };
-        var description = (Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription();
+        var description = (Flow.Create(cancellationToken => operation(cancellationToken))).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description, new Execution.Options(cancellationTokenSource.Token));

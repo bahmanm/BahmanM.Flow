@@ -4,11 +4,6 @@ namespace BahmanM.Flow.Tests.Integration;
 
 public class ChainTests
 {
-    // Al-Kindi (c. 801–873) was a 9th-century Arab philosopher, mathematician, and physician,
-    // often called the "father of Islamic philosophy." He made significant
-    // contributions to various fields, including metaphysics, ethics, and optics.
-    private const string AlKindi = "Al-Kindi";
-
     [Fact]
     public async Task Chain_OnSuccessfulFlow_ExecutesAndReturnsNewFlow()
     {
@@ -119,7 +114,7 @@ public class ChainTests
     {
         // Arrange
         var initialFlow = Flow.Succeed(10);
-        var chainedFlow = initialFlow.Chain(async (value, token) =>
+        var chainedFlow = initialFlow.Chain(async (value, _) =>
         {
             await Task.Yield();
             return Flow.Succeed(value * 2);

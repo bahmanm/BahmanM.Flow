@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/examples/">
+    <Project Path="examples/ShouldIGoOutside/ShouldIGoOutside.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/BahmanM.Flow/BahmanM.Flow.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BahmanM.Flow.Description.Tests.Unit/BahmanM.Flow.Description.Tests.Unit.csproj" />
+    <Project Path="tests/BahmanM.Flow.Tests.Integration/BahmanM.Flow.Tests.Integration.csproj" />
+    <Project Path="tests/BahmanM.Flow.Tests.KnownBugs/BahmanM.Flow.Tests.KnownBugs.csproj" />
+    <Project Path="tests/BahmanM.Flow.Tests.Support/BahmanM.Flow.Tests.Support.csproj" />
+    <Project Path="tests/BahmanM.Flow.Tests.UserAcceptance/BahmanM.Flow.Tests.UserAcceptance.csproj" />
+  </Folder>
+</Solution>

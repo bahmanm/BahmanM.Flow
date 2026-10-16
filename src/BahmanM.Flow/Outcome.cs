@@ -23,35 +23,40 @@ public static class Outcome
 /// </summary>
 public static class OutcomeExtensions
 {
-    /// <summary>
-    /// Checks if the outcome is a <see cref="Success{T}"/>.
-    /// </summary>
-    /// <returns><c>true</c> if the outcome is successful, otherwise <c>false</c>.</returns>
-    public static bool IsSuccess<T>(this Outcome<T> outcome) => outcome is Success<T>;
-
-    /// <summary>
-    /// Checks if the outcome is a <see cref="Failure{T}"/>.
-    /// </summary>
-    /// <returns><c>true</c> if the outcome is a failure, otherwise <c>false</c>.</returns>
-    public static bool IsFailure<T>(this Outcome<T> outcome) => outcome is Failure<T>;
-
-    /// <summary>
-    /// Extracts the value from a <see cref="Success{T}"/> or returns a fallback value if it's a <see cref="Failure{T}"/>.
-    /// </summary>
-    /// <param name="fallbackValue">The value to return in case of failure.</param>
-    /// <returns>The successful value or the fallback value.</returns>
-    public static T GetOrElse<T>(this Outcome<T> outcome, T fallbackValue) =>
-        outcome is Success<T> s ? s.Value : fallbackValue;
-
-    internal static async Task<T> Unwrap<T>(this Task<Outcome<T>> outcomeTask)
+    extension<T>(Outcome<T> outcome)
     {
-        var outcome = await outcomeTask;
-        return outcome switch
+        /// <summary>
+        /// Checks if the outcome is a <see cref="Success{T}"/>.
+        /// </summary>
+        /// <returns><c>true</c> if the outcome is successful, otherwise <c>false</c>.</returns>
+        public bool IsSuccess() => outcome is Success<T>;
+
+        /// <summary>
+        /// Checks if the outcome is a <see cref="Failure{T}"/>.
+        /// </summary>
+        /// <returns><c>true</c> if the outcome is a failure, otherwise <c>false</c>.</returns>
+        public bool IsFailure() => outcome is Failure<T>;
+
+        /// <summary>
+        /// Extracts the value from a <see cref="Success{T}"/> or returns a fallback value if it's a <see cref="Failure{T}"/>.
+        /// </summary>
+        /// <param name="fallbackValue">The value to return in case of failure.</param>
+        /// <returns>The successful value or the fallback value.</returns>
+        public T GetOrElse(T fallbackValue) => outcome is Success<T> s ? s.Value : fallbackValue;
+    }
+
+    extension<T>(Task<Outcome<T>> outcomeTask)
+    {
+        internal async Task<T> Unwrap()
         {
-            Success<T> s => s.Value,
-            Failure<T> f => throw f.Exception,
-            _ => throw new NotSupportedException("Unsupported outcome type.")
-        };
+            var outcome = await outcomeTask;
+            return outcome switch
+            {
+                Success<T> s => s.Value,
+                Failure<T> f => throw f.Exception,
+                _ => throw new NotSupportedException("Unsupported outcome type.")
+            };
+        }
     }
 }
 

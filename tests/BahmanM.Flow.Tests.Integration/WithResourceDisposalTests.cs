@@ -16,7 +16,7 @@ public class WithResourceDisposalTests
         var allocatedProbes = new ConcurrentBag<DisposableProbe>();
         var flow = Flow.WithResource(
             acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
-            use: probe => Flow.Succeed(expected)
+            use: _ => Flow.Succeed(expected)
         );
 
         // Act
@@ -94,7 +94,7 @@ public class WithResourceDisposalTests
         var allocatedProbes = new ConcurrentBag<DisposableProbe>();
         var flow = Flow.WithResource(
             acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
-            use: _ => Flow.Create<int>(async () =>
+            use: _ => Flow.Create(async () =>
             {
                 await Task.Delay(Timeout.InfiniteTimeSpan, cts.Token);
                 return 1;
@@ -135,12 +135,12 @@ public class WithResourceDisposalTests
     {
         // Arrange
         var allocatedProbes = new ConcurrentBag<DisposableProbe>();
-        var flow = Flow.WithResource<DisposableProbe, int>(
+        var flow = Flow.WithResource(
             acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
-            use: outer =>
-                Flow.WithResource<DisposableProbe, int>(
+            use: _ =>
+                Flow.WithResource(
                     acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
-                    use: inner => Flow.Succeed(99)
+                    use: _ => Flow.Succeed(99)
                 )
         );
 
@@ -159,7 +159,7 @@ public class WithResourceDisposalTests
         await RunSerial(100, async () =>
         {
             var allocatedProbes = new ConcurrentBag<DisposableProbe>();
-            var flow = Flow.WithResource<DisposableProbe, int>(
+            var flow = Flow.WithResource(
                 acquire: () => { var probe = new DisposableProbe(); allocatedProbes.Add(probe); return probe; },
                 use: _ => Flow.Succeed(5)
             );

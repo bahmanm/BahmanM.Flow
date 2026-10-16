@@ -17,6 +17,4 @@ public sealed class DisposableProbe : IDisposable
             GC.SuppressFinalize(this);
         }
     }
-
-    public DisposableProbe() { }
 }

@@ -22,7 +22,7 @@ public class CompositeBehaviourDescriptionTests
             secondExecutions++;
             throw secondException;
         };
-        var all = (Flow.All((Flow.Create<int>(() => first())).AsDescription(), (Flow.Create<int>(() => second())).AsDescription())).AsDescription();
+        var all = (Flow.All((Flow.Create(() => first())).AsDescription(), (Flow.Create(() => second())).AsDescription())).AsDescription();
         var description = ((all).WithRetry(3)).AsDescription();
 
         // Act
@@ -60,7 +60,7 @@ public class CompositeBehaviourDescriptionTests
             secondExecutions++;
             throw secondException;
         };
-        var any = (Flow.Any((Flow.Create<int>(() => first())).AsDescription(), (Flow.Create<int>(() => second())).AsDescription())).AsDescription();
+        var any = (Flow.Any((Flow.Create(() => first())).AsDescription(), (Flow.Create(() => second())).AsDescription())).AsDescription();
         var description = ((any).WithRetry(3)).AsDescription();
 
         // Act
@@ -107,7 +107,7 @@ public class CompositeBehaviourDescriptionTests
             }
         };
 
-        var all = (Flow.All((Flow.Create<int>(cancellationToken => WaitForCancellation()(cancellationToken))).AsDescription(), (Flow.Create<int>(cancellationToken => WaitForCancellation()(cancellationToken))).AsDescription())).AsDescription();
+        var all = (Flow.All((Flow.Create(cancellationToken => WaitForCancellation()(cancellationToken))).AsDescription(), (Flow.Create(cancellationToken => WaitForCancellation()(cancellationToken))).AsDescription())).AsDescription();
         var description = ((all).WithTimeout(TimeSpan.FromMilliseconds(300))).AsDescription();
 
         // Act
@@ -156,7 +156,7 @@ public class CompositeBehaviourDescriptionTests
             }
         };
 
-        var any = (Flow.Any((Flow.Create<int>(cancellationToken => WaitForCancellation()(cancellationToken))).AsDescription(), (Flow.Create<int>(cancellationToken => WaitForCancellation()(cancellationToken))).AsDescription())).AsDescription();
+        var any = (Flow.Any((Flow.Create(cancellationToken => WaitForCancellation()(cancellationToken))).AsDescription(), (Flow.Create(cancellationToken => WaitForCancellation()(cancellationToken))).AsDescription())).AsDescription();
         var description = ((any).WithTimeout(TimeSpan.FromMilliseconds(300))).AsDescription();
 
         // Act
@@ -203,7 +203,7 @@ public class CompositeBehaviourDescriptionTests
                 throw;
             }
         };
-        var any = (Flow.Any((Flow.Create<int>(cancellationToken => winner(cancellationToken))).AsDescription(), (Flow.Create<int>(cancellationToken => loser(cancellationToken))).AsDescription())).AsDescription();
+        var any = (Flow.Any((Flow.Create(cancellationToken => winner(cancellationToken))).AsDescription(), (Flow.Create(cancellationToken => loser(cancellationToken))).AsDescription())).AsDescription();
         var description = ((any).WithTimeout(TimeSpan.FromSeconds(5))).AsDescription();
 
         // Act

@@ -57,7 +57,7 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
                     lastException = ex;
                 }
             }
-            throw lastException!;
+            throw lastException;
         };
         return new Ast.Create.Sync<T>(newOperation);
     }
@@ -80,7 +80,7 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
                     lastException = ex;
                 }
             }
-            throw lastException!;
+            throw lastException;
         };
         return new Ast.Create.Async<T>(newOperation);
     }
@@ -104,7 +104,7 @@ internal class RetryStrategy(int maxAttempts, params Type[] nonRetryableExceptio
                     lastException = ex;
                 }
             }
-            throw lastException!;
+            throw lastException;
         };
         return new Ast.Create.CancellableAsync<T>(newOperation);
     }
