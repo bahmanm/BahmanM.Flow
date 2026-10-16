@@ -94,9 +94,9 @@ Console.WriteLine($"Failures: {counter.Failures}");
 That's it! You now know how to extend `Flow` with your own powerful, reusable behaviours.
 
 From here, you have a few options:
-*   Dive into the **[Design Rationale](./design-rationale.md)** to better understand the "why" behind Flow's architecture.
+*   Dive into the **[Design Rationale](../for-contributors/design-rationale.md)** to better understand the "why" behind Flow's architecture.
 *   Browse the **[API Blueprint](./api-blueprint.md)** to see all available methods and operators.
-*   Head back to the **[Learning Path in the main README](../README.md#intrigued-heres-your-learning-path-🗺️)** to choose your next destination.
+*   Head back to the **[main README](../../../README.md#intrigued)** to choose your next destination.
 
 ---
 
