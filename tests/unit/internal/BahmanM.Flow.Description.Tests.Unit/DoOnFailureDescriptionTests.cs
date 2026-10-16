@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Formatting;
+using BahmanM.Flow.Description.Rendering;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -77,7 +77,7 @@ public class DoOnFailureDescriptionTests
         var description = (((Flow.Fail<int>(expectedException)).AsDescription()).DoOnFailure(action)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatting.Describe(description);
+        var descriptionText = Renderer.Describe(description);
         var outcome = await FlowEngine.ExecuteAsync(description);
         var expected = await FlowEngine.ExecuteAsync(
             Flow.Fail<int>(expectedException).DoOnFailure(

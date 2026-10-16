@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Formatting;
+using BahmanM.Flow.Description.Rendering;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -13,7 +13,7 @@ public class DescriptionIdentityTests
         // Act
         var expectedShortId = Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(
             System.Text.Encoding.ASCII.GetBytes(description.Id)))[..10].ToLowerInvariant();
-        var descriptionText = DescriptionFormatting.Describe(description);
+        var descriptionText = Renderer.Describe(description);
 
         // Assert
         Assert.Equal(32, description.Id.Length);

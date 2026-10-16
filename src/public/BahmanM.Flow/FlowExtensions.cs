@@ -1,5 +1,5 @@
 using BahmanM.Flow.Behaviour;
-using BahmanM.Flow.Description.Formatting;
+using BahmanM.Flow.Description.Rendering;
 using BahmanM.Flow.Support;
 
 namespace BahmanM.Flow;
@@ -17,7 +17,7 @@ public static class FlowExtensions
         /// Returns a human-readable description of the Flow's composition.
         /// </summary>
         /// <returns>A plain-text representation of the Flow's description.</returns>
-        public string Describe() => DescriptionFormatting.Describe(flow.AsDescription());
+        public string Describe() => Renderer.Describe(flow.AsDescription());
 
         /// <summary>
         /// Performs a synchronous side-effect if the Flow succeeds.

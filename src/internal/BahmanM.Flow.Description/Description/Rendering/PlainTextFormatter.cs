@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace BahmanM.Flow.Description.Formatting;
+namespace BahmanM.Flow.Description.Rendering;
 
 internal sealed class PlainTextFormatter : IFormatter
 {

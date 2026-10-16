@@ -1,8 +1,8 @@
-using BahmanM.Flow.Description.Formatting;
+using BahmanM.Flow.Description.Rendering;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
-public class DescriptionFormattingTests
+public class DescriptionRenderingTests
 {
     [Fact]
     public void Describe_Shows_Structure_And_Callback_Identity_Without_Invoking_Callback()
@@ -17,7 +17,7 @@ public class DescriptionFormattingTests
         var description = (((Flow.Succeed("Hello")).AsDescription()).Select(operation)).AsDescription();
 
         // Act
-        var result = DescriptionFormatting.Describe(description);
+        var result = Renderer.Describe(description);
 
         // Assert
         Assert.Contains("Select.Sync<string, int>", result);
@@ -45,7 +45,7 @@ public class DescriptionFormattingTests
         var description = (Flow.All((Flow.Create(() => first())).AsDescription(), (Flow.Create(() => second())).AsDescription())).AsDescription();
 
         // Act
-        var result = DescriptionFormatting.Describe(description);
+        var result = Renderer.Describe(description);
 
         // Assert
         Assert.Contains("All<int>", result);
@@ -73,7 +73,7 @@ public class DescriptionFormattingTests
         var description = (Flow.Any((Flow.Create(() => first())).AsDescription(), (Flow.Create(() => second())).AsDescription())).AsDescription();
 
         // Act
-        var result = DescriptionFormatting.Describe(description);
+        var result = Renderer.Describe(description);
 
         // Assert
         Assert.Contains("Any<int>", result);

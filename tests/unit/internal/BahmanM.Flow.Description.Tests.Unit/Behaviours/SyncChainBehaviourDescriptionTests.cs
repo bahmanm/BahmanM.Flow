@@ -1,4 +1,4 @@
-using BahmanM.Flow.Description.Formatting;
+using BahmanM.Flow.Description.Rendering;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -37,7 +37,7 @@ public class SyncChainBehaviourDescriptionTests
         var description = ((chain).WithRetry(3)).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatting.Describe(description);
+        var descriptionText = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (upstreamExecutions, callbackExecutions, childAttempts);
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -89,7 +89,7 @@ public class SyncChainBehaviourDescriptionTests
         var description = ((chain).WithTimeout(TimeSpan.FromMilliseconds(200))).AsDescription();
 
         // Act
-        var descriptionText = DescriptionFormatting.Describe(description);
+        var descriptionText = Renderer.Describe(description);
         var lowered = description.Lower(FacadeBehaviourStrategyFactory.Instance);
         var countsAfterLowering = (upstreamExecutions, callbackExecutions, childExecutions);
         var execution = FlowEngine.ExecuteAsync(description);
