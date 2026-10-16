@@ -68,17 +68,13 @@ This is the **Safety Net**.
 
 It's your contingency plan for when things go wrong.
 
-It ensures a Flow can continue even after a failure.
-
-*   **Use `.Recover(fallbackValue)` when** you have a simple, static default.
-*   **Use `.Recover(recoveryFunc)` when** you need to compute a new value from the exception details.
-*   **Use `.Recover(recoveryFlowFunc)` when** your recovery logic is itself a failable operation, like trying a cache.
+It handles a failure by running a callback that returns another `IFlow<T>`. To recover with a plain value, wrap it in `Flow.Succeed(...)`. To try another operation, return the flow for that operation.
 
 ```csharp
 // If fetching the user fails, create a temporary guest user to continue the flow.
 var safeUserFlow = userFlow
     .DoOnFailure(ex => _logger.LogWarning(ex, "Could not fetch primary user."))
-    .Recover(ex => new User(isGuest: true, error: ex.Message));
+    .Recover(ex => Flow.Succeed(new User(isGuest: true, error: ex.Message)));
 ```
 
 > **Connecting the Gatekeeper and the Safety Net**
@@ -96,9 +92,9 @@ var safeUserFlow = userFlow
 >     )
 >     .Chain(specialData => ProcessSpecialDataFlow(specialData))
 >     // ...otherwise, recover from the validation failure and process it normally.
->     .Recover(ex => ex is NormalDataException,
->         () => ProcessNormalDataFlow(originalData)
->     );
+>     .Recover(ex => ex is NormalDataException
+>         ? ProcessNormalDataFlow(originalData)
+>         : Flow.Fail<ProcessedData>(ex));
 > ```
 
 ### `.DoOn...()`
