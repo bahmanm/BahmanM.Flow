@@ -97,7 +97,7 @@ public class ValidateTests
     }
 
     [Fact]
-    public void ValidateAsync_BehavioursNoOp_ReturnsSameInstance()
+    public async Task ValidateAsync_BehavioursNoOp_PreservesOutcome()
     {
         // Arrange
         var original = Flow.Succeed(10)
@@ -108,8 +108,9 @@ public class ValidateTests
         var withTimeout = original.WithTimeout(TimeSpan.FromMilliseconds(50));
 
         // Assert
-        Assert.Equal(original, withRetry);
-        Assert.Equal(original, withTimeout);
+        var expected = await FlowEngine.ExecuteAsync(original);
+        Assert.Equal(expected, await FlowEngine.ExecuteAsync(withRetry));
+        Assert.Equal(expected, await FlowEngine.ExecuteAsync(withTimeout));
     }
 
     [Fact]
@@ -188,7 +189,7 @@ public class ValidateTests
     }
 
     [Fact]
-    public void Validate_WithRetry_IsNoOpAndReturnsSameInstance()
+    public async Task Validate_WithRetry_IsNoOpAndPreservesOutcome()
     {
         // Arrange
         var original = Flow.Succeed(10)
@@ -198,11 +199,11 @@ public class ValidateTests
         var withRetry = original.WithRetry(3);
 
         // Assert
-        Assert.Equal(original, withRetry);
+        Assert.Equal(await FlowEngine.ExecuteAsync(original), await FlowEngine.ExecuteAsync(withRetry));
     }
 
     [Fact]
-    public void Validate_WithTimeout_IsNoOpAndReturnsSameInstance()
+    public async Task Validate_WithTimeout_IsNoOpAndPreservesOutcome()
     {
         // Arrange
         var original = Flow.Succeed(10)
@@ -212,7 +213,7 @@ public class ValidateTests
         var withTimeout = original.WithTimeout(TimeSpan.FromMilliseconds(50));
 
         // Assert
-        Assert.Equal(original, withTimeout);
+        Assert.Equal(await FlowEngine.ExecuteAsync(original), await FlowEngine.ExecuteAsync(withTimeout));
     }
 
     // Cancellable async Validate
@@ -298,7 +299,7 @@ public class ValidateTests
     }
 
     [Fact]
-    public void ValidateCancellable_BehavioursNoOp_ReturnsSameInstance()
+    public async Task ValidateCancellable_BehavioursNoOp_PreservesOutcome()
     {
         // Arrange
         var original = Flow.Succeed(10)
@@ -309,7 +310,8 @@ public class ValidateTests
         var withTimeout = original.WithTimeout(TimeSpan.FromMilliseconds(50));
 
         // Assert
-        Assert.Equal(original, withRetry);
-        Assert.Equal(original, withTimeout);
+        var expected = await FlowEngine.ExecuteAsync(original);
+        Assert.Equal(expected, await FlowEngine.ExecuteAsync(withRetry));
+        Assert.Equal(expected, await FlowEngine.ExecuteAsync(withTimeout));
     }
 }

@@ -64,4 +64,12 @@ public static class FlowEngine
     /// <param name="options">The execution options, such as a <see cref="CancellationToken"/>.</param>
     public static Task<Outcome<T>> ExecuteAsync<T>(IFlow<T> flow, Execution.Options options) =>
         flow.AsNode().Accept(new Execution.Interpreter(options));
+
+    internal static Task<Outcome<T>> ExecuteAsync<T>(Description.IDescription<T> description) =>
+        ExecuteAsync(description, new Execution.Options(CancellationToken.None));
+
+    internal static Task<Outcome<T>> ExecuteAsync<T>(
+        Description.IDescription<T> description,
+        Execution.Options options) =>
+        description.Lower().Accept(new Execution.Interpreter(options));
 }

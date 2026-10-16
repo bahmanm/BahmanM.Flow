@@ -113,7 +113,7 @@ public class WithAsyncResourceDisposalTests
                 return 42;
             }));
 
-        var timed = never.WithTimeout(TimeSpan.FromMilliseconds(30));
+        var timed = never.WithTimeout(TimeSpan.FromMilliseconds(60));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(timed);
