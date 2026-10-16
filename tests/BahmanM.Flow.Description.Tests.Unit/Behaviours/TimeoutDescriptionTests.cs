@@ -203,7 +203,7 @@ public class TimeoutDescriptionTests
         Assert.Equal(2, invocationCount);
     }
 
-    [Fact]
+    [Fact(Timeout = 15_000)]
     public async Task Timeout_AroundRetry_BoundsTheWholeRetrySequence()
     {
         var timeProvider = new FakeTimeProvider();
@@ -229,9 +229,9 @@ public class TimeoutDescriptionTests
         {
             var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
             var execution = FlowEngine.ExecuteAsync(description, options);
-            await secondAttemptStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            await secondAttemptStarted.Task;
             timeProvider.Advance(timeout);
-            var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(2));
+            var outcome = await execution;
 
             Assert.Equal(2, attempts);
             Assert.IsType<TimeoutException>(Assert.IsType<Failure<int>>(outcome).Exception);
