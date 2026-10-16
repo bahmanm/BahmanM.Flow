@@ -1,4 +1,3 @@
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -8,9 +7,7 @@ public class AllDescriptionTests
     public async Task All_Description_Preserves_Flow_Order_And_Lowers_To_Equivalent_Ast()
     {
         // Arrange
-        var description = DescriptionFlowBuilder.All(
-            DescriptionFlowBuilder.Succeed(2),
-            DescriptionFlowBuilder.Succeed(1));
+        var description = (Flow.All((Flow.Succeed(2)).AsDescription(), (Flow.Succeed(1)).AsDescription())).AsDescription();
         var expectedFlow = Flow.All(Flow.Succeed(2), Flow.Succeed(1));
 
         // Act
@@ -45,9 +42,7 @@ public class AllDescriptionTests
             return value;
         };
 
-        var description = DescriptionFlowBuilder.All(
-            DescriptionFlowBuilder.Create(CreateOperation(1)),
-            DescriptionFlowBuilder.Create(CreateOperation(2)));
+        var description = (Flow.All((Flow.Create<int>(() => CreateOperation(1)())).AsDescription(), (Flow.Create<int>(() => CreateOperation(2)())).AsDescription())).AsDescription();
 
         // Act
         Assert.Equal(0, startedCount);
@@ -80,9 +75,7 @@ public class AllDescriptionTests
             await releaseSecond.Task;
             throw secondException;
         };
-        var description = DescriptionFlowBuilder.All(
-            DescriptionFlowBuilder.Fail<int>(firstException),
-            DescriptionFlowBuilder.Create(secondFlow));
+        var description = (Flow.All((Flow.Fail<int>(firstException)).AsDescription(), (Flow.Create<int>(() => secondFlow())).AsDescription())).AsDescription();
 
         // Act
         var execution = FlowEngine.ExecuteAsync(description);

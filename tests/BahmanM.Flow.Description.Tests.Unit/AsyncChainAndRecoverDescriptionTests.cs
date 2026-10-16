@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -15,13 +14,13 @@ public class AsyncChainAndRecoverDescriptionTests
         {
             callbackCalls++;
             await Task.Yield();
-            return DescriptionFlowBuilder.Create(() =>
+            return (Flow.Create(() =>
             {
                 childCalls++;
                 return value + 1;
-            });
+            })).AsDescription();
         };
-        var description = DescriptionFlowBuilder.Chain(DescriptionFlowBuilder.Succeed(41), operation);
+        var description = (((Flow.Succeed(41)).AsDescription()).Chain(operation)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -57,10 +56,9 @@ public class AsyncChainAndRecoverDescriptionTests
         Flow.Operations.Chain.Async<int, int> operation = _ =>
         {
             callbackCalls++;
-            return Task.FromResult<IFlow<int>>(DescriptionFlowBuilder.Succeed(0));
+            return Task.FromResult<IFlow<int>>((Flow.Succeed(0)).AsDescription());
         };
-        var description = DescriptionFlowBuilder.Chain(
-            DescriptionFlowBuilder.Fail<int>(expectedException), operation);
+        var description = (((Flow.Fail<int>(expectedException)).AsDescription()).Chain(operation)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -79,7 +77,7 @@ public class AsyncChainAndRecoverDescriptionTests
         // Arrange
         var expectedException = new InvalidOperationException("callback");
         Flow.Operations.Chain.Async<int, int> operation = _ => Task.FromException<IFlow<int>>(expectedException);
-        var description = DescriptionFlowBuilder.Chain(DescriptionFlowBuilder.Succeed(1), operation);
+        var description = (((Flow.Succeed(1)).AsDescription()).Chain(operation)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -104,15 +102,13 @@ public class AsyncChainAndRecoverDescriptionTests
             callbackCalls++;
             observedToken = token;
             await Task.Yield();
-            return DescriptionFlowBuilder.Select(
-                DescriptionFlowBuilder.Create(() =>
+            return (((Flow.Create(() =>
                 {
                     childCalls++;
                     return value + 1;
-                }),
-                result => result * 2);
+                })).AsDescription()).Select(result => result * 2)).AsDescription();
         };
-        var description = DescriptionFlowBuilder.Chain(DescriptionFlowBuilder.Succeed(20), operation);
+        var description = (((Flow.Succeed(20)).AsDescription()).Chain(operation)).AsDescription();
         var options = new Execution.Options(cancellationTokenSource.Token);
 
         // Act
@@ -147,9 +143,9 @@ public class AsyncChainAndRecoverDescriptionTests
         Flow.Operations.Chain.CancellableAsync<int, int> operation = (_, _) =>
         {
             callbackCalls++;
-            return Task.FromResult<IFlow<int>>(DescriptionFlowBuilder.Succeed(42));
+            return Task.FromResult<IFlow<int>>((Flow.Succeed(42)).AsDescription());
         };
-        var description = DescriptionFlowBuilder.Chain(DescriptionFlowBuilder.Succeed(1), operation);
+        var description = (((Flow.Succeed(1)).AsDescription()).Chain(operation)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(
@@ -170,7 +166,7 @@ public class AsyncChainAndRecoverDescriptionTests
             Task.FromException<IFlow<int>>(expectedException);
         Flow.Operations.Chain.CancellableAsync<int, int> expectedOperation = (_, _) =>
             Task.FromException<IFlow<int>>(expectedException);
-        var description = DescriptionFlowBuilder.Chain(DescriptionFlowBuilder.Succeed(1), operation);
+        var description = (((Flow.Succeed(1)).AsDescription()).Chain(operation)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -192,14 +188,13 @@ public class AsyncChainAndRecoverDescriptionTests
         {
             callbackCalls++;
             await Task.Yield();
-            return DescriptionFlowBuilder.Create(() =>
+            return (Flow.Create(() =>
             {
                 childCalls++;
                 return exception.Message.Length;
-            });
+            })).AsDescription();
         };
-        var description = DescriptionFlowBuilder.Recover(
-            DescriptionFlowBuilder.Fail<int>(expectedException), recover);
+        var description = (((Flow.Fail<int>(expectedException)).AsDescription()).Recover(recover)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -234,9 +229,9 @@ public class AsyncChainAndRecoverDescriptionTests
         Flow.Operations.Recover.Async<int> recover = _ =>
         {
             callbackCalls++;
-            return Task.FromResult<IFlow<int>>(DescriptionFlowBuilder.Succeed(0));
+            return Task.FromResult<IFlow<int>>((Flow.Succeed(0)).AsDescription());
         };
-        var description = DescriptionFlowBuilder.Recover(DescriptionFlowBuilder.Succeed(42), recover);
+        var description = (((Flow.Succeed(42)).AsDescription()).Recover(recover)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -255,7 +250,7 @@ public class AsyncChainAndRecoverDescriptionTests
         // Arrange
         var expectedException = new InvalidOperationException("callback");
         Flow.Operations.Recover.Async<int> recover = _ => Task.FromException<IFlow<int>>(expectedException);
-        var description = DescriptionFlowBuilder.Recover(DescriptionFlowBuilder.Fail<int>(new Exception("upstream")), recover);
+        var description = (((Flow.Fail<int>(new Exception("upstream"))).AsDescription()).Recover(recover)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -279,11 +274,10 @@ public class AsyncChainAndRecoverDescriptionTests
             callbackCalls++;
             observedToken = token;
             await Task.Yield();
-            return DescriptionFlowBuilder.Succeed(0);
+            return (Flow.Succeed(0)).AsDescription();
         };
-        var failed = DescriptionFlowBuilder.Recover(
-            DescriptionFlowBuilder.Fail<int>(new Exception("upstream")), recover);
-        var succeeded = DescriptionFlowBuilder.Recover(DescriptionFlowBuilder.Succeed(42), recover);
+        var failed = (((Flow.Fail<int>(new Exception("upstream"))).AsDescription()).Recover(recover)).AsDescription();
+        var succeeded = (((Flow.Succeed(42)).AsDescription()).Recover(recover)).AsDescription();
         var options = new Execution.Options(cancellationTokenSource.Token);
 
         // Act
@@ -316,8 +310,7 @@ public class AsyncChainAndRecoverDescriptionTests
         var expectedException = new InvalidOperationException("callback");
         Func<Exception, CancellationToken, Task<IFlow<int>>> recover = (_, _) =>
             Task.FromException<IFlow<int>>(expectedException);
-        var description = DescriptionFlowBuilder.Recover(
-            DescriptionFlowBuilder.Fail<int>(new Exception("upstream")), recover);
+        var description = (((Flow.Fail<int>(new Exception("upstream"))).AsDescription()).Recover(recover)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);

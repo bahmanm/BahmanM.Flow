@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -17,11 +16,11 @@ public class CancellableAsyncChainBehaviourDescriptionTests
         var childAttempts = 0;
         var callbackToken = CancellationToken.None;
         var childTokens = new List<CancellationToken>();
-        var upstream = DescriptionFlowBuilder.Create(() =>
+        var upstream = (Flow.Create(() =>
         {
             upstreamExecutions++;
             return 41;
-        });
+        })).AsDescription();
         Flow.Operations.Chain.CancellableAsync<int, int> operation = async (value, token) =>
         {
             callbackExecutions++;
@@ -38,11 +37,11 @@ public class CancellableAsyncChainBehaviourDescriptionTests
                 return value + 1;
             };
             return returnDescription
-                ? DescriptionFlowBuilder.Create(child)
+                ? (Flow.Create<int>(cancellationToken => child(cancellationToken))).AsDescription()
                 : Flow.Create(cancellationToken => child(cancellationToken));
         };
-        var chain = DescriptionFlowBuilder.Chain(upstream, operation);
-        var description = DescriptionFlowBuilder.Retry(chain, 3);
+        var chain = ((upstream).Chain(operation)).AsDescription();
+        var description = ((chain).WithRetry(3)).AsDescription();
         var options = new Execution.Options(cancellation.Token);
 
         // Act
@@ -77,11 +76,9 @@ public class CancellableAsyncChainBehaviourDescriptionTests
             callbackToken = token;
             callbackStarted.TrySetResult();
             await Task.Delay(Timeout.InfiniteTimeSpan, token);
-            return DescriptionFlowBuilder.Succeed(42);
+            return (Flow.Succeed(42)).AsDescription();
         };
-        var description = DescriptionFlowBuilder.Timeout(
-            DescriptionFlowBuilder.Chain(DescriptionFlowBuilder.Succeed(1), operation),
-            TimeSpan.FromMilliseconds(300));
+        var description = (((((Flow.Succeed(1)).AsDescription()).Chain(operation)).AsDescription()).WithTimeout(TimeSpan.FromMilliseconds(300))).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -113,10 +110,10 @@ public class CancellableAsyncChainBehaviourDescriptionTests
             callbackToken = token;
             callbackStarted.TrySetResult();
             await Task.Delay(Timeout.InfiniteTimeSpan, token);
-            return DescriptionFlowBuilder.Succeed(42);
+            return (Flow.Succeed(42)).AsDescription();
         };
-        var chain = DescriptionFlowBuilder.Chain(DescriptionFlowBuilder.Succeed(1), operation);
-        var description = DescriptionFlowBuilder.Timeout(chain, TimeSpan.FromSeconds(5));
+        var chain = (((Flow.Succeed(1)).AsDescription()).Chain(operation)).AsDescription();
+        var description = ((chain).WithTimeout(TimeSpan.FromSeconds(5))).AsDescription();
 
         // Act
         var execution = FlowEngine.ExecuteAsync(
@@ -142,11 +139,11 @@ public class CancellableAsyncChainBehaviourDescriptionTests
         var childExecutions = 0;
         var childStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var childToken = CancellationToken.None;
-        var upstream = DescriptionFlowBuilder.Create(() =>
+        var upstream = (Flow.Create(() =>
         {
             upstreamExecutions++;
             return 41;
-        });
+        })).AsDescription();
         Flow.Operations.Chain.CancellableAsync<int, int> operation = async (value, _) =>
         {
             callbackExecutions++;
@@ -160,11 +157,11 @@ public class CancellableAsyncChainBehaviourDescriptionTests
                 return value + 1;
             };
             return returnDescription
-                ? DescriptionFlowBuilder.Create(child)
+                ? (Flow.Create<int>(cancellationToken => child(cancellationToken))).AsDescription()
                 : Flow.Create(token => child(token));
         };
-        var chain = DescriptionFlowBuilder.Chain(upstream, operation);
-        var description = DescriptionFlowBuilder.Timeout(chain, TimeSpan.FromMilliseconds(400));
+        var chain = ((upstream).Chain(operation)).AsDescription();
+        var description = ((chain).WithTimeout(TimeSpan.FromMilliseconds(400))).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -207,11 +204,11 @@ public class CancellableAsyncChainBehaviourDescriptionTests
                 return value + 1;
             };
             return returnDescription
-                ? DescriptionFlowBuilder.Create(child)
+                ? (Flow.Create<int>(cancellationToken => child(cancellationToken))).AsDescription()
                 : Flow.Create(token => child(token));
         };
-        var chain = DescriptionFlowBuilder.Chain(DescriptionFlowBuilder.Succeed(41), operation);
-        var description = DescriptionFlowBuilder.Timeout(chain, TimeSpan.FromSeconds(5));
+        var chain = (((Flow.Succeed(41)).AsDescription()).Chain(operation)).AsDescription();
+        var description = ((chain).WithTimeout(TimeSpan.FromSeconds(5))).AsDescription();
 
         // Act
         var execution = FlowEngine.ExecuteAsync(

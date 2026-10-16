@@ -1,4 +1,3 @@
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -8,7 +7,7 @@ public class PrimitiveDescriptionTests
     public async Task Succeed_Description_Lowers_To_Equivalent_Outcome()
     {
         // Arrange
-        var description = DescriptionFlowBuilder.Succeed("Hello");
+        var description = (Flow.Succeed("Hello")).AsDescription();
         var expectedFlow = Flow.Succeed("Hello");
 
         // Act
@@ -25,7 +24,7 @@ public class PrimitiveDescriptionTests
     {
         // Arrange
         var exception = new InvalidOperationException("failure");
-        var description = DescriptionFlowBuilder.Fail<string>(exception);
+        var description = (Flow.Fail<string>(exception)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);

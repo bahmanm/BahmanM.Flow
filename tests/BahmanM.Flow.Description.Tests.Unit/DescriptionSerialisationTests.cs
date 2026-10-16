@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -15,7 +14,7 @@ public class DescriptionSerialisationTests
             invocationCount++;
             return value.Length;
         };
-        var description = DescriptionFlowBuilder.Select(DescriptionFlowBuilder.Succeed("Hello"), operation);
+        var description = (((Flow.Succeed("Hello")).AsDescription()).Select(operation)).AsDescription();
 
         // Act
         var result = DescriptionFormatter.Describe(description);
@@ -43,9 +42,7 @@ public class DescriptionSerialisationTests
             invocationCount++;
             return 2;
         };
-        var description = DescriptionFlowBuilder.All(
-            DescriptionFlowBuilder.Create(first),
-            DescriptionFlowBuilder.Create(second));
+        var description = (Flow.All((Flow.Create<int>(() => first())).AsDescription(), (Flow.Create<int>(() => second())).AsDescription())).AsDescription();
 
         // Act
         var result = DescriptionFormatter.Describe(description);
@@ -73,9 +70,7 @@ public class DescriptionSerialisationTests
             invocationCount++;
             return 2;
         };
-        var description = DescriptionFlowBuilder.Any(
-            DescriptionFlowBuilder.Create(first),
-            DescriptionFlowBuilder.Create(second));
+        var description = (Flow.Any((Flow.Create<int>(() => first())).AsDescription(), (Flow.Create<int>(() => second())).AsDescription())).AsDescription();
 
         // Act
         var result = DescriptionFormatter.Describe(description);

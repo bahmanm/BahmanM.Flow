@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -18,7 +17,7 @@ public class ResourceBehaviourDescriptionTests
         var expectedCounts = new ResourceCounts();
         var descriptionSource = CreateResourceDescription(kind, descriptionCounts, exception);
         var expectedSource = CreateExistingResourceFlow(kind, expectedCounts, exception);
-        var description = DescriptionFlowBuilder.Retry(descriptionSource, maxAttempts: 3);
+        var description = ((descriptionSource).WithRetry(maxAttempts: 3)).AsDescription();
         var expected = expectedSource.WithRetry(maxAttempts: 3);
 
         var text = DescriptionFormatter.Describe(description);
@@ -63,18 +62,16 @@ public class ResourceBehaviourDescriptionTests
             await Task.Delay(Timeout.InfiniteTimeSpan, token);
             return 42;
         };
-        var source = DescriptionFlowBuilder.WithResource(
-            () =>
+        var source = (Flow.WithResource(() =>
             {
                 acquireCalls++;
                 return resource;
-            },
-            _ =>
+            }, _ =>
             {
                 useCalls++;
-                return DescriptionFlowBuilder.Create(operation);
-            });
-        var description = DescriptionFlowBuilder.Timeout(source, TimeoutDuration);
+                return (Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription();
+            })).AsDescription();
+        var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
         var lowered = description.Lower();
@@ -108,14 +105,12 @@ public class ResourceBehaviourDescriptionTests
             await Task.Delay(Timeout.InfiniteTimeSpan, token);
             return 42;
         };
-        var source = DescriptionFlowBuilder.WithResource<AsyncResource, int>(
-            () => Task.FromResult(resource),
-            _ =>
+        var source = (Flow.WithResource<AsyncResource, int>(() => Task.FromResult(resource), _ =>
             {
                 useCalls++;
-                return DescriptionFlowBuilder.Create(operation);
-            });
-        var description = DescriptionFlowBuilder.Timeout(source, TimeoutDuration);
+                return (Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription();
+            })).AsDescription();
+        var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
         var lowered = description.Lower();
         Assert.False(resource.IsDisposed);
@@ -149,14 +144,12 @@ public class ResourceBehaviourDescriptionTests
             await Task.Delay(Timeout.InfiniteTimeSpan, token);
             return 42;
         };
-        var source = DescriptionFlowBuilder.WithResource<AsyncResource, int>(
-            token =>
+        var source = (Flow.WithResource<AsyncResource, int>(token =>
             {
                 acquireToken = token;
                 return Task.FromResult(resource);
-            },
-            _ => DescriptionFlowBuilder.Create(operation));
-        var description = DescriptionFlowBuilder.Timeout(source, TimeoutDuration);
+            }, _ => (Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription())).AsDescription();
+        var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
         var lowered = description.Lower();
@@ -188,20 +181,18 @@ public class ResourceBehaviourDescriptionTests
         var resource = new AsyncResource();
         var useCalls = 0;
         var acquisitionCompleted = false;
-        var source = DescriptionFlowBuilder.WithResource<AsyncResource, int>(
-            async () =>
+        var source = (Flow.WithResource<AsyncResource, int>(async () =>
             {
                 acquireStarted.TrySetResult();
                 await releaseAcquire.Task;
                 acquisitionCompleted = true;
                 return resource;
-            },
-            _ =>
+            }, _ =>
             {
                 useCalls++;
-                return DescriptionFlowBuilder.Succeed(42);
-            });
-        var description = DescriptionFlowBuilder.Timeout(source, TimeoutDuration);
+                return (Flow.Succeed(42)).AsDescription();
+            })).AsDescription();
+        var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
         var lowered = description.Lower();
@@ -233,8 +224,7 @@ public class ResourceBehaviourDescriptionTests
         var resource = new AsyncResource();
         var useCalls = 0;
         CancellationToken acquireToken = default;
-        var source = DescriptionFlowBuilder.WithResource<AsyncResource, int>(
-            async token =>
+        var source = (Flow.WithResource<AsyncResource, int>(async token =>
             {
                 acquireToken = token;
                 acquireStarted.TrySetResult();
@@ -249,13 +239,12 @@ public class ResourceBehaviourDescriptionTests
                 }
 
                 return resource;
-            },
-            _ =>
+            }, _ =>
             {
                 useCalls++;
-                return DescriptionFlowBuilder.Succeed(42);
-            });
-        var description = DescriptionFlowBuilder.Timeout(source, TimeoutDuration);
+                return (Flow.Succeed(42)).AsDescription();
+            })).AsDescription();
+        var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
         var lowered = description.Lower();
         Assert.Equal(0, useCalls);
@@ -280,19 +269,17 @@ public class ResourceBehaviourDescriptionTests
         var releaseAcquire = NewSignal();
         var resource = new SyncResource();
         var useCalls = 0;
-        var source = DescriptionFlowBuilder.WithResource(
-            () =>
+        var source = (Flow.WithResource(() =>
             {
                 acquireStarted.TrySetResult();
                 releaseAcquire.Task.GetAwaiter().GetResult();
                 return resource;
-            },
-            _ =>
+            }, _ =>
             {
                 useCalls++;
-                return DescriptionFlowBuilder.Succeed(42);
-            });
-        var description = DescriptionFlowBuilder.Timeout(source, TimeoutDuration);
+                return (Flow.Succeed(42)).AsDescription();
+            })).AsDescription();
+        var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
         var lowered = description.Lower();
         Assert.Equal(0, useCalls);
 
@@ -326,39 +313,33 @@ public class ResourceBehaviourDescriptionTests
 
         return kind switch
         {
-            ResourceKind.Sync => DescriptionFlowBuilder.WithResource(
-                () =>
+            ResourceKind.Sync => (Flow.WithResource(() =>
                 {
                     counts.AcquireCalls++;
                     return new SyncResource(onDispose: () => counts.DisposalCalls++);
-                },
-                _ =>
+                }, _ =>
                 {
                     counts.UseCalls++;
-                    return DescriptionFlowBuilder.Create(child);
-                }),
-            ResourceKind.Async => DescriptionFlowBuilder.WithResource<AsyncResource, int>(
-                () =>
+                    return (Flow.Create<int>(() => child())).AsDescription();
+                })).AsDescription(),
+            ResourceKind.Async => (Flow.WithResource<AsyncResource, int>(() =>
                 {
                     counts.AcquireCalls++;
                     return Task.FromResult(new AsyncResource(onDispose: () => counts.DisposalCalls++));
-                },
-                _ =>
+                }, _ =>
                 {
                     counts.UseCalls++;
-                    return DescriptionFlowBuilder.Create(child);
-                }),
-            ResourceKind.CancellableAsync => DescriptionFlowBuilder.WithResource<AsyncResource, int>(
-                _ =>
+                    return (Flow.Create<int>(() => child())).AsDescription();
+                })).AsDescription(),
+            ResourceKind.CancellableAsync => (Flow.WithResource<AsyncResource, int>(_ =>
                 {
                     counts.AcquireCalls++;
                     return Task.FromResult(new AsyncResource(onDispose: () => counts.DisposalCalls++));
-                },
-                _ =>
+                }, _ =>
                 {
                     counts.UseCalls++;
-                    return DescriptionFlowBuilder.Create(child);
-                }),
+                    return (Flow.Create<int>(() => child())).AsDescription();
+                })).AsDescription(),
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }
@@ -377,47 +358,47 @@ public class ResourceBehaviourDescriptionTests
         switch (kind)
         {
             case ResourceKind.Sync:
-            {
-                Func<SyncResource> acquire = () =>
                 {
-                    counts.AcquireCalls++;
-                    return new SyncResource(onDispose: () => counts.DisposalCalls++);
-                };
-                Func<SyncResource, IFlow<int>> use = _ =>
-                {
-                    counts.UseCalls++;
-                    return Flow.Create(() => child());
-                };
-                return Flow.WithResource(acquire, use);
-            }
+                    Func<SyncResource> acquire = () =>
+                    {
+                        counts.AcquireCalls++;
+                        return new SyncResource(onDispose: () => counts.DisposalCalls++);
+                    };
+                    Func<SyncResource, IFlow<int>> use = _ =>
+                    {
+                        counts.UseCalls++;
+                        return Flow.Create(() => child());
+                    };
+                    return Flow.WithResource(acquire, use);
+                }
             case ResourceKind.Async:
-            {
-                Func<Task<AsyncResource>> acquire = () =>
                 {
-                    counts.AcquireCalls++;
-                    return Task.FromResult(new AsyncResource(onDispose: () => counts.DisposalCalls++));
-                };
-                Func<AsyncResource, IFlow<int>> use = _ =>
-                {
-                    counts.UseCalls++;
-                    return Flow.Create(() => child());
-                };
-                return Flow.WithResource(acquire, use);
-            }
+                    Func<Task<AsyncResource>> acquire = () =>
+                    {
+                        counts.AcquireCalls++;
+                        return Task.FromResult(new AsyncResource(onDispose: () => counts.DisposalCalls++));
+                    };
+                    Func<AsyncResource, IFlow<int>> use = _ =>
+                    {
+                        counts.UseCalls++;
+                        return Flow.Create(() => child());
+                    };
+                    return Flow.WithResource(acquire, use);
+                }
             case ResourceKind.CancellableAsync:
-            {
-                Func<CancellationToken, Task<AsyncResource>> acquire = _ =>
                 {
-                    counts.AcquireCalls++;
-                    return Task.FromResult(new AsyncResource(onDispose: () => counts.DisposalCalls++));
-                };
-                Func<AsyncResource, IFlow<int>> use = _ =>
-                {
-                    counts.UseCalls++;
-                    return Flow.Create(() => child());
-                };
-                return Flow.WithResource(acquire, use);
-            }
+                    Func<CancellationToken, Task<AsyncResource>> acquire = _ =>
+                    {
+                        counts.AcquireCalls++;
+                        return Task.FromResult(new AsyncResource(onDispose: () => counts.DisposalCalls++));
+                    };
+                    Func<AsyncResource, IFlow<int>> use = _ =>
+                    {
+                        counts.UseCalls++;
+                        return Flow.Create(() => child());
+                    };
+                    return Flow.WithResource(acquire, use);
+                }
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }

@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -14,13 +13,13 @@ public class ChainAndRecoverDescriptionTests
         Flow.Operations.Chain.Sync<int, int> operation = value =>
         {
             callbackCalls++;
-            return DescriptionFlowBuilder.Create(() =>
+            return (Flow.Create(() =>
             {
                 childCalls++;
                 return value + 1;
-            });
+            })).AsDescription();
         };
-        var description = DescriptionFlowBuilder.Chain(DescriptionFlowBuilder.Succeed(41), operation);
+        var description = (((Flow.Succeed(41)).AsDescription()).Chain(operation)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -52,10 +51,9 @@ public class ChainAndRecoverDescriptionTests
         Flow.Operations.Chain.Sync<int, int> operation = _ =>
         {
             callbackCalls++;
-            return DescriptionFlowBuilder.Succeed(42);
+            return (Flow.Succeed(42)).AsDescription();
         };
-        var description = DescriptionFlowBuilder.Chain(
-            DescriptionFlowBuilder.Fail<int>(expectedException), operation);
+        var description = (((Flow.Fail<int>(expectedException)).AsDescription()).Chain(operation)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -74,7 +72,7 @@ public class ChainAndRecoverDescriptionTests
         // Arrange
         var expectedException = new InvalidOperationException("callback");
         Flow.Operations.Chain.Sync<int, int> operation = _ => throw expectedException;
-        var description = DescriptionFlowBuilder.Chain(DescriptionFlowBuilder.Succeed(1), operation);
+        var description = (((Flow.Succeed(1)).AsDescription()).Chain(operation)).AsDescription();
         Flow.Operations.Chain.Sync<int, int> expectedOperation = _ => throw expectedException;
 
         // Act
@@ -96,16 +94,13 @@ public class ChainAndRecoverDescriptionTests
         Flow.Operations.Recover.Sync<int> recover = exception =>
         {
             callbackCalls++;
-            return DescriptionFlowBuilder.Select(
-                DescriptionFlowBuilder.Create(() =>
+            return (((Flow.Create(() =>
                 {
                     childCalls++;
                     return exception.Message.Length;
-                }),
-                length => length + 1);
+                })).AsDescription()).Select(length => length + 1)).AsDescription();
         };
-        var description = DescriptionFlowBuilder.Recover(
-            DescriptionFlowBuilder.Fail<int>(expectedException), recover);
+        var description = (((Flow.Fail<int>(expectedException)).AsDescription()).Recover(recover)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -137,9 +132,9 @@ public class ChainAndRecoverDescriptionTests
         Flow.Operations.Recover.Sync<int> recover = _ =>
         {
             callbackCalls++;
-            return DescriptionFlowBuilder.Succeed(0);
+            return (Flow.Succeed(0)).AsDescription();
         };
-        var description = DescriptionFlowBuilder.Recover(DescriptionFlowBuilder.Succeed(42), recover);
+        var description = (((Flow.Succeed(42)).AsDescription()).Recover(recover)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -159,8 +154,7 @@ public class ChainAndRecoverDescriptionTests
         var expectedException = new InvalidOperationException("recovery callback");
         Flow.Operations.Recover.Sync<int> recover = _ => throw expectedException;
         Flow.Operations.Recover.Sync<int> expectedRecover = _ => throw expectedException;
-        var description = DescriptionFlowBuilder.Recover(
-            DescriptionFlowBuilder.Fail<int>(new Exception("upstream")), recover);
+        var description = (((Flow.Fail<int>(new Exception("upstream"))).AsDescription()).Recover(recover)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);

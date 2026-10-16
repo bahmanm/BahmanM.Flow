@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -9,7 +8,7 @@ public class DescriptionIdentityTests
     public void Description_Identity_Is_Stable_And_Hash_Derived()
     {
         // Arrange
-        var description = DescriptionFlowBuilder.Succeed("Hello");
+        var description = (Flow.Succeed("Hello")).AsDescription();
 
         // Act
         var expectedShortId = Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(

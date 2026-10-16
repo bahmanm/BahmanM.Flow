@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -14,11 +13,11 @@ public class AsyncChainBehaviourDescriptionTests
         var upstreamExecutions = 0;
         var callbackExecutions = 0;
         var childAttempts = 0;
-        var upstream = DescriptionFlowBuilder.Create(() =>
+        var upstream = (Flow.Create(() =>
         {
             upstreamExecutions++;
             return 41;
-        });
+        })).AsDescription();
         Flow.Operations.Chain.Async<int, int> operation = async value =>
         {
             callbackExecutions++;
@@ -33,11 +32,11 @@ public class AsyncChainBehaviourDescriptionTests
                 return value + 1;
             };
             return returnDescription
-                ? DescriptionFlowBuilder.Create(child)
+                ? (Flow.Create<int>(() => child())).AsDescription()
                 : Flow.Create(async () => await child());
         };
-        var chain = DescriptionFlowBuilder.Chain(upstream, operation);
-        var description = DescriptionFlowBuilder.Retry(chain, 3);
+        var chain = ((upstream).Chain(operation)).AsDescription();
+        var description = ((chain).WithRetry(3)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -68,11 +67,11 @@ public class AsyncChainBehaviourDescriptionTests
         var childStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var childCompleted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var releaseChild = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var upstream = DescriptionFlowBuilder.Create(() =>
+        var upstream = (Flow.Create(() =>
         {
             upstreamExecutions++;
             return 41;
-        });
+        })).AsDescription();
         Flow.Operations.Chain.Async<int, int> operation = async value =>
         {
             callbackExecutions++;
@@ -86,11 +85,11 @@ public class AsyncChainBehaviourDescriptionTests
                 return value + 1;
             };
             return returnDescription
-                ? DescriptionFlowBuilder.Create(child)
+                ? (Flow.Create<int>(() => child())).AsDescription()
                 : Flow.Create(async () => await child());
         };
-        var chain = DescriptionFlowBuilder.Chain(upstream, operation);
-        var description = DescriptionFlowBuilder.Timeout(chain, TimeSpan.FromMilliseconds(500));
+        var chain = ((upstream).Chain(operation)).AsDescription();
+        var description = ((chain).WithTimeout(TimeSpan.FromMilliseconds(500))).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);

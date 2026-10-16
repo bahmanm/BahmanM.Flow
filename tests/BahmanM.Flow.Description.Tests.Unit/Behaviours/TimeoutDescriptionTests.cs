@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -12,9 +11,9 @@ public class TimeoutDescriptionTests
     {
         var exception = new InvalidOperationException("primitive failure");
         var source = fail
-            ? DescriptionFlowBuilder.Fail<int>(exception)
-            : DescriptionFlowBuilder.Succeed(42);
-        var description = DescriptionFlowBuilder.Timeout(source, TimeSpan.Zero);
+            ? (Flow.Fail<int>(exception)).AsDescription()
+            : (Flow.Succeed(42)).AsDescription();
+        var description = ((source).WithTimeout(TimeSpan.Zero)).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
         var lowered = description.Lower();
@@ -38,9 +37,9 @@ public class TimeoutDescriptionTests
             invocationCount++;
             return 42;
         };
-        var source = DescriptionFlowBuilder.Create(operation);
+        var source = (Flow.Create<int>(() => operation())).AsDescription();
         var duration = TimeSpan.FromSeconds(5);
-        var description = DescriptionFlowBuilder.Timeout(source, duration);
+        var description = ((source).WithTimeout(duration)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -76,9 +75,7 @@ public class TimeoutDescriptionTests
             operationCompleted.TrySetResult();
             return 42;
         };
-        var description = DescriptionFlowBuilder.Timeout(
-            DescriptionFlowBuilder.Create(operation),
-            TimeSpan.FromMilliseconds(200));
+        var description = (((Flow.Create<int>(() => operation())).AsDescription()).WithTimeout(TimeSpan.FromMilliseconds(200))).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -113,9 +110,7 @@ public class TimeoutDescriptionTests
             await Task.Delay(Timeout.InfiniteTimeSpan, token);
             return 42;
         };
-        var description = DescriptionFlowBuilder.Timeout(
-            DescriptionFlowBuilder.Create(operation),
-            TimeSpan.FromSeconds(5));
+        var description = (((Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription()).WithTimeout(TimeSpan.FromSeconds(5))).AsDescription();
 
         // Act
         var execution = FlowEngine.ExecuteAsync(
@@ -144,9 +139,7 @@ public class TimeoutDescriptionTests
             await Task.Delay(Timeout.InfiniteTimeSpan, token);
             return 42;
         };
-        var description = DescriptionFlowBuilder.Timeout(
-            DescriptionFlowBuilder.Create(operation),
-            TimeSpan.FromMilliseconds(200));
+        var description = (((Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription()).WithTimeout(TimeSpan.FromMilliseconds(200))).AsDescription();
 
         // Act
         var execution = FlowEngine.ExecuteAsync(description);
@@ -164,9 +157,7 @@ public class TimeoutDescriptionTests
         // Arrange
         var invocationCount = 0;
         Flow.Operations.Create.Sync<int> operation = () => ++invocationCount;
-        var description = DescriptionFlowBuilder.Timeout(
-            DescriptionFlowBuilder.Create(operation),
-            TimeSpan.FromMilliseconds(100));
+        var description = (((Flow.Create<int>(() => operation())).AsDescription()).WithTimeout(TimeSpan.FromMilliseconds(100))).AsDescription();
         var lowered = description.Lower();
         await Task.Delay(TimeSpan.FromMilliseconds(200));
 
@@ -196,9 +187,9 @@ public class TimeoutDescriptionTests
             Thread.Sleep(TimeSpan.FromMilliseconds(500));
             return 42;
         };
-        var source = DescriptionFlowBuilder.Create(operation);
-        var retried = DescriptionFlowBuilder.Retry(source, 3);
-        var description = DescriptionFlowBuilder.Timeout(retried, TimeSpan.FromMilliseconds(200));
+        var source = (Flow.Create<int>(() => operation())).AsDescription();
+        var retried = ((source).WithRetry(3)).AsDescription();
+        var description = ((retried).WithTimeout(TimeSpan.FromMilliseconds(200))).AsDescription();
 
         // Act
         var execution = FlowEngine.ExecuteAsync(description);
@@ -223,9 +214,9 @@ public class TimeoutDescriptionTests
             Thread.Sleep(TimeSpan.FromMilliseconds(500));
             return 42;
         };
-        var source = DescriptionFlowBuilder.Create(operation);
-        var timed = DescriptionFlowBuilder.Timeout(source, TimeSpan.FromMilliseconds(200));
-        var description = DescriptionFlowBuilder.Retry(timed, 3);
+        var source = (Flow.Create<int>(() => operation())).AsDescription();
+        var timed = ((source).WithTimeout(TimeSpan.FromMilliseconds(200))).AsDescription();
+        var description = ((timed).WithRetry(3)).AsDescription();
 
         // Act
         var execution = FlowEngine.ExecuteAsync(description);

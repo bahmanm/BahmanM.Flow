@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -12,7 +11,7 @@ public class DoOnFailureDescriptionTests
         var expected = new InvalidOperationException("upstream");
         Exception? observed = null;
         Flow.Operations.DoOnFailure.Sync action = exception => observed = exception;
-        var description = DescriptionFlowBuilder.DoOnFailure(DescriptionFlowBuilder.Fail<int>(expected), action);
+        var description = (((Flow.Fail<int>(expected)).AsDescription()).DoOnFailure(action)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -32,7 +31,7 @@ public class DoOnFailureDescriptionTests
         // Arrange
         var expected = new InvalidOperationException("upstream");
         Flow.Operations.DoOnFailure.Sync action = _ => throw new Exception("observer");
-        var description = DescriptionFlowBuilder.DoOnFailure(DescriptionFlowBuilder.Fail<int>(expected), action);
+        var description = (((Flow.Fail<int>(expected)).AsDescription()).DoOnFailure(action)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -50,7 +49,7 @@ public class DoOnFailureDescriptionTests
         // Arrange
         var actionCalls = 0;
         Flow.Operations.DoOnFailure.Sync action = _ => actionCalls++;
-        var description = DescriptionFlowBuilder.DoOnFailure(DescriptionFlowBuilder.Succeed(42), action);
+        var description = (((Flow.Succeed(42)).AsDescription()).DoOnFailure(action)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -75,8 +74,7 @@ public class DoOnFailureDescriptionTests
             await Task.Yield();
             throw new InvalidOperationException("observer");
         };
-        var description = DescriptionFlowBuilder.DoOnFailure(
-            DescriptionFlowBuilder.Fail<int>(expectedException), action);
+        var description = (((Flow.Fail<int>(expectedException)).AsDescription()).DoOnFailure(action)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -107,8 +105,7 @@ public class DoOnFailureDescriptionTests
             observedToken = token;
             await Task.Delay(Timeout.InfiniteTimeSpan, token);
         };
-        var description = DescriptionFlowBuilder.DoOnFailure(
-            DescriptionFlowBuilder.Fail<int>(expectedException), action);
+        var description = (((Flow.Fail<int>(expectedException)).AsDescription()).DoOnFailure(action)).AsDescription();
         var options = new Execution.Options(cancellationTokenSource.Token);
 
         // Act

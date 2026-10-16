@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -21,8 +20,7 @@ public class ValidateDescriptionTests
             factoryCalls++;
             return new InvalidOperationException("invalid");
         };
-        var description = DescriptionFlowBuilder.Validate(
-            DescriptionFlowBuilder.Succeed(42), predicate, exceptionFactory);
+        var description = (((Flow.Succeed(42)).AsDescription()).Validate(predicate, exceptionFactory)).AsDescription();
 
         // Act
         _ = DescriptionFormatter.Describe(description);
@@ -49,8 +47,7 @@ public class ValidateDescriptionTests
     {
         // Arrange
         var expected = new InvalidOperationException("invalid");
-        var description = DescriptionFlowBuilder.Validate(
-            DescriptionFlowBuilder.Succeed(0), _ => false, _ => expected);
+        var description = (((Flow.Succeed(0)).AsDescription()).Validate(_ => false, _ => expected)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -72,10 +69,7 @@ public class ValidateDescriptionTests
         // Arrange
         var expected = new InvalidOperationException("upstream");
         var callbackCalls = 0;
-        var description = DescriptionFlowBuilder.Validate(
-            DescriptionFlowBuilder.Fail<int>(expected),
-            _ => { callbackCalls++; return true; },
-            _ => { callbackCalls++; return new Exception("unused"); });
+        var description = (((Flow.Fail<int>(expected)).AsDescription()).Validate(_ => { callbackCalls++; return true; }, _ => { callbackCalls++; return new Exception("unused"); })).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -105,8 +99,7 @@ public class ValidateDescriptionTests
             factoryCalls++;
             return new InvalidOperationException("invalid");
         };
-        var description = DescriptionFlowBuilder.Validate(
-            DescriptionFlowBuilder.Succeed(42), predicate, exceptionFactory);
+        var description = (((Flow.Succeed(42)).AsDescription()).Validate(predicate, exceptionFactory)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -141,8 +134,7 @@ public class ValidateDescriptionTests
             observedToken = token;
             return Task.FromResult(value > 0);
         };
-        var description = DescriptionFlowBuilder.Validate(
-            DescriptionFlowBuilder.Succeed(42), predicate, _ => new InvalidOperationException("unused"));
+        var description = (((Flow.Succeed(42)).AsDescription()).Validate(predicate, _ => new InvalidOperationException("unused"))).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -174,8 +166,7 @@ public class ValidateDescriptionTests
             predicateCalls++;
             return Task.FromResult(true);
         };
-        var description = DescriptionFlowBuilder.Validate(
-            DescriptionFlowBuilder.Succeed(42), predicate, _ => new InvalidOperationException("unused"));
+        var description = (((Flow.Succeed(42)).AsDescription()).Validate(predicate, _ => new InvalidOperationException("unused"))).AsDescription();
         var options = new Execution.Options(cancellationTokenSource.Token);
 
         // Act

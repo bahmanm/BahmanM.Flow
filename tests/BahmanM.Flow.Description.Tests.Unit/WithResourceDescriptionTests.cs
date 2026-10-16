@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -12,21 +11,19 @@ public class WithResourceDescriptionTests
         var useCalls = 0;
         var childCalls = 0;
         var resource = new SyncResource();
-        var description = DescriptionFlowBuilder.WithResource(
-            () =>
+        var description = (Flow.WithResource(() =>
             {
                 acquireCalls++;
                 return resource;
-            },
-            acquired =>
+            }, acquired =>
             {
                 useCalls++;
-                return DescriptionFlowBuilder.Create(() =>
+                return (Flow.Create(() =>
                 {
                     childCalls++;
                     return acquired.Value;
-                });
-            });
+                })).AsDescription();
+            })).AsDescription();
         var expected = Flow.WithResource(
             () => resource,
             acquired => Flow.Create(() => acquired.Value));
@@ -52,18 +49,14 @@ public class WithResourceDescriptionTests
     public async Task WithResource_Sync_Description_Preserves_Acquire_And_Use_Failures_And_Disposal()
     {
         var acquireException = new InvalidOperationException("acquire");
-        var failedAcquire = DescriptionFlowBuilder.WithResource<SyncResource, int>(
-            () => throw acquireException,
-            _ => throw new Xunit.Sdk.XunitException("Use must not run after acquisition fails."));
+        var failedAcquire = (Flow.WithResource<SyncResource, int>(() => throw acquireException, _ => throw new Xunit.Sdk.XunitException("Use must not run after acquisition fails."))).AsDescription();
         var acquireOutcome = await FlowEngine.ExecuteAsync(failedAcquire);
 
         Assert.Same(acquireException, Assert.IsType<Failure<int>>(acquireOutcome).Exception);
 
         var useException = new InvalidOperationException("use");
         var resource = new SyncResource();
-        var failedUse = DescriptionFlowBuilder.WithResource<SyncResource, int>(
-            () => resource,
-            _ => throw useException);
+        var failedUse = (Flow.WithResource<SyncResource, int>(() => resource, _ => throw useException)).AsDescription();
         var useOutcome = await FlowEngine.ExecuteAsync(failedUse);
 
         Assert.Same(useException, Assert.IsType<Failure<int>>(useOutcome).Exception);
@@ -76,9 +69,7 @@ public class WithResourceDescriptionTests
         var useException = new InvalidOperationException("use");
         var disposeException = new ApplicationException("dispose");
         var resource = new SyncResource(() => throw disposeException);
-        var description = DescriptionFlowBuilder.WithResource<SyncResource, int>(
-            () => resource,
-            _ => throw useException);
+        var description = (Flow.WithResource<SyncResource, int>(() => resource, _ => throw useException)).AsDescription();
 
         var outcome = await FlowEngine.ExecuteAsync(description);
 
@@ -92,18 +83,16 @@ public class WithResourceDescriptionTests
         var acquireCalls = 0;
         var useCalls = 0;
         var resource = new AsyncResource();
-        var description = DescriptionFlowBuilder.WithResource(
-            async () =>
+        var description = (Flow.WithResource(async () =>
             {
                 acquireCalls++;
                 await Task.Yield();
                 return resource;
-            },
-            acquired =>
+            }, acquired =>
             {
                 useCalls++;
-                return DescriptionFlowBuilder.Succeed(acquired.Value);
-            });
+                return (Flow.Succeed(acquired.Value)).AsDescription();
+            })).AsDescription();
         var expected = Flow.WithResource(
             () => Task.FromResult(resource),
             acquired => Flow.Succeed(acquired.Value));
@@ -133,17 +122,15 @@ public class WithResourceDescriptionTests
         var useCalls = 0;
         var resource = new AsyncResource();
         var expectedResource = new AsyncResource();
-        var description = DescriptionFlowBuilder.WithResource<AsyncResource, int>(
-            token =>
+        var description = (Flow.WithResource<AsyncResource, int>(token =>
             {
                 receivedToken = token;
                 return Task.FromResult(resource);
-            },
-            acquired =>
+            }, acquired =>
             {
                 useCalls++;
-                return DescriptionFlowBuilder.Succeed(acquired.Value);
-            });
+                return (Flow.Succeed(acquired.Value)).AsDescription();
+            })).AsDescription();
         var expected = Flow.WithResource<AsyncResource, int>(
             token =>
             {
@@ -171,9 +158,7 @@ public class WithResourceDescriptionTests
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
         var resource = new AsyncResource();
-        var description = DescriptionFlowBuilder.WithResource<AsyncResource, int>(
-            _ => Task.FromResult(resource),
-            _ => DescriptionFlowBuilder.Create(token => Task.FromCanceled<int>(token)));
+        var description = (Flow.WithResource<AsyncResource, int>(_ => Task.FromResult(resource), _ => (Flow.Create(token => Task.FromCanceled<int>(token))).AsDescription())).AsDescription();
 
         var outcome = await FlowEngine.ExecuteAsync(description, new Execution.Options(cancellation.Token));
         await resource.Disposed.WaitAsync(TimeSpan.FromSeconds(5));
@@ -188,9 +173,7 @@ public class WithResourceDescriptionTests
         var useException = new InvalidOperationException("use");
         var disposeException = new ApplicationException("dispose");
         var resource = new AsyncResource(() => throw disposeException);
-        var description = DescriptionFlowBuilder.WithResource<AsyncResource, int>(
-            () => Task.FromResult(resource),
-            _ => throw useException);
+        var description = (Flow.WithResource<AsyncResource, int>(() => Task.FromResult(resource), _ => throw useException)).AsDescription();
 
         var outcome = await FlowEngine.ExecuteAsync(description);
 

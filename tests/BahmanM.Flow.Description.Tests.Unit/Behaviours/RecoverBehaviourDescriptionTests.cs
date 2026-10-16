@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -32,12 +31,12 @@ public class RecoverBehaviourDescriptionTests
             fallbackExecutions++;
             throw fallbackException;
         };
-        var source = DescriptionFlowBuilder.Create(sourceOperation);
+        var source = (Flow.Create<int>(() => sourceOperation())).AsDescription();
         var fallback = returnDescription
-            ? DescriptionFlowBuilder.Create(fallbackOperation)
+            ? (Flow.Create<int>(() => fallbackOperation())).AsDescription()
             : Flow.Create(() => fallbackOperation());
         var recover = CreateRecover(source, fallback, kind, _ => callbackExecutions++);
-        var description = DescriptionFlowBuilder.Retry(recover, 3);
+        var description = ((recover).WithRetry(3)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -92,16 +91,16 @@ public class RecoverBehaviourDescriptionTests
             fallbackCompleted.TrySetResult();
             return 42;
         };
-        var source = DescriptionFlowBuilder.Create(sourceOperation);
+        var source = (Flow.Create<int>(cancellationToken => sourceOperation(cancellationToken))).AsDescription();
         var fallback = returnDescription
-            ? DescriptionFlowBuilder.Create(fallbackOperation)
+            ? (Flow.Create<int>(() => fallbackOperation())).AsDescription()
             : Flow.Create(() => fallbackOperation());
         var recover = CreateRecover(source, fallback, kind, exception =>
         {
             callbackExecutions++;
             recoveredException = exception;
         });
-        var description = DescriptionFlowBuilder.Timeout(recover, timeout);
+        var description = ((recover).WithTimeout(timeout)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -137,25 +136,23 @@ public class RecoverBehaviourDescriptionTests
         Action<Exception> onRecovery) =>
         kind switch
         {
-            RecoverKind.Sync => DescriptionFlowBuilder.Recover(source, exception =>
+            RecoverKind.Sync => ((source).Recover(exception =>
             {
                 onRecovery(exception);
                 return fallback;
-            }),
-            RecoverKind.Async => DescriptionFlowBuilder.Recover(source, async exception =>
+            })).AsDescription(),
+            RecoverKind.Async => ((source).Recover(async exception =>
             {
                 onRecovery(exception);
                 await Task.Yield();
                 return fallback;
-            }),
-            RecoverKind.CancellableAsync => DescriptionFlowBuilder.Recover(
-                source,
-                async (exception, _) =>
+            })).AsDescription(),
+            RecoverKind.CancellableAsync => ((source).Recover(async (exception, _) =>
                 {
                     onRecovery(exception);
                     await Task.Yield();
                     return fallback;
-                }),
+                })).AsDescription(),
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
 

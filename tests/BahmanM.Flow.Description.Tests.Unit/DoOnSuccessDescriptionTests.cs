@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -15,7 +14,7 @@ public class DoOnSuccessDescriptionTests
             Assert.Equal(42, value);
             actionCalls++;
         };
-        var description = DescriptionFlowBuilder.DoOnSuccess(DescriptionFlowBuilder.Succeed(42), action);
+        var description = (((Flow.Succeed(42)).AsDescription()).DoOnSuccess(action)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -40,7 +39,7 @@ public class DoOnSuccessDescriptionTests
         // Arrange
         var expected = new InvalidOperationException("action");
         Flow.Operations.DoOnSuccess.Sync<int> action = _ => throw expected;
-        var description = DescriptionFlowBuilder.DoOnSuccess(DescriptionFlowBuilder.Succeed(42), action);
+        var description = (((Flow.Succeed(42)).AsDescription()).DoOnSuccess(action)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -59,7 +58,7 @@ public class DoOnSuccessDescriptionTests
         var expected = new InvalidOperationException("upstream");
         var actionCalls = 0;
         Flow.Operations.DoOnSuccess.Sync<int> action = _ => actionCalls++;
-        var description = DescriptionFlowBuilder.DoOnSuccess(DescriptionFlowBuilder.Fail<int>(expected), action);
+        var description = (((Flow.Fail<int>(expected)).AsDescription()).DoOnSuccess(action)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -83,7 +82,7 @@ public class DoOnSuccessDescriptionTests
             await Task.Yield();
             actionCalls++;
         };
-        var description = DescriptionFlowBuilder.DoOnSuccess(DescriptionFlowBuilder.Succeed(42), action);
+        var description = (((Flow.Succeed(42)).AsDescription()).DoOnSuccess(action)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -113,7 +112,7 @@ public class DoOnSuccessDescriptionTests
             observedToken = token;
             return Task.CompletedTask;
         };
-        var description = DescriptionFlowBuilder.DoOnSuccess(DescriptionFlowBuilder.Succeed(42), action);
+        var description = (((Flow.Succeed(42)).AsDescription()).DoOnSuccess(action)).AsDescription();
         var options = new Execution.Options(cancellationTokenSource.Token);
 
         // Act

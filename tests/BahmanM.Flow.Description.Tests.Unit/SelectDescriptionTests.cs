@@ -1,4 +1,3 @@
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -14,7 +13,7 @@ public class SelectDescriptionTests
             invocationCount++;
             return value.Length;
         };
-        var description = DescriptionFlowBuilder.Select(DescriptionFlowBuilder.Succeed("Hello"), operation);
+        var description = (((Flow.Succeed("Hello")).AsDescription()).Select(operation)).AsDescription();
         var expectedFlow = Flow.Succeed("Hello").Select(value => value.Length);
 
         // Act
@@ -39,7 +38,7 @@ public class SelectDescriptionTests
             invocationCount++;
             return Task.FromResult(value.Length);
         };
-        var description = DescriptionFlowBuilder.Select(DescriptionFlowBuilder.Succeed("Hello"), operation);
+        var description = (((Flow.Succeed("Hello")).AsDescription()).Select(operation)).AsDescription();
         Flow.Operations.Select.Async<string, int> expectedOperation = value => Task.FromResult(value.Length);
         var expectedFlow = Flow.Succeed("Hello").Select(expectedOperation);
 
@@ -66,7 +65,7 @@ public class SelectDescriptionTests
             observedToken = cancellationToken;
             return Task.FromResult(value.Length);
         };
-        var description = DescriptionFlowBuilder.Select(DescriptionFlowBuilder.Succeed("Hello"), operation);
+        var description = (((Flow.Succeed("Hello")).AsDescription()).Select(operation)).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description, new Execution.Options(cancellationTokenSource.Token));

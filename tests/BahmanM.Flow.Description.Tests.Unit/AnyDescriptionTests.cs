@@ -1,4 +1,3 @@
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit;
 
@@ -8,9 +7,7 @@ public class AnyDescriptionTests
     public void Any_Description_Lowers_Children_In_Input_Order()
     {
         // Arrange
-        var description = DescriptionFlowBuilder.Any(
-            DescriptionFlowBuilder.Succeed(2),
-            DescriptionFlowBuilder.Succeed(1));
+        var description = (Flow.Any((Flow.Succeed(2)).AsDescription(), (Flow.Succeed(1)).AsDescription())).AsDescription();
 
         // Act
         var lowered = Assert.IsType<Ast.Primitive.Any<int>>(description.Lower());
@@ -55,9 +52,7 @@ public class AnyDescriptionTests
                 throw;
             }
         };
-        var description = DescriptionFlowBuilder.Any(
-            DescriptionFlowBuilder.Create(winner),
-            DescriptionFlowBuilder.Create(loser));
+        var description = (Flow.Any((Flow.Create<int>(cancellationToken => winner(cancellationToken))).AsDescription(), (Flow.Create<int>(cancellationToken => loser(cancellationToken))).AsDescription())).AsDescription();
         var expectedFlow = Flow.Any(
             Flow.Create(cancellationToken => winner(cancellationToken)),
             Flow.Create(cancellationToken => loser(cancellationToken)));
@@ -92,9 +87,7 @@ public class AnyDescriptionTests
         // Arrange
         var firstException = new InvalidOperationException("first failure");
         var secondException = new ArgumentException("second failure");
-        var description = DescriptionFlowBuilder.Any(
-            DescriptionFlowBuilder.Fail<int>(firstException),
-            DescriptionFlowBuilder.Fail<int>(secondException));
+        var description = (Flow.Any((Flow.Fail<int>(firstException)).AsDescription(), (Flow.Fail<int>(secondException)).AsDescription())).AsDescription();
 
         // Act
         var actual = await FlowEngine.ExecuteAsync(description);

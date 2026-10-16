@@ -1,6 +1,5 @@
 using BahmanM.Flow.Behaviour;
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -16,8 +15,8 @@ public class CustomBehaviourDescriptionTests
             sourceCalls++;
             return 42;
         };
-        var source = DescriptionFlowBuilder.Create(operation);
-        var description = DescriptionFlowBuilder.WithBehaviour(source, behaviour);
+        var source = (Flow.Create<int>(() => operation())).AsDescription();
+        var description = new Description.Behaviour.Custom.Custom<int>(source, behaviour);
 
         var text = DescriptionFormatter.Describe(description);
         var lowered = description.Lower();
@@ -47,9 +46,7 @@ public class CustomBehaviourDescriptionTests
             return 42;
         };
         var behaviour = new FailSecondApplicationBehaviour(new InvalidOperationException("second application"));
-        var description = DescriptionFlowBuilder.WithBehaviour(
-            DescriptionFlowBuilder.Create(operation),
-            behaviour);
+        var description = new Description.Behaviour.Custom.Custom<int>((Flow.Create<int>(() => operation())).AsDescription(), behaviour);
         Assert.Equal(0, behaviour.ApplyCalls);
         var lowered = description.Lower();
         Assert.Equal(1, behaviour.ApplyCalls);
@@ -67,9 +64,7 @@ public class CustomBehaviourDescriptionTests
     public async Task CustomBehaviour_ApplyReceivesLoweredAst()
     {
         var behaviour = new DescriptionSourceBehaviour();
-        var description = DescriptionFlowBuilder.WithBehaviour(
-            DescriptionFlowBuilder.Succeed(42),
-            behaviour);
+        var description = new Description.Behaviour.Custom.Custom<int>((Flow.Succeed(42)).AsDescription(), behaviour);
         var lowered = description.Lower();
 
         Assert.True(behaviour.ReceivedAstNode);
@@ -88,10 +83,8 @@ public class CustomBehaviourDescriptionTests
         var behaviour = new RecordingBehaviour(
             "Test.Concurrent",
             () => Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(2))));
-        var firstLowering = Task.Run(() => DescriptionFlowBuilder.WithBehaviour(
-            DescriptionFlowBuilder.Create(operation), behaviour).Lower());
-        var secondLowering = Task.Run(() => DescriptionFlowBuilder.WithBehaviour(
-            DescriptionFlowBuilder.Create(operation), behaviour).Lower());
+        var firstLowering = Task.Run(() => new Description.Behaviour.Custom.Custom<int>((Flow.Create<int>(() => operation())).AsDescription(), behaviour).Lower());
+        var secondLowering = Task.Run(() => new Description.Behaviour.Custom.Custom<int>((Flow.Create<int>(() => operation())).AsDescription(), behaviour).Lower());
         var loweredFlows = await Task.WhenAll(firstLowering, secondLowering);
         var outcomes = await Task.WhenAll(
             FlowEngine.ExecuteAsync(loweredFlows[0]),
@@ -112,13 +105,9 @@ public class CustomBehaviourDescriptionTests
             events.Add("Source");
             return 42;
         };
-        var source = DescriptionFlowBuilder.Create(operation);
-        var inner = DescriptionFlowBuilder.WithBehaviour(
-            source,
-            new WrappingBehaviour("Inner", events));
-        var outer = DescriptionFlowBuilder.WithBehaviour(
-            inner,
-            new WrappingBehaviour("Outer", events));
+        var source = (Flow.Create<int>(() => operation())).AsDescription();
+        var inner = new Description.Behaviour.Custom.Custom<int>(source, new WrappingBehaviour("Inner", events));
+        var outer = new Description.Behaviour.Custom.Custom<int>(inner, new WrappingBehaviour("Outer", events));
 
         var text = DescriptionFormatter.Describe(outer);
         Assert.Contains("operationType: Test.Outer", text);
@@ -140,9 +129,7 @@ public class CustomBehaviourDescriptionTests
     {
         var expectedException = new InvalidOperationException("apply failed");
         var behaviour = new RecordingBehaviour("Test.Throwing", () => throw expectedException);
-        var description = DescriptionFlowBuilder.WithBehaviour(
-            DescriptionFlowBuilder.Succeed(42),
-            behaviour);
+        var description = new Description.Behaviour.Custom.Custom<int>((Flow.Succeed(42)).AsDescription(), behaviour);
 
         var exception = Assert.Throws<InvalidOperationException>(() => description.Lower());
 
@@ -156,9 +143,7 @@ public class CustomBehaviourDescriptionTests
         var behaviour = new DescriptionReturningBehaviour();
         Flow.Operations.Create.Sync<int> operation = () =>
             throw new Xunit.Sdk.XunitException("Original flow should be replaced.");
-        var description = DescriptionFlowBuilder.WithBehaviour(
-            DescriptionFlowBuilder.Create(operation),
-            behaviour);
+        var description = new Description.Behaviour.Custom.Custom<int>((Flow.Create<int>(() => operation())).AsDescription(), behaviour);
 
         var outcome = await FlowEngine.ExecuteAsync(description);
 
@@ -177,9 +162,7 @@ public class CustomBehaviourDescriptionTests
             receivedToken = token;
             operationStarted.TrySetResult();
         });
-        var description = DescriptionFlowBuilder.WithBehaviour(
-            DescriptionFlowBuilder.Succeed(1),
-            behaviour);
+        var description = new Description.Behaviour.Custom.Custom<int>((Flow.Succeed(1)).AsDescription(), behaviour);
 
         var execution = FlowEngine.ExecuteAsync(description, new Execution.Options(cancellation.Token));
         await operationStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
@@ -242,7 +225,7 @@ public class CustomBehaviourDescriptionTests
         public IFlow<T> Apply<T>(IFlow<T> originalFlow)
         {
             Interlocked.Increment(ref _applyCalls);
-            return DescriptionFlowBuilder.Succeed<T>(default!);
+            return (Flow.Succeed<T>(default!)).AsDescription();
         }
     }
 
@@ -274,7 +257,7 @@ public class CustomBehaviourDescriptionTests
                 await Task.Delay(Timeout.InfiniteTimeSpan, token);
                 return default!;
             };
-            return DescriptionFlowBuilder.Create(operation);
+            return (Flow.Create<T>(cancellationToken => operation(cancellationToken))).AsDescription();
         }
     }
 }

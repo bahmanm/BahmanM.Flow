@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -30,9 +29,9 @@ public class OrdinaryOperatorBehaviourDescriptionTests
             sourceCalls++;
             throw sourceException;
         };
-        var source = DescriptionFlowBuilder.Create(operation);
+        var source = (Flow.Create<int>(() => operation())).AsDescription();
         var wrapped = Wrap(source, kind, variant, () => operatorCalls++);
-        var description = DescriptionFlowBuilder.Retry(wrapped, maxAttempts: 3);
+        var description = ((wrapped).WithRetry(maxAttempts: 3)).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
         var lowered = description.Lower();
@@ -86,9 +85,9 @@ public class OrdinaryOperatorBehaviourDescriptionTests
                 throw;
             }
         };
-        var source = DescriptionFlowBuilder.Create(operation);
+        var source = (Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription();
         var wrapped = Wrap(source, kind, variant, () => operatorCalls++, token => operatorToken = token);
-        var description = DescriptionFlowBuilder.Timeout(wrapped, TimeSpan.FromMilliseconds(300));
+        var description = ((wrapped).WithTimeout(TimeSpan.FromMilliseconds(300))).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
         var lowered = description.Lower();
@@ -127,11 +126,7 @@ public class OrdinaryOperatorBehaviourDescriptionTests
             await releaseSelect.Task;
             return value;
         };
-        var description = DescriptionFlowBuilder.Timeout(
-            DescriptionFlowBuilder.Select(
-                DescriptionFlowBuilder.Create(() => 42),
-                select),
-            timeout);
+        var description = (((((Flow.Create(() => 42)).AsDescription()).Select(select)).AsDescription()).WithTimeout(timeout)).AsDescription();
 
         var execution = FlowEngine.ExecuteAsync(description);
         await selectStarted.Task.WaitAsync(TimeSpan.FromSeconds(2));
@@ -157,93 +152,66 @@ public class OrdinaryOperatorBehaviourDescriptionTests
 
         return (kind, variant) switch
         {
-            (OperatorKind.DoOnSuccess, OperatorVariant.Sync) => DescriptionFlowBuilder.DoOnSuccess(
-                source,
-                _ => onOperator()),
-            (OperatorKind.DoOnSuccess, OperatorVariant.Async) => DescriptionFlowBuilder.DoOnSuccess(
-                source,
-                async _ =>
+            (OperatorKind.DoOnSuccess, OperatorVariant.Sync) => ((source).DoOnSuccess(_ => onOperator())).AsDescription(),
+            (OperatorKind.DoOnSuccess, OperatorVariant.Async) => ((source).DoOnSuccess(async _ =>
                 {
                     onOperator();
                     await Task.Yield();
-                }),
-            (OperatorKind.DoOnSuccess, OperatorVariant.CancellableAsync) => DescriptionFlowBuilder.DoOnSuccess(
-                source,
-                async (_, token) =>
+                })).AsDescription(),
+            (OperatorKind.DoOnSuccess, OperatorVariant.CancellableAsync) => ((source).DoOnSuccess(async (_, token) =>
                 {
                     captureToken?.Invoke(token);
                     onOperator();
                     await Task.Yield();
-                }),
-            (OperatorKind.DoOnFailure, OperatorVariant.Sync) => DescriptionFlowBuilder.DoOnFailure(
-                source,
-                _ => onOperator()),
-            (OperatorKind.DoOnFailure, OperatorVariant.Async) => DescriptionFlowBuilder.DoOnFailure(
-                source,
-                async _ =>
+                })).AsDescription(),
+            (OperatorKind.DoOnFailure, OperatorVariant.Sync) => ((source).DoOnFailure(_ => onOperator())).AsDescription(),
+            (OperatorKind.DoOnFailure, OperatorVariant.Async) => ((source).DoOnFailure(async _ =>
                 {
                     onOperator();
                     await Task.Yield();
-                }),
-            (OperatorKind.DoOnFailure, OperatorVariant.CancellableAsync) => DescriptionFlowBuilder.DoOnFailure(
-                source,
-                async (_, token) =>
+                })).AsDescription(),
+            (OperatorKind.DoOnFailure, OperatorVariant.CancellableAsync) => ((source).DoOnFailure(async (_, token) =>
                 {
                     captureToken?.Invoke(token);
                     onOperator();
                     await Task.Yield();
-                }),
-            (OperatorKind.Select, OperatorVariant.Sync) => DescriptionFlowBuilder.Select(
-                source,
-                value =>
+                })).AsDescription(),
+            (OperatorKind.Select, OperatorVariant.Sync) => ((source).Select(value =>
                 {
                     onOperator();
                     return value;
-                }),
-            (OperatorKind.Select, OperatorVariant.Async) => DescriptionFlowBuilder.Select<int, int>(
-                source,
-                async value =>
+                })).AsDescription(),
+            (OperatorKind.Select, OperatorVariant.Async) => ((source).Select<int, int>(async value =>
                 {
                     onOperator();
                     await Task.Yield();
                     return value;
-                }),
-            (OperatorKind.Select, OperatorVariant.CancellableAsync) => DescriptionFlowBuilder.Select(
-                source,
-                async (value, token) =>
+                })).AsDescription(),
+            (OperatorKind.Select, OperatorVariant.CancellableAsync) => ((source).Select(async (value, token) =>
                 {
                     captureToken?.Invoke(token);
                     onOperator();
                     await Task.Yield();
                     return value;
-                }),
-            (OperatorKind.Validate, OperatorVariant.Sync) => DescriptionFlowBuilder.Validate(
-                source,
-                _ =>
+                })).AsDescription(),
+            (OperatorKind.Validate, OperatorVariant.Sync) => ((source).Validate(_ =>
                 {
                     onOperator();
                     return true;
-                },
-                _ => exception),
-            (OperatorKind.Validate, OperatorVariant.Async) => DescriptionFlowBuilder.Validate(
-                source,
-                async _ =>
+                }, _ => exception)).AsDescription(),
+            (OperatorKind.Validate, OperatorVariant.Async) => ((source).Validate(async _ =>
                 {
                     onOperator();
                     await Task.Yield();
                     return true;
-                },
-                _ => exception),
-            (OperatorKind.Validate, OperatorVariant.CancellableAsync) => DescriptionFlowBuilder.Validate(
-                source,
-                async (_, token) =>
+                }, _ => exception)).AsDescription(),
+            (OperatorKind.Validate, OperatorVariant.CancellableAsync) => ((source).Validate(async (_, token) =>
                 {
                     captureToken?.Invoke(token);
                     onOperator();
                     await Task.Yield();
                     return true;
-                },
-                _ => exception),
+                }, _ => exception)).AsDescription(),
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }

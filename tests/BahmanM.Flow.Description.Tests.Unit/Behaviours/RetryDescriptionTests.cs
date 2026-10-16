@@ -1,5 +1,4 @@
 using BahmanM.Flow.Description.Serialisation;
-using BahmanM.Flow.Description.Tests.Unit.Support;
 
 namespace BahmanM.Flow.Description.Tests.Unit.Behaviours;
 
@@ -16,10 +15,7 @@ public class RetryDescriptionTests
                 throw new InvalidOperationException("try again");
             return 42;
         };
-        var description = DescriptionFlowBuilder.Retry(
-            DescriptionFlowBuilder.Create(operation),
-            maxAttempts: 3,
-            typeof(TimeoutException));
+        var description = (((Flow.Create<int>(() => operation())).AsDescription()).WithRetry(maxAttempts: 3, typeof(TimeoutException))).AsDescription();
 
         var lowered = description.Lower();
         Assert.Equal(0, attempts);
@@ -44,10 +40,7 @@ public class RetryDescriptionTests
                 throw new InvalidOperationException("try again");
             return 42;
         };
-        var description = DescriptionFlowBuilder.Retry(
-            DescriptionFlowBuilder.Create(operation),
-            maxAttempts: 3,
-            typeof(TimeoutException));
+        var description = (((Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription()).WithRetry(maxAttempts: 3, typeof(TimeoutException))).AsDescription();
 
         var lowered = description.Lower();
         Assert.Equal(0, attempts);
@@ -67,9 +60,9 @@ public class RetryDescriptionTests
     {
         var exception = new InvalidOperationException("primitive failure");
         var source = fail
-            ? DescriptionFlowBuilder.Fail<int>(exception)
-            : DescriptionFlowBuilder.Succeed(42);
-        var description = DescriptionFlowBuilder.Retry(source, maxAttempts: 3);
+            ? (Flow.Fail<int>(exception)).AsDescription()
+            : (Flow.Succeed(42)).AsDescription();
+        var description = ((source).WithRetry(maxAttempts: 3)).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
         var lowered = description.Lower();
@@ -96,8 +89,8 @@ public class RetryDescriptionTests
             return 42;
         };
         var excludedExceptions = new[] { typeof(TimeoutException) };
-        var source = DescriptionFlowBuilder.Create(operation);
-        var description = DescriptionFlowBuilder.Retry(source, 3, excludedExceptions);
+        var source = (Flow.Create<int>(() => operation())).AsDescription();
+        var description = ((source).WithRetry(3, excludedExceptions)).AsDescription();
         excludedExceptions[0] = typeof(InvalidOperationException);
 
         // Act
@@ -131,10 +124,7 @@ public class RetryDescriptionTests
                 throw new InvalidOperationException("try again");
             return 42;
         };
-        var description = DescriptionFlowBuilder.Retry(
-            DescriptionFlowBuilder.Create(descriptionOperation),
-            maxAttempts: 3,
-            typeof(TimeoutException));
+        var description = (((Flow.Create<int>(() => descriptionOperation())).AsDescription()).WithRetry(maxAttempts: 3, typeof(TimeoutException))).AsDescription();
 
         var existingInvocationCount = 0;
         Flow.Operations.Create.Sync<int> existingOperation = () =>
@@ -166,10 +156,7 @@ public class RetryDescriptionTests
             invocationCount++;
             throw exception;
         };
-        var description = DescriptionFlowBuilder.Retry(
-            DescriptionFlowBuilder.Create(operation),
-            maxAttempts: 3,
-            typeof(TimeoutException));
+        var description = (((Flow.Create<int>(() => operation())).AsDescription()).WithRetry(maxAttempts: 3, typeof(TimeoutException))).AsDescription();
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(description);
@@ -190,7 +177,7 @@ public class RetryDescriptionTests
             invocationCount++;
             throw exception;
         };
-        var description = DescriptionFlowBuilder.Retry(DescriptionFlowBuilder.Create(operation), maxAttempts: 3);
+        var description = (((Flow.Create<int>(() => operation())).AsDescription()).WithRetry(maxAttempts: 3)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -212,8 +199,8 @@ public class RetryDescriptionTests
             invocationCount++;
             throw new InvalidOperationException($"cannot select {value}");
         };
-        var source = DescriptionFlowBuilder.Select(DescriptionFlowBuilder.Succeed(1), operation);
-        var description = DescriptionFlowBuilder.Retry(source, 3, typeof(TimeoutException));
+        var source = (((Flow.Succeed(1)).AsDescription()).Select(operation)).AsDescription();
+        var description = ((source).WithRetry(3, typeof(TimeoutException))).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -232,10 +219,10 @@ public class RetryDescriptionTests
     public void Retry_Description_RejectsNonPositiveAttemptCountAtConstruction()
     {
         // Arrange
-        var source = DescriptionFlowBuilder.Create(() => 42);
+        var source = (Flow.Create(() => 42)).AsDescription();
 
         // Act / Assert
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            DescriptionFlowBuilder.Retry(source, 0, typeof(TimeoutException)));
+            ((source).WithRetry(0, typeof(TimeoutException))).AsDescription());
     }
 }
