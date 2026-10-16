@@ -3,13 +3,27 @@
     <Project Path="examples/ShouldIGoOutside/ShouldIGoOutside.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/BahmanM.Flow/BahmanM.Flow.csproj" />
+    <Project Path="src/public/BahmanM.Flow/BahmanM.Flow.csproj" />
+    <Project Path="src/public/BahmanM.Flow.Abstractions/BahmanM.Flow.Abstractions.csproj" />
+    <Project Path="src/internal/BahmanM.Flow.Shared/BahmanM.Flow.Shared.csproj" />
+    <Project Path="src/internal/BahmanM.Flow.Description/BahmanM.Flow.Description.csproj" />
+    <Project Path="src/internal/BahmanM.Flow.Ast/BahmanM.Flow.Ast.csproj" />
+    <Project Path="src/internal/BahmanM.Flow.Execution/BahmanM.Flow.Execution.csproj" />
   </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/BahmanM.Flow.Description.Tests.Unit/BahmanM.Flow.Description.Tests.Unit.csproj" />
-    <Project Path="tests/BahmanM.Flow.Tests.Integration/BahmanM.Flow.Tests.Integration.csproj" />
-    <Project Path="tests/BahmanM.Flow.Tests.KnownBugs/BahmanM.Flow.Tests.KnownBugs.csproj" />
-    <Project Path="tests/BahmanM.Flow.Tests.Support/BahmanM.Flow.Tests.Support.csproj" />
-    <Project Path="tests/BahmanM.Flow.Tests.UserAcceptance/BahmanM.Flow.Tests.UserAcceptance.csproj" />
+  <Folder Name="/tests/unit/public/">
+    <Project Path="tests/unit/public/BahmanM.Flow.Tests.Unit/BahmanM.Flow.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/tests/unit/internal/">
+    <Project Path="tests/unit/internal/BahmanM.Flow.Description.Tests.Unit/BahmanM.Flow.Description.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/tests/integration/">
+    <Project Path="tests/integration/BahmanM.Flow.Tests.Integration/BahmanM.Flow.Tests.Integration.csproj" />
+    <Project Path="tests/integration/BahmanM.Flow.Tests.KnownBugs/BahmanM.Flow.Tests.KnownBugs.csproj" />
+  </Folder>
+  <Folder Name="/tests/end-to-end/">
+    <Project Path="tests/end-to-end/BahmanM.Flow.Tests.UserAcceptance/BahmanM.Flow.Tests.UserAcceptance.csproj" />
+  </Folder>
+  <Folder Name="/tests/support/">
+    <Project Path="tests/support/BahmanM.Flow.Tests.Support/BahmanM.Flow.Tests.Support.csproj" />
   </Folder>
 </Solution>

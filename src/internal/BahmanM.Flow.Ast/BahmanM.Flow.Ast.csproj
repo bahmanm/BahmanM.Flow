@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="BahmanM.Flow" />
+    <InternalsVisibleTo Include="BahmanM.Flow.Description" />
+    <InternalsVisibleTo Include="BahmanM.Flow.Execution" />
+    <InternalsVisibleTo Include="BahmanM.Flow.Description.Tests.Unit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../BahmanM.Flow.Shared/BahmanM.Flow.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

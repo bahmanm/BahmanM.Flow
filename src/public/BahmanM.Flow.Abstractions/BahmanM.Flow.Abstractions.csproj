@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="BahmanM.Flow" />
+    <InternalsVisibleTo Include="BahmanM.Flow.Execution" />
+  </ItemGroup>
+
+</Project>

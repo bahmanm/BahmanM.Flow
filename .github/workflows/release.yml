@@ -102,7 +102,7 @@ jobs:
 
       - name: Pack
         run: >
-          dotnet pack src/BahmanM.Flow/BahmanM.Flow.csproj
+          dotnet pack src/public/BahmanM.Flow/BahmanM.Flow.csproj
           --configuration Release
           -o ./artifacts
           /p:ContinuousIntegrationBuild=true
