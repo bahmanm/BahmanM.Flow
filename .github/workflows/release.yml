@@ -53,6 +53,8 @@ jobs:
           cache: true
           cache-dependency-path: |
             **/*.csproj
+            Directory.Packages.props
+            global.json
 
       - name: Compute version and tag
         id: meta
@@ -96,7 +98,7 @@ jobs:
         run: dotnet build BahmanM.Flow.slnx --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test BahmanM.Flow.slnx --configuration Release --no-build --verbosity normal
+        run: dotnet test --solution BahmanM.Flow.slnx --configuration Release --no-build --verbosity normal
 
       - name: Pack
         run: >
