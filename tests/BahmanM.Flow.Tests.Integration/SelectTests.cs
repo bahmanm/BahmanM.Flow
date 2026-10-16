@@ -87,7 +87,7 @@ public class SelectTests
     {
         // Arrange
         var successValue = 123;
-        var flow = Flow.Succeed(successValue).Select(async (x, token) =>
+        var flow = Flow.Succeed(successValue).Select(async (x, _) =>
         {
             await Task.Yield();
             return x * 2;

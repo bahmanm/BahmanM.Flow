@@ -81,7 +81,7 @@ public class WithAsyncResourceDisposalTests
         var probe = new AsyncDisposableProbe(delay: TimeSpan.FromMilliseconds(50));
         var flow = Flow.WithResource(
             acquireAsync: () => Task.FromResult(probe),
-            use: _ => Flow.Create<int>(async ct =>
+            use: _ => Flow.Create(async ct =>
             {
                 await Task.Delay(Timeout.InfiniteTimeSpan, ct);
                 return 1;
@@ -109,7 +109,7 @@ public class WithAsyncResourceDisposalTests
         var probe = new AsyncDisposableProbe(delay: TimeSpan.FromMilliseconds(50));
         var never = Flow.WithResource(
             acquireAsync: () => Task.FromResult(probe),
-            use: _ => Flow.Create<int>(async ct =>
+            use: _ => Flow.Create(async ct =>
             {
                 started.TrySetResult();
                 await Task.Delay(Timeout.InfiniteTimeSpan, ct);
@@ -159,7 +159,7 @@ public class WithAsyncResourceDisposalTests
             acquireAsync: () => Task.FromResult(outer),
             use: _ => Flow.WithResource(
                 acquireAsync: () => Task.FromResult(inner),
-                use: __ => Flow.Succeed(99)));
+                use: _ => Flow.Succeed(99)));
 
         // Act
         var outcome = await FlowEngine.ExecuteAsync(flow);

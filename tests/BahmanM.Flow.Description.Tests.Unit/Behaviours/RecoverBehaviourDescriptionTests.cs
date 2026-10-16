@@ -31,9 +31,9 @@ public class RecoverBehaviourDescriptionTests
             fallbackExecutions++;
             throw fallbackException;
         };
-        var source = (Flow.Create<int>(() => sourceOperation())).AsDescription();
+        var source = (Flow.Create(() => sourceOperation())).AsDescription();
         var fallback = returnDescription
-            ? (Flow.Create<int>(() => fallbackOperation())).AsDescription()
+            ? (Flow.Create(() => fallbackOperation())).AsDescription()
             : Flow.Create(() => fallbackOperation());
         var recover = CreateRecover(source, fallback, kind, _ => callbackExecutions++);
         var description = ((recover).WithRetry(3)).AsDescription();
@@ -91,9 +91,9 @@ public class RecoverBehaviourDescriptionTests
             fallbackCompleted.TrySetResult();
             return 42;
         };
-        var source = (Flow.Create<int>(cancellationToken => sourceOperation(cancellationToken))).AsDescription();
+        var source = (Flow.Create(cancellationToken => sourceOperation(cancellationToken))).AsDescription();
         var fallback = returnDescription
-            ? (Flow.Create<int>(() => fallbackOperation())).AsDescription()
+            ? (Flow.Create(() => fallbackOperation())).AsDescription()
             : Flow.Create(() => fallbackOperation());
         var recover = CreateRecover(source, fallback, kind, exception =>
         {

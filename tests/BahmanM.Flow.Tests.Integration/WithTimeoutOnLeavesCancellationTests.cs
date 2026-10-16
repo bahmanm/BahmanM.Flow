@@ -41,7 +41,7 @@ public class WithTimeoutOnLeavesCancellationTests
         var sideEffects = new ConcurrentBag<string>();
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var operationToken = CancellationToken.None;
-        var flow = Flow.Succeed("start").Chain(async (string _, CancellationToken ct) =>
+        var flow = Flow.Succeed("start").Chain(async (_, ct) =>
         {
             operationToken = ct;
             started.TrySetResult();

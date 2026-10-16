@@ -9,7 +9,7 @@ public sealed class FlowCompletionSource<T>
 
     public Task Started => _started.Task;
 
-    public IFlow<T> Flow => BahmanM.Flow.Flow.Create<T>(async () =>
+    public IFlow<T> Flow => BahmanM.Flow.Flow.Create(async () =>
     {
         _started.TrySetResult();
         return await _result.Task.ConfigureAwait(false);

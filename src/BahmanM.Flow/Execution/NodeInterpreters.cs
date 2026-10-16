@@ -27,113 +27,113 @@ internal class NodeInterpreters
     {
         internal SelectNodes(Ast.IInterpreter interpreter, Options options)
         {
-            Sync = new Execution.Select.Sync(interpreter, options);
-            Async = new Execution.Select.Async(interpreter, options);
-            CancellableAsync = new Execution.Select.CancellableAsync(interpreter, options);
+            Sync = new Select.Sync(interpreter, options);
+            Async = new Select.Async(interpreter, options);
+            CancellableAsync = new Select.CancellableAsync(interpreter, options);
         }
 
-        internal Execution.Select.Sync Sync { get; }
-        internal Execution.Select.Async Async { get; }
-        internal Execution.Select.CancellableAsync CancellableAsync { get; }
+        internal Select.Sync Sync { get; }
+        internal Select.Async Async { get; }
+        internal Select.CancellableAsync CancellableAsync { get; }
     }
 
     internal record ChainNodes
     {
         internal ChainNodes(Ast.IInterpreter interpreter, Options options)
         {
-            Sync = new Execution.Chain.Sync(interpreter, options);
-            Async = new Execution.Chain.Async(interpreter, options);
-            CancellableAsync = new Execution.Chain.CancellableAsync(interpreter, options);
+            Sync = new Chain.Sync(interpreter, options);
+            Async = new Chain.Async(interpreter, options);
+            CancellableAsync = new Chain.CancellableAsync(interpreter, options);
         }
 
-        internal Execution.Chain.Sync Sync { get; }
-        internal Execution.Chain.Async Async { get; }
-        internal Execution.Chain.CancellableAsync CancellableAsync { get; }
+        internal Chain.Sync Sync { get; }
+        internal Chain.Async Async { get; }
+        internal Chain.CancellableAsync CancellableAsync { get; }
     }
 
     internal record PrimitiveNodes
     {
         internal PrimitiveNodes(Ast.IInterpreter interpreter, Options options)
         {
-            Any = new Execution.Primitive.Any(interpreter, options);
-            All = new Execution.Primitive.All(interpreter, options);
-            Succeed = new Execution.Primitive.Succeed(interpreter, options);
-            Fail = new Execution.Primitive.Fail(interpreter, options);
+            Any = new Primitive.Any(interpreter, options);
+            All = new Primitive.All(interpreter, options);
+            Succeed = new Primitive.Succeed(interpreter, options);
+            Fail = new Primitive.Fail(interpreter, options);
         }
 
-        internal Execution.Primitive.Any Any { get; }
-        internal Execution.Primitive.All All { get; }
-        internal Execution.Primitive.Succeed Succeed { get; }
-        internal Execution.Primitive.Fail Fail { get; }
+        internal Primitive.Any Any { get; }
+        internal Primitive.All All { get; }
+        internal Primitive.Succeed Succeed { get; }
+        internal Primitive.Fail Fail { get; }
     }
 
     internal record CreateNodes
     {
         internal CreateNodes(Ast.IInterpreter interpreter, Options options)
         {
-            Sync = new Execution.Create.Sync(interpreter, options);
-            Async = new Execution.Create.Async(interpreter, options);
-            CancellableAsync = new Execution.Create.CancellableAsync(interpreter, options);
+            Sync = new Create.Sync(interpreter, options);
+            Async = new Create.Async(interpreter, options);
+            CancellableAsync = new Create.CancellableAsync(interpreter, options);
         }
 
-        internal Execution.Create.Sync Sync { get; }
-        internal Execution.Create.Async Async { get; }
-        internal Execution.Create.CancellableAsync CancellableAsync { get; }
+        internal Create.Sync Sync { get; }
+        internal Create.Async Async { get; }
+        internal Create.CancellableAsync CancellableAsync { get; }
     }
 
     internal record DoOnSuccessNodes
     {
         internal DoOnSuccessNodes(Ast.IInterpreter interpreter, Options options)
         {
-            Sync = new Execution.DoOnSuccess.Sync(interpreter, options);
-            Async = new Execution.DoOnSuccess.Async(interpreter, options);
-            CancellableAsync = new Execution.DoOnSuccess.CancellableAsync(interpreter, options);
+            Sync = new DoOnSuccess.Sync(interpreter, options);
+            Async = new DoOnSuccess.Async(interpreter, options);
+            CancellableAsync = new DoOnSuccess.CancellableAsync(interpreter, options);
         }
 
-        internal Execution.DoOnSuccess.Sync Sync { get; }
-        internal Execution.DoOnSuccess.Async Async { get; }
-        internal Execution.DoOnSuccess.CancellableAsync CancellableAsync { get; }
+        internal DoOnSuccess.Sync Sync { get; }
+        internal DoOnSuccess.Async Async { get; }
+        internal DoOnSuccess.CancellableAsync CancellableAsync { get; }
     }
 
     internal record DoOnFailureNodes
     {
         internal DoOnFailureNodes(Ast.IInterpreter interpreter, Options options)
         {
-            Sync = new Execution.DoOnFailure.Sync(interpreter, options);
-            Async = new Execution.DoOnFailure.Async(interpreter, options);
-            CancellableAsync = new Execution.DoOnFailure.CancellableAsync(interpreter, options);
+            Sync = new DoOnFailure.Sync(interpreter, options);
+            Async = new DoOnFailure.Async(interpreter, options);
+            CancellableAsync = new DoOnFailure.CancellableAsync(interpreter, options);
         }
 
-        internal Execution.DoOnFailure.Sync Sync { get; }
-        internal Execution.DoOnFailure.Async Async { get; }
-        internal Execution.DoOnFailure.CancellableAsync CancellableAsync { get; }
+        internal DoOnFailure.Sync Sync { get; }
+        internal DoOnFailure.Async Async { get; }
+        internal DoOnFailure.CancellableAsync CancellableAsync { get; }
     }
 
     internal record ValidateNodes
     {
         internal ValidateNodes(Ast.IInterpreter interpreter, Options options)
         {
-            Sync = new Execution.Validate.Sync(interpreter, options);
-            Async = new Execution.Validate.Async(interpreter, options);
-            CancellableAsync = new Execution.Validate.CancellableAsync(interpreter, options);
+            Sync = new Validate.Sync(interpreter, options);
+            Async = new Validate.Async(interpreter, options);
+            CancellableAsync = new Validate.CancellableAsync(interpreter, options);
         }
 
-        internal Execution.Validate.Sync Sync { get; }
-        internal Execution.Validate.Async Async { get; }
-        internal Execution.Validate.CancellableAsync CancellableAsync { get; }
+        internal Validate.Sync Sync { get; }
+        internal Validate.Async Async { get; }
+        internal Validate.CancellableAsync CancellableAsync { get; }
     }
 
     internal record ResourceNodes
     {
         internal ResourceNodes(Ast.IInterpreter interpreter, Options options)
         {
-            WithResource = new Execution.Resource.WithResource(interpreter, options);
-            WithResourceAsync = new Execution.Resource.WithResourceAsyncExecutor(interpreter, options);
-            WithResourceCancellableAsync = new Execution.Resource.WithResourceCancellableAsyncExecutor(interpreter, options);
+            WithResource = new Resource.WithResource(interpreter, options);
+            WithResourceAsync = new Resource.WithResourceAsyncExecutor(interpreter, options);
+            WithResourceCancellableAsync = new Resource.WithResourceCancellableAsyncExecutor(interpreter, options);
         }
 
-        internal Execution.Resource.WithResource WithResource { get; }
-        internal Execution.Resource.WithResourceAsyncExecutor WithResourceAsync { get; }
-        internal Execution.Resource.WithResourceCancellableAsyncExecutor WithResourceCancellableAsync { get; }
+        internal Resource.WithResource WithResource { get; }
+        internal Resource.WithResourceAsyncExecutor WithResourceAsync { get; }
+        internal Resource.WithResourceCancellableAsyncExecutor WithResourceCancellableAsync { get; }
     }
 }

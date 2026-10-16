@@ -94,7 +94,7 @@ public sealed class WeatherClient(HttpClient httpClient) : IWeatherClient
                             weatherDto => weatherDto is not null,
                             _ => new InvalidDataException("Failed to deserialize weather response."))
                         .Select(weatherDto =>
-                            new Weather(weatherDto!.CurrentWeather.Temperature, weatherDto!.CurrentWeather.WeatherCode))
+                            new Weather(weatherDto!.CurrentWeather.Temperature, weatherDto.CurrentWeather.WeatherCode))
                 ))
             .Validate(
                 w => w.Temperature is > -90 and < 60, // A simple sanity check on the data.

@@ -30,7 +30,7 @@ public class SyncChainBehaviourDescriptionTests
                 return value + 1;
             };
             return returnDescription
-                ? (Flow.Create<int>(() => child())).AsDescription()
+                ? (Flow.Create(() => child())).AsDescription()
                 : Flow.Create(() => child());
         };
         var chain = ((upstream).Chain(operation)).AsDescription();
@@ -82,7 +82,7 @@ public class SyncChainBehaviourDescriptionTests
                 return value + 1;
             };
             return returnDescription
-                ? (Flow.Create<int>(() => child())).AsDescription()
+                ? (Flow.Create(() => child())).AsDescription()
                 : Flow.Create(() => child());
         };
         var chain = ((upstream).Chain(operation)).AsDescription();

@@ -69,7 +69,7 @@ public class ResourceBehaviourDescriptionTests
             }, _ =>
             {
                 useCalls++;
-                return (Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription();
+                return (Flow.Create(cancellationToken => operation(cancellationToken))).AsDescription();
             })).AsDescription();
         var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
@@ -108,7 +108,7 @@ public class ResourceBehaviourDescriptionTests
         var source = (Flow.WithResource<AsyncResource, int>(() => Task.FromResult(resource), _ =>
             {
                 useCalls++;
-                return (Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription();
+                return (Flow.Create(cancellationToken => operation(cancellationToken))).AsDescription();
             })).AsDescription();
         var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
@@ -148,7 +148,7 @@ public class ResourceBehaviourDescriptionTests
             {
                 acquireToken = token;
                 return Task.FromResult(resource);
-            }, _ => (Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription())).AsDescription();
+            }, _ => (Flow.Create(cancellationToken => operation(cancellationToken))).AsDescription())).AsDescription();
         var description = ((source).WithTimeout(TimeoutDuration)).AsDescription();
 
         var text = DescriptionFormatter.Describe(description);
@@ -320,7 +320,7 @@ public class ResourceBehaviourDescriptionTests
                 }, _ =>
                 {
                     counts.UseCalls++;
-                    return (Flow.Create<int>(() => child())).AsDescription();
+                    return (Flow.Create(() => child())).AsDescription();
                 })).AsDescription(),
             ResourceKind.Async => (Flow.WithResource<AsyncResource, int>(() =>
                 {
@@ -329,7 +329,7 @@ public class ResourceBehaviourDescriptionTests
                 }, _ =>
                 {
                     counts.UseCalls++;
-                    return (Flow.Create<int>(() => child())).AsDescription();
+                    return (Flow.Create(() => child())).AsDescription();
                 })).AsDescription(),
             ResourceKind.CancellableAsync => (Flow.WithResource<AsyncResource, int>(_ =>
                 {
@@ -338,7 +338,7 @@ public class ResourceBehaviourDescriptionTests
                 }, _ =>
                 {
                     counts.UseCalls++;
-                    return (Flow.Create<int>(() => child())).AsDescription();
+                    return (Flow.Create(() => child())).AsDescription();
                 })).AsDescription(),
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };

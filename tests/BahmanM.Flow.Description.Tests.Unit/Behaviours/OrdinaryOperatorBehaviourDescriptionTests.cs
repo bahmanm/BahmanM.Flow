@@ -29,7 +29,7 @@ public class OrdinaryOperatorBehaviourDescriptionTests
             sourceCalls++;
             throw sourceException;
         };
-        var source = (Flow.Create<int>(() => operation())).AsDescription();
+        var source = (Flow.Create(() => operation())).AsDescription();
         var wrapped = Wrap(source, kind, variant, () => operatorCalls++);
         var description = ((wrapped).WithRetry(maxAttempts: 3)).AsDescription();
 
@@ -85,7 +85,7 @@ public class OrdinaryOperatorBehaviourDescriptionTests
                 throw;
             }
         };
-        var source = (Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription();
+        var source = (Flow.Create(cancellationToken => operation(cancellationToken))).AsDescription();
         var wrapped = Wrap(source, kind, variant, () => operatorCalls++, token => operatorToken = token);
         var description = ((wrapped).WithTimeout(TimeSpan.FromMilliseconds(300))).AsDescription();
 

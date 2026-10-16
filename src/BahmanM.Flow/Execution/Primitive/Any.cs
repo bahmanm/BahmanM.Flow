@@ -22,7 +22,7 @@ internal class Any(Ast.IInterpreter interpreter, Options options)
         private static CancellationTokenSource CreateLinkedCts(Options options) =>
             CancellationTokenSource.CreateLinkedTokenSource(options.CancellationToken);
 
-        private static Execution.Interpreter CreateChildInterpreter(Options options, CancellationTokenSource cts) =>
+        private static Interpreter CreateChildInterpreter(Options options, CancellationTokenSource cts) =>
             new(options with { CancellationToken = cts.Token });
 
         private static List<Task<Outcome<T>>> StartAll(Ast.Primitive.Any<T> node, Ast.IInterpreter child) =>

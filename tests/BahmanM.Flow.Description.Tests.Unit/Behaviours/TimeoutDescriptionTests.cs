@@ -38,7 +38,7 @@ public class TimeoutDescriptionTests
             invocationCount++;
             return 42;
         };
-        var source = (Flow.Create<int>(() => operation())).AsDescription();
+        var source = (Flow.Create(() => operation())).AsDescription();
         var duration = TimeSpan.FromSeconds(5);
         var description = ((source).WithTimeout(duration)).AsDescription();
 
@@ -78,7 +78,7 @@ public class TimeoutDescriptionTests
             return value;
         };
         var timeout = TimeSpan.FromMinutes(1);
-        var description = (((Flow.Create<int>(() => operation())).AsDescription()).WithTimeout(timeout)).AsDescription();
+        var description = (((Flow.Create(() => operation())).AsDescription()).WithTimeout(timeout)).AsDescription();
 
         // Act
         var descriptionText = DescriptionFormatter.Describe(description);
@@ -116,7 +116,7 @@ public class TimeoutDescriptionTests
             await Task.Delay(Timeout.InfiniteTimeSpan, token);
             return 42;
         };
-        var description = (((Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription()).WithTimeout(TimeSpan.FromSeconds(5))).AsDescription();
+        var description = (((Flow.Create(cancellationToken => operation(cancellationToken))).AsDescription()).WithTimeout(TimeSpan.FromSeconds(5))).AsDescription();
 
         // Act
         var execution = FlowEngine.ExecuteAsync(
@@ -146,7 +146,7 @@ public class TimeoutDescriptionTests
             return 42;
         };
         var timeout = TimeSpan.FromMinutes(1);
-        var description = (((Flow.Create<int>(cancellationToken => operation(cancellationToken))).AsDescription()).WithTimeout(timeout)).AsDescription();
+        var description = (((Flow.Create(cancellationToken => operation(cancellationToken))).AsDescription()).WithTimeout(timeout)).AsDescription();
 
         var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
         var execution = FlowEngine.ExecuteAsync(description, options);
@@ -182,7 +182,7 @@ public class TimeoutDescriptionTests
             return await completion[index].Task.WaitAsync(token);
         };
         var timeout = TimeSpan.FromMinutes(1);
-        var description = (((Flow.Create<int>(token => operation(token))).AsDescription()).WithTimeout(timeout)).AsDescription();
+        var description = (((Flow.Create(token => operation(token))).AsDescription()).WithTimeout(timeout)).AsDescription();
         var lowered = description.Lower();
 
         var firstOptions = new Execution.Options(CancellationToken.None) { TimeProvider = firstTimeProvider };
@@ -220,7 +220,7 @@ public class TimeoutDescriptionTests
             releaseSecondAttempt.Wait();
             return 42;
         };
-        var source = (Flow.Create<int>(() => operation())).AsDescription();
+        var source = (Flow.Create(() => operation())).AsDescription();
         var retried = ((source).WithRetry(3)).AsDescription();
         var timeout = TimeSpan.FromMinutes(1);
         var description = ((retried).WithTimeout(timeout)).AsDescription();
@@ -256,7 +256,7 @@ public class TimeoutDescriptionTests
             releaseOperation.Wait();
             return 42;
         };
-        var source = (Flow.Create<int>(() => operation())).AsDescription();
+        var source = (Flow.Create(() => operation())).AsDescription();
         var timeout = TimeSpan.FromMinutes(1);
         var timed = ((source).WithTimeout(timeout)).AsDescription();
         var description = ((timed).WithRetry(3)).AsDescription();

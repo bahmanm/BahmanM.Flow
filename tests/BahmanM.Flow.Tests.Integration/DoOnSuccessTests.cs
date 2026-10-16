@@ -129,7 +129,7 @@ public class DoOnSuccessTests
         // Arrange
         var successValue = 123;
         var actionCalled = false;
-        Flow.Operations.DoOnSuccess.CancellableAsync<int> onSuccess = async (val, token) =>
+        Flow.Operations.DoOnSuccess.CancellableAsync<int> onSuccess = async (val, _) =>
         {
             Assert.Equal(successValue, val);
             await Task.Yield();
@@ -175,7 +175,7 @@ public class DoOnSuccessTests
         var cts = new CancellationTokenSource();
         var options = new Execution.Options(CancellationToken: cts.Token);
 
-        Flow.Operations.DoOnSuccess.CancellableAsync<int> onSuccess = async (val, token) =>
+        Flow.Operations.DoOnSuccess.CancellableAsync<int> onSuccess = async (_, token) =>
         {
             await Task.Delay(Timeout.InfiniteTimeSpan, token);
         };

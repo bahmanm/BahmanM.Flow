@@ -20,9 +20,9 @@ public class PublicDslOperatorTests
             (value, _) => Task.FromResult(value.ToString());
         Flow.Operations.Chain.Sync<int, string> chainSync = value => Flow.Succeed(value.ToString());
         Flow.Operations.Chain.Async<int, string> chainAsync =
-            value => Task.FromResult<IFlow<string>>(Flow.Succeed(value.ToString()));
+            value => Task.FromResult(Flow.Succeed(value.ToString()));
         Flow.Operations.Chain.CancellableAsync<int, string> chainCancellable =
-            (value, _) => Task.FromResult<IFlow<string>>(Flow.Succeed(value.ToString()));
+            (value, _) => Task.FromResult(Flow.Succeed(value.ToString()));
         Func<int, bool> validateSync = _ => true;
         Func<int, Task<bool>> validateAsync = _ => Task.FromResult(true);
         Func<int, CancellationToken, Task<bool>> validateCancellable = (_, _) => Task.FromResult(true);
@@ -48,21 +48,21 @@ public class PublicDslOperatorTests
 
         Type[] expectedTypes =
         [
-            typeof(Description.DoOnSuccess.Sync<int>),
-            typeof(Description.DoOnSuccess.Async<int>),
-            typeof(Description.DoOnSuccess.CancellableAsync<int>),
-            typeof(Description.DoOnFailure.Sync<int>),
-            typeof(Description.DoOnFailure.Async<int>),
-            typeof(Description.DoOnFailure.CancellableAsync<int>),
-            typeof(Description.Select.Sync<int, string>),
-            typeof(Description.Select.Async<int, string>),
-            typeof(Description.Select.CancellableAsync<int, string>),
-            typeof(Description.Chain.Sync<int, string>),
-            typeof(Description.Chain.Async<int, string>),
-            typeof(Description.Chain.CancellableAsync<int, string>),
-            typeof(Description.Validate.Sync<int>),
-            typeof(Description.Validate.Async<int>),
-            typeof(Description.Validate.CancellableAsync<int>)
+            typeof(DoOnSuccess.Sync<int>),
+            typeof(DoOnSuccess.Async<int>),
+            typeof(DoOnSuccess.CancellableAsync<int>),
+            typeof(DoOnFailure.Sync<int>),
+            typeof(DoOnFailure.Async<int>),
+            typeof(DoOnFailure.CancellableAsync<int>),
+            typeof(Select.Sync<int, string>),
+            typeof(Select.Async<int, string>),
+            typeof(Select.CancellableAsync<int, string>),
+            typeof(Chain.Sync<int, string>),
+            typeof(Chain.Async<int, string>),
+            typeof(Chain.CancellableAsync<int, string>),
+            typeof(Validate.Sync<int>),
+            typeof(Validate.Async<int>),
+            typeof(Validate.CancellableAsync<int>)
         ];
 
         Assert.Equal(expectedTypes, flows.Select(static flow => flow.GetType()));
@@ -74,13 +74,13 @@ public class PublicDslOperatorTests
         var failed = Flow.Fail<int>(new InvalidOperationException("failure"));
         Flow.Operations.Recover.Sync<int> recoverSync = _ => Flow.Succeed(1);
         Flow.Operations.Recover.Async<int> recoverAsync =
-            _ => Task.FromResult<IFlow<int>>(Flow.Succeed(1));
+            _ => Task.FromResult(Flow.Succeed(1));
         Func<Exception, CancellationToken, Task<IFlow<int>>> recoverCancellable =
-            (_, _) => Task.FromResult<IFlow<int>>(Flow.Succeed(1));
+            (_, _) => Task.FromResult(Flow.Succeed(1));
 
-        Assert.IsType<Description.Recover.Sync<int>>(failed.Recover(recoverSync));
-        Assert.IsType<Description.Recover.Async<int>>(failed.Recover(recoverAsync));
-        Assert.IsType<Description.Recover.CancellableAsync<int>>(failed.Recover(recoverCancellable));
+        Assert.IsType<Recover.Sync<int>>(failed.Recover(recoverSync));
+        Assert.IsType<Recover.Async<int>>(failed.Recover(recoverAsync));
+        Assert.IsType<Recover.CancellableAsync<int>>(failed.Recover(recoverCancellable));
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public class PublicDslOperatorTests
             return Flow.Succeed(value + 1);
         });
 
-        Assert.IsType<Description.Chain.Sync<int, int>>(flow);
+        Assert.IsType<Chain.Sync<int, int>>(flow);
         Assert.Equal(0, invocationCount);
         Assert.Equal(new Success<int>(2), await FlowEngine.ExecuteAsync(flow));
         Assert.Equal(1, invocationCount);
@@ -103,13 +103,13 @@ public class PublicDslOperatorTests
     public async Task Recover_DefersFallbackUntilPublicExecution()
     {
         var invocationCount = 0;
-        var flow = Flow.Fail<int>(new InvalidOperationException("failure")).Recover(error =>
+        var flow = Flow.Fail<int>(new InvalidOperationException("failure")).Recover(_ =>
         {
             invocationCount++;
             return Flow.Succeed(2);
         });
 
-        Assert.IsType<Description.Recover.Sync<int>>(flow);
+        Assert.IsType<Recover.Sync<int>>(flow);
         Assert.Equal(0, invocationCount);
         Assert.Equal(new Success<int>(2), await FlowEngine.ExecuteAsync(flow));
         Assert.Equal(1, invocationCount);

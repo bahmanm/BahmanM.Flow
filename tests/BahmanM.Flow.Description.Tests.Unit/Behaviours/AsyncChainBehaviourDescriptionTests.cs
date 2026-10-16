@@ -32,7 +32,7 @@ public class AsyncChainBehaviourDescriptionTests
                 return value + 1;
             };
             return returnDescription
-                ? (Flow.Create<int>(() => child())).AsDescription()
+                ? (Flow.Create(() => child())).AsDescription()
                 : Flow.Create(async () => await child());
         };
         var chain = ((upstream).Chain(operation)).AsDescription();
@@ -85,7 +85,7 @@ public class AsyncChainBehaviourDescriptionTests
                 return value + 1;
             };
             return returnDescription
-                ? (Flow.Create<int>(() => child())).AsDescription()
+                ? (Flow.Create(() => child())).AsDescription()
                 : Flow.Create(async () => await child());
         };
         var chain = ((upstream).Chain(operation)).AsDescription();

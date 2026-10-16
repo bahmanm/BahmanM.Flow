@@ -40,7 +40,7 @@ public static class FlowEngine
     /// <param name="flow">The Flow to execute.</param>
     /// <returns>An <see cref="Outcome{T}"/> representing the result of the execution.</returns>
     public static Task<Outcome<T>> ExecuteAsync<T>(IFlow<T> flow) =>
-        ExecuteAsync(flow, new Execution.Options(CancellationToken.None));
+        ExecuteAsync(flow, new Options(CancellationToken.None));
 
     /// <summary>
     /// Executes the given Flow with the specified execution options.
@@ -63,14 +63,14 @@ public static class FlowEngine
     /// <inheritdoc cref="ExecuteAsync{T}(IFlow{T})"/>
     /// <param name="flow">The Flow to execute.</param>
     /// <param name="options">The execution options, including the cancellation token and time provider.</param>
-    public static Task<Outcome<T>> ExecuteAsync<T>(IFlow<T> flow, Execution.Options options) =>
-        flow.AsNode().Accept(new Execution.Interpreter(options));
+    public static Task<Outcome<T>> ExecuteAsync<T>(IFlow<T> flow, Options options) =>
+        flow.AsNode().Accept(new Interpreter(options));
 
     internal static Task<Outcome<T>> ExecuteAsync<T>(Description.IDescription<T> description) =>
-        ExecuteAsync(description, new Execution.Options(CancellationToken.None));
+        ExecuteAsync(description, new Options(CancellationToken.None));
 
     internal static Task<Outcome<T>> ExecuteAsync<T>(
         Description.IDescription<T> description,
-        Execution.Options options) =>
-        description.Lower().Accept(new Execution.Interpreter(options));
+        Options options) =>
+        description.Lower().Accept(new Interpreter(options));
 }

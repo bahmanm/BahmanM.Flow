@@ -2,7 +2,7 @@ namespace BahmanM.Flow.Execution;
 
 internal class Interpreter : Ast.IInterpreter
 {
-    private Execution.Options Options { get; init; }
+    private Options Options { get; init; }
     private NodeInterpreters NodeInterpreters { get; init; }
 
     public Interpreter(Options options)
@@ -31,9 +31,9 @@ internal class Interpreter : Ast.IInterpreter
     public Task<Outcome<TOut>> Interpret<TIn, TOut>(Ast.Chain.Async<TIn, TOut> node) => NodeInterpreters.Chain.Async.Interpret(node);
     public Task<Outcome<TOut>> Interpret<TIn, TOut>(Ast.Chain.CancellableAsync<TIn, TOut> node) => NodeInterpreters.Chain.CancellableAsync.Interpret(node);
 
-    public Task<Outcome<T>> Interpret<T>(Ast.Recover.Sync<T> node) => Execution.Recover.Sync.Execute(node, this, Options);
-    public Task<Outcome<T>> Interpret<T>(Ast.Recover.Async<T> node) => Execution.Recover.Async.Execute(node, this, Options);
-    public Task<Outcome<T>> Interpret<T>(Ast.Recover.CancellableAsync<T> node) => Execution.Recover.CancellableAsync.Execute(node, this, Options);
+    public Task<Outcome<T>> Interpret<T>(Ast.Recover.Sync<T> node) => Recover.Sync.Execute(node, this, Options);
+    public Task<Outcome<T>> Interpret<T>(Ast.Recover.Async<T> node) => Recover.Async.Execute(node, this, Options);
+    public Task<Outcome<T>> Interpret<T>(Ast.Recover.CancellableAsync<T> node) => Recover.CancellableAsync.Execute(node, this, Options);
 
     public Task<Outcome<T>> Interpret<T>(Ast.Validate.Sync<T> node) => NodeInterpreters.Validate.Sync.Interpret(node);
     public Task<Outcome<T>> Interpret<T>(Ast.Validate.Async<T> node) => NodeInterpreters.Validate.Async.Interpret(node);
