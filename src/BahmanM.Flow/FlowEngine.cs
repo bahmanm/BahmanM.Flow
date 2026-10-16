@@ -46,8 +46,8 @@ public static class FlowEngine
     /// Executes the given Flow with the specified execution options.
     /// </summary>
     /// <remarks>
-    /// Use this overload when you need to provide a <see cref="CancellationToken"/> to enable
-    /// co-operative cancellation of the Flow from an external source.
+    /// Use this overload to provide execution-scoped dependencies, such as a <see cref="CancellationToken"/>
+    /// for co-operative cancellation or a <see cref="TimeProvider"/> for time-related behaviour.
     /// </remarks>
     /// <example>
     /// <code>
@@ -61,7 +61,7 @@ public static class FlowEngine
     /// </code>
     /// </example>
     /// <inheritdoc cref="ExecuteAsync{T}(IFlow{T})"/>
-    /// <param name="options">The execution options, such as a <see cref="CancellationToken"/>.</param>
+    /// <param name="options">The execution options, including the cancellation token and time provider.</param>
     public static Task<Outcome<T>> ExecuteAsync<T>(IFlow<T> flow, Execution.Options options) =>
         flow.AsNode().Accept(new Execution.Interpreter(options));
 
