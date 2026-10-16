@@ -7,8 +7,10 @@ namespace BahmanM.Flow;
 /// type <typeparamref name="T"/> or an <see cref="Exception"/>.
 /// </summary>
 /// <remarks>
-/// An <see cref="IFlow{T}"/> is an immutable data structure (an Abstract Syntax Tree) that represents the 'recipe' for a computation.
-/// It is not executed until it is passed to the <see cref="FlowEngine"/>.
+/// Flow factories and operators compose description nodes for the computation. When an
+/// <see cref="IFlow{T}"/> is passed to <see cref="FlowEngine"/>, its description is lowered to
+/// an Abstract Syntax Tree (AST) and interpreted. Callbacks may capture mutable state, so the
+/// description's structure alone does not guarantee that callback state is safe to share.
 /// </remarks>
 /// <typeparam name="T">The type of the value that will be produced by the successful execution of the Flow.</typeparam>
 public interface IFlow<T>

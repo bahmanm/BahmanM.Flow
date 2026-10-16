@@ -2,21 +2,21 @@
 
 If you have a background in functional programming, you may recognize some familiar patterns in Flow. 
 
-This section provides a brief mapping from Flows concepts to their traditional FP counterparts.
+This section provides a brief mapping from Flow concepts to their functional programming counterparts.
 
-*   **`IFlow<T>` as a Monad:** At its core, Flows is a monad for managing asynchronous, failable operations. It encapsulates a value and a context (in this case, the potential for failure and the sequence of operations).
+*   **`IFlow<T>` as a Monad:** Flow can be understood as a monadic abstraction for composing asynchronous, failable operations. A flow carries a value through operations while preserving the possibility of failure.
 
-*   **`Outcome<T>` as `Either<Exception, T>`:** The `Outcome<T>` type, which is the result of executing a Flows, is a classic sum type representing one of two possible outcomes. It is directly analogous to the `Either` monad, where `Success<T>` corresponds to `Right<T>` and `Failure<T>` corresponds to `Left<Exception>`.
+*   **`Outcome<T>` as `Either<Exception, T>`:** The result of executing a flow is either `Success<T>` or `Failure<T>`, analogous to `Right<T>` and `Left<Exception>` in `Either`.
 
-*   **`Flow.Succeed()` and `Flow.Of()` as `return` or `pure`:** These are the monadic unit functions. They take a simple value and lift it into the monadic context (Flows). `Flow.Succeed()` is an alias for `Flow.Of()`.
+*   **`Flow.Succeed(value)` as `return` or `pure`:** This places an existing value into a successful flow.
 
-*   **`Flow.Create()` as `liftF` or `IO.delay`**: This function captures an effectful computation (e.g., an I/O operation or a function that might throw an exception) and defers its execution. It's analogous to `liftF` in a Free monad context or `IO.delay`/`IO.suspend` in libraries like Cats Effect. It allows you to bring impure actions into the `Flow` context safely.
+*   **`Flow.Create()` as `liftF` or `IO.delay`**: This function captures an effectful computation (e.g., an I/O operation or a function that might throw an exception) and defers its execution until the flow is run. It's analogous to `liftF` in a Free monad context or `IO.delay`/`IO.suspend` in libraries like Cats Effect. Exceptions thrown by the operation become flow failures.
 
-*   **`.Chain()` as `bind` or `flatMap`:** This is the quintessential monadic binding function (`>>=`). It takes a value from a monadic context, applies a function that returns a new monad (`A -> M<B>`), and flattens the result (`M<B>`). This is the foundation of sequencing in Flows.
+*   **`.Chain()` as `bind` or `flatMap`:** It takes a value from a successful flow, applies a function that returns another flow (`A -> M<B>`), and sequences that child flow.
 
-*   **`.Select()` as `map` or `fmap`:** This is the functorial `map`. It allows you to apply a pure function (`A -> B`) to the value inside the monadic context without affecting the context itself. Flows's implementation also includes exception handling, automatically lifting a thrown exception into a `Failure` state.
+*   **`.Select()` as `map` or `fmap`:** It applies a function (`A -> B`) to the value in a successful flow. If the callback throws, Flow converts that exception into a `Failure`.
 
-*   **`FlowEngine` as the Interpreter:** The `FlowEngine` acts as the interpreter that "runs" the monadic computation. It traverses the constructed Flows (which is essentially an Abstract Syntax Tree) and executes the described effects, ultimately producing an `Outcome<T>`.
+*   **`FlowEngine` as the Interpreter:** The public API composes a description, which `FlowEngine` lowers to an AST and interprets to produce an `Outcome<T>`. Flows returned by callbacks such as those passed to `Chain` are produced during execution and lowered then.
 
 ---
 
