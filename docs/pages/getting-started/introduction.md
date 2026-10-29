@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Introduction: The 'Why'
 
 Is your business logic a tangled mess of `try-catch` blocks and `if-else` statements? Do you find error handling, logging, and retries cluttering your core code?

@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Practical Recipes
 
 Ready to cook up something more advanced? This document provides practical recipes for specific scenarios you might encounter.

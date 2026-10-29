@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Flow's Relatives in the .NET Ecosystem
 
 Navigating an ecosystem as large as .NET can be quite time-consuming and tricky; trying out things, reading documentation, evaluating this or that, ...

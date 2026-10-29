@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Your First Flow
 
 Let's look at a real-world example. 

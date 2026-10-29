@@ -3,18 +3,21 @@
     {
       "src": [
         {
+          "src": "..",
           "files": [
-            "../src/public/BahmanM.Flow/BahmanM.Flow.csproj",
-            "../src/public/BahmanM.Flow.Abstractions/BahmanM.Flow.Abstractions.csproj"
+            "src/public/BahmanM.Flow/BahmanM.Flow.csproj",
+            "src/public/BahmanM.Flow.Abstractions/BahmanM.Flow.Abstractions.csproj"
           ]
         }
       ],
-      "dest": "obj/docfx-api"
+      "dest": "api"
     }
   ],
   "build": {
     "content": [
-      { "files": [ "obj/docfx-api/**/*.yml", "api-home.md", "toc.yml" ] }
+      { "files": [ "api/**/*.yml" ] },
+      { "files": "index.md", "src": "api-home", "dest": "." },
+      { "files": "toc.yml" }
     ],
     "resource": [
       { "files": [ "assets/**" ] }

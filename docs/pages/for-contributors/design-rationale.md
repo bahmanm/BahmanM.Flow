@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Design Rationale
 
 This guide explains the current structure of Flow and the reasons behind its main API choices.
