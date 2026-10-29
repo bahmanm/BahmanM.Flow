@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 <p align="center">
   <img src="/assets/img/flow-1535x529.png" style="border-radius: 8px;" alt="Hydraulic Systems - Khuzestan, Iran"/>
   <br/>
@@ -27,7 +31,7 @@ _Best served in order_ 🍽️
 -   [Behaviours (Extensibility)](./pages/reference/behaviours.md)
 -   [Flow's Relatives in the .NET Ecosystem](./pages/deep-dives/relatives-and-ecosystem.md)
 -   [API Blueprint](./pages/reference/api-blueprint.md)
--   [Browsable API Reference](./api-home.md)
+-   [API Reference](/api/)
 
 ---
 
