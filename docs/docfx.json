@@ -10,13 +10,13 @@
           ]
         }
       ],
-      "dest": "obj/docfx-api"
+      "dest": "api"
     }
   ],
   "build": {
     "content": [
-      { "files": [ "**/*.yml" ], "src": "obj/docfx-api", "dest": "api" },
-      { "files": "api-home.md", "dest": "index.md" },
+      { "files": [ "api/**/*.yml" ] },
+      { "files": "index.md", "src": "api-home", "dest": "." },
       { "files": "toc.yml" }
     ],
     "resource": [

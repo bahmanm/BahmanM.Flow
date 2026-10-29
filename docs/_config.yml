@@ -7,7 +7,8 @@ google_analytics: G-F6X0X837RG
 favicon: /assets/img/flow-32x32.png
 repository: bahmanm/BahmanM.Flow
 exclude:
+  - api
   - vendor
-  - api-home.md
+  - api-home
   - docfx.json
   - toc.yml
