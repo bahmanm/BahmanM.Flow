@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Behaviours
 
 You've mastered the core operators, but have you ever wondered how `.WithRetry()` works under the hood? 

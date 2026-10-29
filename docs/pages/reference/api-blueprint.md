@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # API Blueprint
 
 Here's a high-level overview of the Flow's public API surface.

@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # Advanced Concepts
 
 ### Composable Behaviours

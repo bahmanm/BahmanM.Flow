@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # λ For Functional Programmers
 
 If you have a background in functional programming, you may recognize some familiar patterns in Flow. 

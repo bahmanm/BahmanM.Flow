@@ -3,7 +3,7 @@ name: Documentation
 on:
   push:
     branches: ["main"]
-  # ## TEMP: remove after the Pages artifact is verified.
+  # ## TEMP: remove after verifying the cookbook pages render.
   pull_request:
     branches: ["main"]
 
@@ -60,12 +60,13 @@ jobs:
       - name: Build API reference
         run: dotnet tool run docfx docs/docfx.json
 
-      # ## TEMP: remove after the generated site has been confirmed.
+      # ## TEMP: remove after the cookbook and API output are confirmed.
       - name: Verify Pages output
         run: |
           test -f _site/index.html
           test -f _site/api/index.html
           test "$(find _site/api -type f -name '*.html' | wc -l)" -gt 2
+          test "$(find _site/pages -type f -name '*.html' | wc -l)" -eq 11
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 # The Core Operators
 
 An **Operator** is a foundational primitive that you use to build a Flow, step-by-step, operation-by-operation.
