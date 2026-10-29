@@ -27,6 +27,7 @@ _Best served in order_ 🍽️
 -   [Behaviours (Extensibility)](./pages/reference/behaviours.md)
 -   [Flow's Relatives in the .NET Ecosystem](./pages/deep-dives/relatives-and-ecosystem.md)
 -   [API Blueprint](./pages/reference/api-blueprint.md)
+-   [Browsable API Reference](./api-home.md)
 
 ---
 
