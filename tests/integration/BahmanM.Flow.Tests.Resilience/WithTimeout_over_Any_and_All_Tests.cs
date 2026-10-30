@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Time.Testing;
 
-namespace BahmanM.Flow.Tests.Integration;
+namespace BahmanM.Flow.Tests.Resilience;
 
-public class WithTimeoutOnCompositesCancellationTests
+public class WithTimeout_over_Any_and_All_Tests
 {
     private static readonly TimeSpan TimeoutDuration = TimeSpan.FromMinutes(1);
 
