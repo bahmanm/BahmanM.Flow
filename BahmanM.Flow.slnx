@@ -18,6 +18,7 @@
   </Folder>
   <Folder Name="/tests/integration/">
     <Project Path="tests/integration/BahmanM.Flow.Tests.Integration/BahmanM.Flow.Tests.Integration.csproj" />
+    <Project Path="tests/integration/BahmanM.Flow.Tests.Resilience/BahmanM.Flow.Tests.Resilience.csproj" />
     <Project Path="tests/integration/BahmanM.Flow.Tests.KnownBugs/BahmanM.Flow.Tests.KnownBugs.csproj" />
   </Folder>
   <Folder Name="/tests/end-to-end/">
