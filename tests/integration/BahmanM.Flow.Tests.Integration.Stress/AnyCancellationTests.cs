@@ -116,21 +116,56 @@ public class AnyCancellationTests
     public async Task Any_Scale_OneFastSuccess_ManyLosers_RemainsResponsive()
     {
         // Arrange
+        const int loserCount = 50;
+        var started = Enumerable
+            .Range(0, loserCount)
+            .Select(_ => new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously))
+            .ToArray();
+        var cancellationObserved = Enumerable
+            .Range(0, loserCount)
+            .Select(_ => new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously))
+            .ToArray();
+        var resources = Enumerable
+            .Range(0, loserCount)
+            .Select(_ => new DisposableProbe())
+            .ToArray();
         var losers = Enumerable
-            .Range(0, 50)
-            .Select(_ => FlowTestHelpers.NeverCompletesUntilCancelled<string>())
+            .Range(0, loserCount)
+            .Select(index => Flow.WithResource(
+                acquire: () => resources[index],
+                use: _ => Flow.Create<string>(async ct =>
+                {
+                    started[index].TrySetResult();
+                    try
+                    {
+                        await Task.Delay(Timeout.InfiniteTimeSpan, ct);
+                        return "unexpected completion";
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        cancellationObserved[index].TrySetResult();
+                        return "cancelled";
+                    }
+                })))
             .ToArray();
 
         var winner = new FlowCompletionSource<string>();
 
         // Act
         var exec = FlowEngine.ExecuteAsync(Flow.Any(winner.Flow, losers));
-        await winner.Started;
+        await Task.WhenAll(winner.Started, Task.WhenAll(started.Select(signal => signal.Task)))
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         winner.Succeed("win");
-        var outcome = await exec;
+        var outcome = await exec.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await Task.WhenAll(
+                Task.WhenAll(cancellationObserved.Select(signal => signal.Task)),
+                Task.WhenAll(resources.Select(resource => resource.Disposed)))
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(outcome.IsSuccess());
         Assert.Equal("win", outcome.GetOrElse("fallback"));
+        Assert.All(cancellationObserved, signal => Assert.True(signal.Task.IsCompletedSuccessfully));
+        Assert.All(resources, resource => Assert.True(resource.IsDisposed));
     }
 }
