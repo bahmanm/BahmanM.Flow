@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Time.Testing;
 
-namespace BahmanM.Flow.Tests.Integration.Resilience;
+namespace BahmanM.Flow.Tests.Integration.Stress;
 
 public class WithTimeout_over_Chain_and_leaf_Flows_Tests
 {
