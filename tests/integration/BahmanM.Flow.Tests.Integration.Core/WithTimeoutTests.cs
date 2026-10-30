@@ -2,7 +2,7 @@ using Microsoft.Extensions.Time.Testing;
 
 using static BahmanM.Flow.Outcome;
 
-namespace BahmanM.Flow.Tests.Integration.Resilience;
+namespace BahmanM.Flow.Tests.Integration.Core;
 
 public class WithTimeoutTests
 {
