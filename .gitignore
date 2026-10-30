@@ -415,3 +415,9 @@ GEMINI.md
 
 # Jekyll
 _site/
+
+# DocFX generated API metadata
+/docs/api/
+
+# DocFX default CSS exported for local reference
+/docs/_docfx-default-css/
