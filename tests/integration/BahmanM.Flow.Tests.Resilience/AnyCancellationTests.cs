@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using BahmanM.Flow.Tests.Support;
 
-namespace BahmanM.Flow.Tests.Integration;
+namespace BahmanM.Flow.Tests.Resilience;
 
 public class AnyCancellationTests
 {
