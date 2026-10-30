@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Time.Testing;
 
-namespace BahmanM.Flow.Tests.Resilience;
+namespace BahmanM.Flow.Tests.Integration.Resilience;
 
 public class WithTimeout_over_Any_and_All_Tests
 {

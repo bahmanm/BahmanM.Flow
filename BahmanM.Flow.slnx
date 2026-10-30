@@ -17,8 +17,8 @@
     <Project Path="tests/unit/internal/BahmanM.Flow.Description.Tests.Unit/BahmanM.Flow.Description.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/tests/integration/">
-    <Project Path="tests/integration/BahmanM.Flow.Tests.Integration/BahmanM.Flow.Tests.Integration.csproj" />
-    <Project Path="tests/integration/BahmanM.Flow.Tests.Resilience/BahmanM.Flow.Tests.Resilience.csproj" />
+    <Project Path="tests/integration/BahmanM.Flow.Tests.Integration.Core/BahmanM.Flow.Tests.Integration.Core.csproj" />
+    <Project Path="tests/integration/BahmanM.Flow.Tests.Integration.Resilience/BahmanM.Flow.Tests.Integration.Resilience.csproj" />
     <Project Path="tests/integration/BahmanM.Flow.Tests.KnownBugs/BahmanM.Flow.Tests.KnownBugs.csproj" />
   </Folder>
   <Folder Name="/tests/end-to-end/">

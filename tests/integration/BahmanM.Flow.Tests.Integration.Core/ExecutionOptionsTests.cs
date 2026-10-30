@@ -1,4 +1,4 @@
-namespace BahmanM.Flow.Tests.Integration;
+namespace BahmanM.Flow.Tests.Integration.Core;
 
 public class ExecutionOptionsTests
 {
