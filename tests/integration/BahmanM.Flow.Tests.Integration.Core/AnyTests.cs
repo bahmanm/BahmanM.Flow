@@ -1,8 +1,9 @@
+using System.Collections.Concurrent;
 using BahmanM.Flow.Tests.Support;
 using Microsoft.Extensions.Time.Testing;
 using static BahmanM.Flow.Outcome;
 
-namespace BahmanM.Flow.Tests.Integration;
+namespace BahmanM.Flow.Tests.Integration.Core;
 
 public class AnyTests
 {
@@ -26,6 +27,91 @@ public class AnyTests
 
         // Assert
         Assert.Equal(Success(SophieGermain), outcome);
+    }
+
+    [Fact]
+    public async Task Any_WhenOneFlowSucceeds_CancelsOtherFlows()
+    {
+        // Arrange
+        var sideEffects = new ConcurrentBag<string>();
+
+        var fast = new FlowCompletionSource<string>();
+
+        var slowStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var slowFlow = Flow.Create<string>(async ct =>
+        {
+            slowStarted.TrySetResult();
+            try
+            {
+                await Task.Delay(Timeout.InfiniteTimeSpan, ct);
+                sideEffects.Add("slow flow ran to completion");
+                return "slow";
+            }
+            catch (TaskCanceledException)
+            {
+                // expected cancellation
+                return "cancelled";
+            }
+        });
+
+        // Act
+        var exec = FlowEngine.ExecuteAsync(Flow.Any(fast.Flow, slowFlow));
+        await Task.WhenAll(fast.Started, slowStarted.Task);
+        fast.Succeed("fast");
+        var outcome = await exec;
+
+        // Assert
+        Assert.True(outcome.IsSuccess());
+        Assert.Empty(sideEffects);
+    }
+
+    [Fact]
+    public async Task Any_FirstSuccess_WithMixedCancellableAndNonCancellable_BestEffort()
+    {
+        // Arrange
+        var cancellableSideEffects = new ConcurrentBag<string>();
+        var nonCancellableSideEffects = new ConcurrentBag<string>();
+
+        var winner = new FlowCompletionSource<string>();
+
+        var cancellableStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var slowCancellable = Flow.Create<string>(async ct =>
+        {
+            cancellableStarted.TrySetResult();
+            try
+            {
+                await Task.Delay(Timeout.InfiniteTimeSpan, ct);
+                cancellableSideEffects.Add("cancellable ran");
+                return "cancellable";
+            }
+            catch (TaskCanceledException)
+            {
+                return "cancelled";
+            }
+        });
+
+        var nonCancellableDone = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var slowNonCancellable = Flow.Create<string>(async () =>
+        {
+            await Task.Yield();
+            nonCancellableSideEffects.Add("non-cancellable ran");
+            nonCancellableDone.TrySetResult();
+            return "non-cancellable";
+        });
+
+        // Act
+        var exec = FlowEngine.ExecuteAsync(Flow.Any(winner.Flow, slowCancellable, slowNonCancellable));
+        await Task.WhenAll(winner.Started, cancellableStarted.Task);
+        winner.Succeed("win");
+        var outcome = await exec;
+
+        // Wait for non-cancellable branch to complete its side-effect
+        await nonCancellableDone.Task;
+
+        // Assert
+        Assert.True(outcome.IsSuccess());
+        Assert.Empty(cancellableSideEffects);
+        Assert.Single(nonCancellableSideEffects);
     }
 
     [Fact]
@@ -100,6 +186,7 @@ public class AnyTests
     [Fact]
     public async Task WithTimeout_OnAny_FailsIfNoFlowSucceedsWithinDuration()
     {
+        // Arrange
         var timeProvider = new FakeTimeProvider();
         var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -117,11 +204,14 @@ public class AnyTests
         });
 
         var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
+
+        // Act
         var execution = FlowEngine.ExecuteAsync(Flow.Any(never1, never2).WithTimeout(TimeSpan.FromMinutes(1)), options);
         await Task.WhenAll(firstStarted.Task, secondStarted.Task).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeSpan.FromMinutes(1));
         var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
+        // Assert
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
     }
@@ -129,6 +219,7 @@ public class AnyTests
     [Fact]
     public async Task Any_WithTimeoutOnLeaves_DoesNotDisturbWinner()
     {
+        // Arrange
         var timeProvider = new FakeTimeProvider();
         var fcs = new FlowCompletionSource<string>();
         var slowStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -143,12 +234,15 @@ public class AnyTests
             .WithTimeout(TimeSpan.FromMinutes(1));
 
         var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
+
+        // Act
         var execution = FlowEngine.ExecuteAsync(Flow.Any(fast, slowTimesOut), options);
         await Task.WhenAll(fcs.Started, slowStarted.Task).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeSpan.FromMinutes(1));
         fcs.Succeed("fast");
         var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
+        // Assert
         Assert.Equal(Success("fast"), outcome);
     }
 

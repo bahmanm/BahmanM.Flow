@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using BahmanM.Flow.Tests.Support;
 using static BahmanM.Flow.Outcome;
 
-namespace BahmanM.Flow.Tests.Integration;
+namespace BahmanM.Flow.Tests.Integration.Core;
 
 [Collection("WithResourceDisposal")]
 public class WithResourceDisposalTests

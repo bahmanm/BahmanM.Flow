@@ -1,94 +1,10 @@
 using System.Collections.Concurrent;
 using BahmanM.Flow.Tests.Support;
 
-namespace BahmanM.Flow.Tests.Integration;
+namespace BahmanM.Flow.Tests.Integration.Stress;
 
 public class AnyCancellationTests
 {
-    [Fact]
-    public async Task Any_WhenOneFlowSucceeds_CancelsOtherFlows()
-    {
-        // Arrange
-        var sideEffects = new ConcurrentBag<string>();
-
-        var fast = new FlowCompletionSource<string>();
-
-        var slowStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var slowFlow = Flow.Create<string>(async ct =>
-        {
-            slowStarted.TrySetResult();
-            try
-            {
-                await Task.Delay(Timeout.InfiniteTimeSpan, ct);
-                sideEffects.Add("slow flow ran to completion");
-                return "slow";
-            }
-            catch (TaskCanceledException)
-            {
-                // expected cancellation
-                return "cancelled";
-            }
-        });
-
-        var exec = FlowEngine.ExecuteAsync(Flow.Any(fast.Flow, slowFlow));
-        await Task.WhenAll(fast.Started, slowStarted.Task);
-        fast.Succeed("fast");
-        var outcome = await exec;
-
-        // Assert
-        Assert.True(outcome.IsSuccess());
-        Assert.Empty(sideEffects);
-    }
-
-    [Fact]
-    public async Task Any_FirstSuccess_WithMixedCancellableAndNonCancellable_BestEffort()
-    {
-        // Arrange
-        var cancellableSideEffects = new ConcurrentBag<string>();
-        var nonCancellableSideEffects = new ConcurrentBag<string>();
-
-        var winner = new FlowCompletionSource<string>();
-
-        var cancellableStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var slowCancellable = Flow.Create<string>(async ct =>
-        {
-            cancellableStarted.TrySetResult();
-            try
-            {
-                await Task.Delay(Timeout.InfiniteTimeSpan, ct);
-                cancellableSideEffects.Add("cancellable ran");
-                return "cancellable";
-            }
-            catch (TaskCanceledException)
-            {
-                return "cancelled";
-            }
-        });
-
-        var nonCancellableDone = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var slowNonCancellable = Flow.Create<string>(async () =>
-        {
-            await Task.Yield();
-            nonCancellableSideEffects.Add("non-cancellable ran");
-            nonCancellableDone.TrySetResult();
-            return "non-cancellable";
-        });
-
-        // Act
-        var exec = FlowEngine.ExecuteAsync(Flow.Any(winner.Flow, slowCancellable, slowNonCancellable));
-        await Task.WhenAll(winner.Started, cancellableStarted.Task);
-        winner.Succeed("win");
-        var outcome = await exec;
-
-        // Wait for non-cancellable branch to complete its side-effect
-        await nonCancellableDone.Task;
-
-        // Assert
-        Assert.True(outcome.IsSuccess());
-        Assert.Empty(cancellableSideEffects);
-        Assert.Single(nonCancellableSideEffects);
-    }
-
     [Fact]
     public async Task Any_OuterCancellation_BeforeStart_DoesNotStartBranches()
     {
@@ -200,21 +116,56 @@ public class AnyCancellationTests
     public async Task Any_Scale_OneFastSuccess_ManyLosers_RemainsResponsive()
     {
         // Arrange
+        const int loserCount = 50;
+        var started = Enumerable
+            .Range(0, loserCount)
+            .Select(_ => new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously))
+            .ToArray();
+        var cancellationObserved = Enumerable
+            .Range(0, loserCount)
+            .Select(_ => new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously))
+            .ToArray();
+        var resources = Enumerable
+            .Range(0, loserCount)
+            .Select(_ => new DisposableProbe())
+            .ToArray();
         var losers = Enumerable
-            .Range(0, 50)
-            .Select(_ => FlowTestHelpers.NeverCompletesUntilCancelled<string>())
+            .Range(0, loserCount)
+            .Select(index => Flow.WithResource(
+                acquire: () => resources[index],
+                use: _ => Flow.Create<string>(async ct =>
+                {
+                    started[index].TrySetResult();
+                    try
+                    {
+                        await Task.Delay(Timeout.InfiniteTimeSpan, ct);
+                        return "unexpected completion";
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        cancellationObserved[index].TrySetResult();
+                        return "cancelled";
+                    }
+                })))
             .ToArray();
 
         var winner = new FlowCompletionSource<string>();
 
         // Act
         var exec = FlowEngine.ExecuteAsync(Flow.Any(winner.Flow, losers));
-        await winner.Started;
+        await Task.WhenAll(winner.Started, Task.WhenAll(started.Select(signal => signal.Task)))
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         winner.Succeed("win");
-        var outcome = await exec;
+        var outcome = await exec.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await Task.WhenAll(
+                Task.WhenAll(cancellationObserved.Select(signal => signal.Task)),
+                Task.WhenAll(resources.Select(resource => resource.Disposed)))
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(outcome.IsSuccess());
         Assert.Equal("win", outcome.GetOrElse("fallback"));
+        Assert.All(cancellationObserved, signal => Assert.True(signal.Task.IsCompletedSuccessfully));
+        Assert.All(resources, resource => Assert.True(resource.IsDisposed));
     }
 }

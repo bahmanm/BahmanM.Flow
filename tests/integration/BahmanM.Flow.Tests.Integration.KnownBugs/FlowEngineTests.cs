@@ -1,4 +1,4 @@
-namespace BahmanM.Flow.Tests.KnownBugs;
+namespace BahmanM.Flow.Tests.Integration.KnownBugs;
 
 public class FlowEngineTests
 {

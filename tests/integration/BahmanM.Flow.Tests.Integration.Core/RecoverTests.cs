@@ -1,7 +1,7 @@
 using static BahmanM.Flow.Outcome;
 using Microsoft.Extensions.Time.Testing;
 
-namespace BahmanM.Flow.Tests.Integration;
+namespace BahmanM.Flow.Tests.Integration.Core;
 
 public class RecoverTests
 {
