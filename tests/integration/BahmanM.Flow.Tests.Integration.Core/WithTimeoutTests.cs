@@ -148,6 +148,7 @@ public class WithTimeoutTests
     [Fact]
     public async Task WithTimeout_AfterSelect_TimesOutUpstreamCreate()
     {
+        // Arrange
         var timeProvider = new FakeTimeProvider();
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var selectorInvocations = 0;
@@ -159,11 +160,13 @@ public class WithTimeoutTests
             })
             .WithTimeout(TimeoutDuration);
 
+        // Act
         var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
         await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeoutDuration);
         var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
+        // Assert
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
         Assert.Equal(0, selectorInvocations);
@@ -172,6 +175,7 @@ public class WithTimeoutTests
     [Fact]
     public async Task WithTimeout_AfterSelect_DoesNotTimeAsyncSelector()
     {
+        // Arrange
         var timeProvider = new FakeTimeProvider();
         var selectorStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var selectorCompletion = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -183,15 +187,17 @@ public class WithTimeoutTests
             }))
             .WithTimeout(TimeoutDuration);
 
+        // Act
         var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
         await selectorStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         timeProvider.Advance(TimeoutDuration);
-
-        Assert.False(execution.IsCompleted);
+        var executionRemainsPending = !execution.IsCompleted;
 
         selectorCompletion.SetResult("selected");
         var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
+        // Assert
+        Assert.True(executionRemainsPending);
         Assert.Equal(Success("selected"), outcome);
     }
 
@@ -399,6 +405,42 @@ public class WithTimeoutTests
         // Assert
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
+    }
+
+    [Fact]
+    public async Task WithTimeout_OnResource_StartsAfterSynchronousAcquisitionReturns()
+    {
+        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var acquisitionStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var releaseAcquisition = new ManualResetEventSlim();
+        var flow = Flow.WithResource(
+            acquire: () =>
+            {
+                acquisitionStarted.TrySetResult();
+                releaseAcquisition.Wait();
+                return new CancellationTokenSource();
+            },
+            use: _ => Flow.Succeed(SimoneDeBeauvoir))
+            .WithTimeout(TimeoutDuration);
+
+        // Act
+        var execution = Task.Run(() => FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider)));
+
+        try
+        {
+            await acquisitionStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            timeProvider.Advance(TimeoutDuration);
+        }
+        finally
+        {
+            releaseAcquisition.Set();
+        }
+
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(Success(SimoneDeBeauvoir), outcome);
     }
 
     private static Execution.Options CreateOptions(TimeProvider timeProvider) =>

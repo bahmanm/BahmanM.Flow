@@ -121,6 +121,7 @@ namespace BahmanM.Flow.Tests.Integration.Core
         [Fact]
         public async Task WithRetry_BeforeSelectRetriesCreate_ButAfterSelectDoesNot()
         {
+            // Arrange
             var retriesBeforeSelect = 0;
             var selectedBeforeSelect = 0;
             var flowWithRetryBeforeSelect = Flow.Create<string>(() =>
@@ -149,9 +150,11 @@ namespace BahmanM.Flow.Tests.Integration.Core
                 .Select(value => value)
                 .WithRetry(3);
 
+            // Act
             var retriedBeforeSelectOutcome = await FlowEngine.ExecuteAsync(flowWithRetryBeforeSelect);
             var retriedAfterSelectOutcome = await FlowEngine.ExecuteAsync(flowWithRetryAfterSelect);
 
+            // Assert
             Assert.Equal(Success("value"), retriedBeforeSelectOutcome);
             Assert.Equal(3, retriesBeforeSelect);
             Assert.Equal(1, selectedBeforeSelect);
@@ -163,6 +166,7 @@ namespace BahmanM.Flow.Tests.Integration.Core
         [Fact]
         public async Task WithRetry_AppliedToSelect_DoesNotRetryFailingSelector()
         {
+            // Arrange
             var selectorInvocations = 0;
             var exception = new InvalidOperationException("Selector failed.");
             var flow = Flow.Succeed(42)
@@ -173,8 +177,10 @@ namespace BahmanM.Flow.Tests.Integration.Core
                 }))
                 .WithRetry(3);
 
+            // Act
             var outcome = await FlowEngine.ExecuteAsync(flow);
 
+            // Assert
             Assert.Equal(Failure<int>(exception), outcome);
             Assert.Equal(1, selectorInvocations);
         }
