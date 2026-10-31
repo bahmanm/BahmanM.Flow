@@ -202,6 +202,64 @@ public class WithTimeoutTests
     }
 
     [Fact]
+    public async Task WithTimeout_AfterValidate_TimesOutUpstreamCreate()
+    {
+        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var predicateInvocations = 0;
+        var flow = CreateNeverCompletingFlow(started)
+            .Validate(_ =>
+            {
+                predicateInvocations++;
+                return true;
+            }, _ => new InvalidOperationException("Validation failed."))
+            .WithTimeout(TimeoutDuration);
+
+        // Act
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // Assert
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+        Assert.Equal(0, predicateInvocations);
+    }
+
+    [Fact]
+    public async Task WithTimeout_AfterValidate_DoesNotTimeCancellableAsyncPredicate()
+    {
+        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var predicateStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var predicateCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var predicateInvocations = 0;
+        var flow = Flow.Succeed(42)
+            .Validate(async (_, _) =>
+            {
+                predicateInvocations++;
+                predicateStarted.TrySetResult();
+                return await predicateCompletion.Task;
+            }, _ => new InvalidOperationException("Validation failed."))
+            .WithTimeout(TimeoutDuration);
+
+        // Act
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+        await predicateStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        timeProvider.Advance(TimeoutDuration);
+        var executionRemainsPending = !execution.IsCompleted;
+        predicateCompletion.SetResult(true);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.True(executionRemainsPending);
+        Assert.Equal(Success(42), outcome);
+        Assert.Equal(1, predicateInvocations);
+    }
+
+    [Fact]
     public async Task WithRetryThenWithTimeout_WhenRetriesSucceedWithinTimeout_Succeeds()
     {
         // Arrange
