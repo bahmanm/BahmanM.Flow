@@ -6,7 +6,7 @@ namespace BahmanM.Flow.Ast.Recover;
 /// <param name="Source">The source flow whose failure may be recovered.</param>
 /// <param name="Recover">A function that creates the recovery flow from the failure.</param>
 /// <typeparam name="T">The value type produced by the source and recovery flows.</typeparam>
-public sealed record Sync<T> (IFlow<T> Source, Flow.Operations.Recover.Sync<T> Recover) : INode<T>
+internal sealed record Sync<T> (IFlow<T> Source, Flow.Operations.Recover.Sync<T> Recover) : INode<T>
 {
     Task<Outcome<T>> INode<T>.Accept(IInterpreter interpreter) =>
         interpreter.Interpret(new Internal.Sync<T>(Source, error => Recover(error)));
