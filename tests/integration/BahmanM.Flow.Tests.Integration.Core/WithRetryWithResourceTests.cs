@@ -12,7 +12,6 @@ public class WithRetryWithResourceTests
         var acquisitionCount = 0;
         var operationAttempts = 0;
         var resource = new DisposableProbe();
-        var resourcesUsed = new List<DisposableProbe>();
         var exception = new InvalidOperationException("Operation failed.");
 
         var flow = Flow.WithResource(
@@ -45,6 +44,7 @@ public class WithRetryWithResourceTests
         var acquisitionCount = 0;
         var operationAttempts = 0;
         var resource = new DisposableProbe();
+        var resourcesUsed = new List<DisposableProbe>();
 
         var flow = Flow.WithResource(
             acquire: () =>

@@ -186,6 +186,52 @@ namespace BahmanM.Flow.Tests.Integration.Core
         }
 
         [Fact]
+        public async Task WithRetry_AppliedToAsyncSelect_DoesNotRetryFailingSelector()
+        {
+            // Arrange
+            var selectorInvocations = 0;
+            var exception = new InvalidOperationException("Async selector failed.");
+            var flow = Flow.Succeed(42)
+                .Select<int, int>(async _ =>
+                {
+                    selectorInvocations++;
+                    await Task.Yield();
+                    throw exception;
+                })
+                .WithRetry(3);
+
+            // Act
+            var outcome = await FlowEngine.ExecuteAsync(flow);
+
+            // Assert
+            Assert.Equal(Failure<int>(exception), outcome);
+            Assert.Equal(1, selectorInvocations);
+        }
+
+        [Fact]
+        public async Task WithRetry_AppliedToCancellableAsyncSelect_DoesNotRetryFailingSelector()
+        {
+            // Arrange
+            var selectorInvocations = 0;
+            var exception = new InvalidOperationException("Cancellable async selector failed.");
+            var flow = Flow.Succeed(42)
+                .Select((Flow.Operations.Select.CancellableAsync<int, int>)(async (_, _) =>
+                {
+                    selectorInvocations++;
+                    await Task.Yield();
+                    throw exception;
+                }))
+                .WithRetry(3);
+
+            // Act
+            var outcome = await FlowEngine.ExecuteAsync(flow);
+
+            // Assert
+            Assert.Equal(Failure<int>(exception), outcome);
+            Assert.Equal(1, selectorInvocations);
+        }
+
+        [Fact]
         public async Task WithRetry_OnFlakyAsyncOperation_SucceedsAfterRetries()
         {
             // Arrange
