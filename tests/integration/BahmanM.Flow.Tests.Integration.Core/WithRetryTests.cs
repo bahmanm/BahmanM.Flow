@@ -119,6 +119,48 @@ namespace BahmanM.Flow.Tests.Integration.Core
         }
 
         [Fact]
+        public async Task WithRetry_BeforeSelectRetriesCreate_ButAfterSelectDoesNot()
+        {
+            var retriesBeforeSelect = 0;
+            var selectedBeforeSelect = 0;
+            var flowWithRetryBeforeSelect = Flow.Create<string>(() =>
+            {
+                retriesBeforeSelect++;
+                if (retriesBeforeSelect < 3)
+                {
+                    throw new InvalidOperationException("Temporary failure.");
+                }
+
+                return "value";
+            })
+                .WithRetry(3)
+                .Select(value =>
+                {
+                    selectedBeforeSelect++;
+                    return value;
+                });
+
+            var attemptsWithRetryAfterSelect = 0;
+            var flowWithRetryAfterSelect = Flow.Create<string>((Func<string>)(() =>
+            {
+                attemptsWithRetryAfterSelect++;
+                throw new InvalidOperationException("Temporary failure.");
+            }))
+                .Select(value => value)
+                .WithRetry(3);
+
+            var retriedBeforeSelectOutcome = await FlowEngine.ExecuteAsync(flowWithRetryBeforeSelect);
+            var retriedAfterSelectOutcome = await FlowEngine.ExecuteAsync(flowWithRetryAfterSelect);
+
+            Assert.Equal(Success("value"), retriedBeforeSelectOutcome);
+            Assert.Equal(3, retriesBeforeSelect);
+            Assert.Equal(1, selectedBeforeSelect);
+
+            Assert.IsType<Failure<string>>(retriedAfterSelectOutcome);
+            Assert.Equal(1, attemptsWithRetryAfterSelect);
+        }
+
+        [Fact]
         public async Task WithRetry_OnFlakyAsyncOperation_SucceedsAfterRetries()
         {
             // Arrange
