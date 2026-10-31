@@ -161,6 +161,25 @@ namespace BahmanM.Flow.Tests.Integration.Core
         }
 
         [Fact]
+        public async Task WithRetry_AppliedToSelect_DoesNotRetryFailingSelector()
+        {
+            var selectorInvocations = 0;
+            var exception = new InvalidOperationException("Selector failed.");
+            var flow = Flow.Succeed(42)
+                .Select((Flow.Operations.Select.Sync<int, int>)(_ =>
+                {
+                    selectorInvocations++;
+                    throw exception;
+                }))
+                .WithRetry(3);
+
+            var outcome = await FlowEngine.ExecuteAsync(flow);
+
+            Assert.Equal(Failure<int>(exception), outcome);
+            Assert.Equal(1, selectorInvocations);
+        }
+
+        [Fact]
         public async Task WithRetry_OnFlakyAsyncOperation_SucceedsAfterRetries()
         {
             // Arrange
