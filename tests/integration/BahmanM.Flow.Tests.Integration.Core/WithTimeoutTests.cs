@@ -146,6 +146,56 @@ public class WithTimeoutTests
     }
 
     [Fact]
+    public async Task WithTimeout_AfterSelect_TimesOutUpstreamCreate()
+    {
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var selectorInvocations = 0;
+        var flow = CreateNeverCompletingFlow(started)
+            .Select(value =>
+            {
+                selectorInvocations++;
+                return value;
+            })
+            .WithTimeout(TimeoutDuration);
+
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+        Assert.Equal(0, selectorInvocations);
+    }
+
+    [Fact]
+    public async Task WithTimeout_AfterSelect_DoesNotTimeAsyncSelector()
+    {
+        var timeProvider = new FakeTimeProvider();
+        var selectorStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var selectorCompletion = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var flow = Flow.Succeed("input")
+            .Select((Flow.Operations.Select.Async<string, string>)(_ =>
+            {
+                selectorStarted.TrySetResult();
+                return selectorCompletion.Task;
+            }))
+            .WithTimeout(TimeoutDuration);
+
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+        await selectorStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        timeProvider.Advance(TimeoutDuration);
+
+        Assert.False(execution.IsCompleted);
+
+        selectorCompletion.SetResult("selected");
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        Assert.Equal(Success("selected"), outcome);
+    }
+
+    [Fact]
     public async Task WithRetryThenWithTimeout_WhenRetriesSucceedWithinTimeout_Succeeds()
     {
         // Arrange
