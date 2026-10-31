@@ -94,7 +94,7 @@ public class WithTimeoutTests
     {
         // Arrange
         var timeProvider = new FakeTimeProvider();
-        var flow = Flow.Succeed("start").Chain(async (string _, CancellationToken cancellationToken) =>
+        var flow = Flow.Succeed("start").Chain(async (_, cancellationToken) =>
         {
             await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
             return Flow.Succeed(SimoneDeBeauvoir);
