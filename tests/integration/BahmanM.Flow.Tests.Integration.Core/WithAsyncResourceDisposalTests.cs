@@ -132,6 +132,50 @@ public class WithAsyncResourceDisposalTests
     }
 
     [Fact]
+    public async Task WithResource_Async_Timeout_ReturnsBeforeDisposalCompletes()
+    {
+        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var resource = new GatedAsyncDisposable();
+        var flow = Flow.WithResource(
+            acquireAsync: () => Task.FromResult<IAsyncDisposable>(resource),
+            use: _ => Flow.Create(async ct =>
+            {
+                started.TrySetResult();
+                await Task.Delay(Timeout.InfiniteTimeSpan, ct);
+                return 42;
+            }))
+            .WithTimeout(TimeSpan.FromMinutes(1));
+        var options = new Execution.Options(CancellationToken.None) { TimeProvider = timeProvider };
+
+        // Act
+        var execution = FlowEngine.ExecuteAsync(flow, options);
+        Outcome<int>? outcome = null;
+        var disposalPendingWhenOutcomeReturned = false;
+        try
+        {
+            await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            timeProvider.Advance(TimeSpan.FromMinutes(1));
+            await resource.DisposeStarted.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            disposalPendingWhenOutcomeReturned = !resource.DisposeCompleted.IsCompleted;
+        }
+        finally
+        {
+            resource.CompleteDisposal();
+        }
+
+        await resource.DisposeCompleted.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // Assert
+        var failure = Assert.IsType<Failure<int>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+        Assert.True(disposalPendingWhenOutcomeReturned);
+        Assert.Equal(1, resource.DisposeCalls);
+    }
+
+    [Fact]
     public async Task WithResource_Async_DisposeFailure_OverridesOutcome_WhenNotCancelled()
     {
         // Arrange
@@ -168,5 +212,27 @@ public class WithAsyncResourceDisposalTests
         Assert.Equal(Success(99), outcome);
         Assert.True(outer.IsDisposed);
         Assert.True(inner.IsDisposed);
+    }
+
+    private sealed class GatedAsyncDisposable : IAsyncDisposable
+    {
+        private readonly TaskCompletionSource _disposeStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _allowDisposal = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _disposeCompleted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _disposeCalls;
+
+        public Task DisposeStarted => _disposeStarted.Task;
+        public Task DisposeCompleted => _disposeCompleted.Task;
+        public int DisposeCalls => Volatile.Read(ref _disposeCalls);
+
+        public async ValueTask DisposeAsync()
+        {
+            Interlocked.Increment(ref _disposeCalls);
+            _disposeStarted.TrySetResult();
+            await _allowDisposal.Task.ConfigureAwait(false);
+            _disposeCompleted.TrySetResult();
+        }
+
+        public void CompleteDisposal() => _allowDisposal.TrySetResult();
     }
 }

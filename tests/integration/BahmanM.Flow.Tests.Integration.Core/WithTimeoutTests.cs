@@ -94,7 +94,7 @@ public class WithTimeoutTests
     {
         // Arrange
         var timeProvider = new FakeTimeProvider();
-        var flow = Flow.Succeed("start").Chain(async (string _, CancellationToken cancellationToken) =>
+        var flow = Flow.Succeed("start").Chain(async (_, cancellationToken) =>
         {
             await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
             return Flow.Succeed(SimoneDeBeauvoir);
@@ -143,6 +143,233 @@ public class WithTimeoutTests
         {
             releaseOperation.Set();
         }
+    }
+
+    [Fact]
+    public async Task WithTimeout_AfterSelect_TimesOutUpstreamCreate()
+    {
+        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var selectorInvocations = 0;
+        var flow = CreateNeverCompletingFlow(started)
+            .Select(value =>
+            {
+                selectorInvocations++;
+                return value;
+            })
+            .WithTimeout(TimeoutDuration);
+
+        // Act
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // Assert
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+        Assert.Equal(0, selectorInvocations);
+    }
+
+    [Fact]
+    public async Task WithTimeout_AfterSelect_DoesNotTimeAsyncSelector()
+    {
+        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var selectorStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var selectorCompletion = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var flow = Flow.Succeed("input")
+            .Select((Flow.Operations.Select.Async<string, string>)(_ =>
+            {
+                selectorStarted.TrySetResult();
+                return selectorCompletion.Task;
+            }))
+            .WithTimeout(TimeoutDuration);
+
+        // Act
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+        await selectorStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        timeProvider.Advance(TimeoutDuration);
+        var executionRemainsPending = !execution.IsCompleted;
+
+        selectorCompletion.SetResult("selected");
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.True(executionRemainsPending);
+        Assert.Equal(Success("selected"), outcome);
+    }
+
+    [Fact]
+    public async Task WithTimeout_AfterValidate_TimesOutUpstreamCreate()
+    {
+        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var predicateInvocations = 0;
+        var flow = CreateNeverCompletingFlow(started)
+            .Validate(_ =>
+            {
+                predicateInvocations++;
+                return true;
+            }, _ => new InvalidOperationException("Validation failed."))
+            .WithTimeout(TimeoutDuration);
+
+        // Act
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // Assert
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+        Assert.Equal(0, predicateInvocations);
+    }
+
+    [Fact]
+    public async Task WithTimeout_AfterValidate_DoesNotTimeCancellableAsyncPredicate()
+    {
+        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var predicateStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var predicateCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var predicateInvocations = 0;
+        var flow = Flow.Succeed(42)
+            .Validate(async (_, _) =>
+            {
+                predicateInvocations++;
+                predicateStarted.TrySetResult();
+                return await predicateCompletion.Task;
+            }, _ => new InvalidOperationException("Validation failed."))
+            .WithTimeout(TimeoutDuration);
+
+        // Act
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+        await predicateStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        timeProvider.Advance(TimeoutDuration);
+        var executionRemainsPending = !execution.IsCompleted;
+        predicateCompletion.SetResult(true);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.True(executionRemainsPending);
+        Assert.Equal(Success(42), outcome);
+        Assert.Equal(1, predicateInvocations);
+    }
+
+    [Fact]
+    public async Task WithTimeout_AfterDoOnSuccess_TimesOutUpstreamCreate()
+    {
+        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var callbackInvocations = 0;
+        var flow = CreateNeverCompletingFlow(started)
+            .DoOnSuccess(_ => callbackInvocations++)
+            .WithTimeout(TimeoutDuration);
+
+        // Act
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // Assert
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+        Assert.Equal(0, callbackInvocations);
+    }
+
+    [Fact]
+    public async Task WithTimeout_AfterDoOnSuccess_DoesNotTimeCancellableAsyncCallback()
+    {
+        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var callbackStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var callbackCompletion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var callbackInvocations = 0;
+        Flow.Operations.DoOnSuccess.CancellableAsync<string> callback = async (_, _) =>
+        {
+            callbackInvocations++;
+            callbackStarted.TrySetResult();
+            await callbackCompletion.Task;
+        };
+        var flow = Flow.Succeed("value").DoOnSuccess(callback).WithTimeout(TimeoutDuration);
+
+        // Act
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+        await callbackStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        timeProvider.Advance(TimeoutDuration);
+        var executionRemainsPending = !execution.IsCompleted;
+        callbackCompletion.SetResult();
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.True(executionRemainsPending);
+        Assert.Equal(Success("value"), outcome);
+        Assert.Equal(1, callbackInvocations);
+    }
+
+    [Fact]
+    public async Task WithTimeout_AfterDoOnFailure_TimesOutUpstreamAndRunsFailureCallback()
+    {
+        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var callbackInvocations = 0;
+        Exception? callbackException = null;
+        var flow = CreateNeverCompletingFlow(started)
+            .DoOnFailure(exception =>
+            {
+                callbackInvocations++;
+                callbackException = exception;
+            })
+            .WithTimeout(TimeoutDuration);
+
+        // Act
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        timeProvider.Advance(TimeoutDuration);
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // Assert
+        var failure = Assert.IsType<Failure<string>>(outcome);
+        Assert.IsType<TimeoutException>(failure.Exception);
+        Assert.IsType<TimeoutException>(callbackException);
+        Assert.Equal(1, callbackInvocations);
+    }
+
+    [Fact]
+    public async Task WithTimeout_AfterDoOnFailure_DoesNotTimeCancellableAsyncCallback()
+    {
+        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var sourceException = new InvalidOperationException("Source failed.");
+        var callbackStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var callbackCompletion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var callbackInvocations = 0;
+        Flow.Operations.DoOnFailure.CancellableAsync callback = async (_, _) =>
+        {
+            callbackInvocations++;
+            callbackStarted.TrySetResult();
+            await callbackCompletion.Task;
+        };
+        var flow = Flow.Fail<string>(sourceException).DoOnFailure(callback).WithTimeout(TimeoutDuration);
+
+        // Act
+        var execution = FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider));
+        await callbackStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        timeProvider.Advance(TimeoutDuration);
+        var executionRemainsPending = !execution.IsCompleted;
+        callbackCompletion.SetResult();
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.True(executionRemainsPending);
+        Assert.Equal(Failure<string>(sourceException), outcome);
+        Assert.Equal(1, callbackInvocations);
     }
 
     [Fact]
@@ -349,6 +576,42 @@ public class WithTimeoutTests
         // Assert
         var failure = Assert.IsType<Failure<string>>(outcome);
         Assert.IsType<TimeoutException>(failure.Exception);
+    }
+
+    [Fact]
+    public async Task WithTimeout_OnResource_StartsAfterSynchronousAcquisitionReturns()
+    {
+        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var acquisitionStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var releaseAcquisition = new ManualResetEventSlim();
+        var flow = Flow.WithResource(
+            acquire: () =>
+            {
+                acquisitionStarted.TrySetResult();
+                releaseAcquisition.Wait();
+                return new CancellationTokenSource();
+            },
+            use: _ => Flow.Succeed(SimoneDeBeauvoir))
+            .WithTimeout(TimeoutDuration);
+
+        // Act
+        var execution = Task.Run(() => FlowEngine.ExecuteAsync(flow, CreateOptions(timeProvider)));
+
+        try
+        {
+            await acquisitionStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            timeProvider.Advance(TimeoutDuration);
+        }
+        finally
+        {
+            releaseAcquisition.Set();
+        }
+
+        var outcome = await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(Success(SimoneDeBeauvoir), outcome);
     }
 
     private static Execution.Options CreateOptions(TimeProvider timeProvider) =>
